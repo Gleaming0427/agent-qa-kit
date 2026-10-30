@@ -40,6 +40,9 @@ if [[ "${QA_DRY_RUN:-0}" == 1 ]]; then
   exit 0
 fi
 mkdir -p reports
+if [[ "$PHASE" == 2 ]]; then
+  node qa/scenario-review.mjs reserve "$TICKET" "$SPEC" || fail 'review generated tests and RED failures, or reassess the attempt limit, before phase 2'
+fi
 # This spec-derived manifest is produced independently BEFORE the agent writes anything.
 node qa/criteria-manifest.mjs "$TICKET" "$SPEC" "reports/$TICKET-criteria.json" || fail 'Cannot build authoritative manifest'
 rm -f reports/vitest.json reports/playwright.json
@@ -70,6 +73,9 @@ VERDICT="$(jq -r '.verdict' <<<"$VERDICT_JSON")"
 echo "QA agent $TICKET, phase $PHASE: $VERDICT, cost \$$COST"
 if [[ "$VERDICT" != 'blocked' ]]; then
   node qa/coverage-report.mjs "$TICKET" "$PHASE" || fail 'Per-criterion coverage report failed'
+fi
+if [[ "$PHASE" == 1 && "$VERDICT" == ready ]]; then
+  node qa/scenario-review.mjs prepare "$TICKET" "$SPEC" || fail 'Cannot prepare the human scenario review'
 fi
 case "$VERDICT" in
   ready|pass) exit 0 ;;

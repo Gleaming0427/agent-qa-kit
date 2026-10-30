@@ -30,12 +30,16 @@ For EVERY manifest criterion:
 4. Make the assertion test user-visible behavior, never just component existence.
 5. Run `npm run test:affected`: the NEW MFE assertions must fail against
    the unimplemented behavior, one failing assertion for each criterion.
+   Check each failure message. A setup failure, missing module, broken selector
+   or unavailable environment is not evidence of missing behavior.
 6. Never use `.skip`, `.only`, `.fixme`, `.todo`, snapshot updates or trivial assertions.
 7. If the spec is ambiguous, report a question instead of inventing behavior.
 
 Only test commands are allowed. Read the condensed output using
 `npm run test:summary`. A shell test need not run before implementation,
 but its source must exist and include the ticket + criterion tags.
+The launcher prepares a review packet after this phase. A human checks the
+assertions and RED failures before development continues; do not approve it.
 
 End with JSON only:
 ```json

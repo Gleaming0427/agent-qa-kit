@@ -3,6 +3,8 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
+  workers: process.env.CI ? 1 : undefined,
+  globalTimeout: 5 * 60_000,
   retries: 0,
   reporter: [['list'], ['json', { outputFile: 'reports/playwright.json' }]],
   use: {

@@ -7,6 +7,7 @@ from a ticket. `qa-verifier` runs those tests **without Write/Edit tools**.
 A deterministic validator rejects a success verdict if an expected criterion
 is missing, an assertion was not executed, a test was skipped, or actual test
 results contradict the verdict.
+The example also runs a fixed browser smoke journey on every PR.
 
 > **Status: experimental.** Includes a working-source React example and an
 > executable Red → Green → Regression test workflow. It is not production-ready
@@ -26,6 +27,8 @@ results contradict the verdict.
                          │
                  RED tests expected
                          │
+             Human reviews tests + RED cause
+                         │
                 Development agent
                          │
              ┌───────────▼───────────┐
@@ -33,7 +36,7 @@ results contradict the verdict.
              │ No direct write tools │
              └───────────┬───────────┘
                          │
-                 Vitest + Playwright
+             Vitest + Playwright + fixed smoke
                          │
              ┌───────────▼───────────┐
              │ Deterministic check   │
@@ -59,6 +62,7 @@ actual named assertions for each criterion and for both test levels.
 | `qa/criteria-manifest.mjs` | Generate authoritative criterion IDs + spec hash |
 | `qa/coverage-report.mjs` | Report execution evidence by criterion |
 | `qa/check-tests.mjs` | Scan edited test files for disabled/focused cases |
+| `qa/scenario-review.mjs` | Prepare and verify human review of generated tests and RED failures |
 | `qa/run-qa.sh` | Orchestrate CLI agent phases and deterministic validation |
 | `qa/test-guard.sh`, `qa/test-verdict-check.sh` | Existing guard/validator regression matrices |
 | `qa/tests/` | Node's built-in strict-evidence and hook-integration tests |
@@ -94,8 +98,10 @@ cd examples/server-console
 npm ci
 npx playwright install chromium
 npm run build
+npm run test:smoke
 npm run demo:unit
 npm run demo:e2e
+npm run verify:final
 ```
 
 Both `demo:*` commands run the same assertions through three stages:
@@ -111,9 +117,21 @@ edited** between stages. JSON reports are saved to the example's `reports/`
 directory. This tests the same UI at the component level (Vitest / Testing
 Library) and browser level (Playwright). **It is an isolated fake shell, not a real application or a multi-repo MFE integration.**
 
+The smoke test follows a stable user journey: open services, search for one,
+and see the empty state. CI runs it on every PR independently of a ticket.
+The demo cycle checks that the RED and regression stages contain an actual
+`AC-2` assertion failure with a diagnostic message; a crashed test runner does
+not count as a successful RED stage. `verify:final` runs the complete green
+unit and browser suites after the demonstration.
+
 The example includes `package-lock.json`; CI uses `npm ci` for reproducible installs.
 
 ## Integrate into a real MFE project
+
+Run a small fixed browser suite for the flows whose failure would have the
+largest user impact on every PR. Invoke ticket-specific QA for changes to those
+flows or other high-risk behavior; a low-risk change need not generate new E2E
+tests. Keep the fixed suite stable and independent of individual Jira tickets.
 
 Adapt the existing client's test scripts and Playwright configuration:
 
@@ -137,9 +155,29 @@ Then run:
 ```bash
 QA_DRY_RUN=1 qa/run-qa.sh TICKET-42 1 specs/TICKET-42.md services
 qa/run-qa.sh TICKET-42 1 specs/TICKET-42.md services
+# Review the generated tests and reports/TICKET-42-review-request.json.
+# Copy reports/TICKET-42-review-decision.template.json to
+# reports/TICKET-42-review-decision.json, then fill the reviewer and the
+# reason each RED failure reflects missing behavior.
+node qa/scenario-review.mjs approve TICKET-42 specs/TICKET-42.md
 # Once implementation is delivered:
 qa/run-qa.sh TICKET-42 2 specs/TICKET-42.md services
 ```
+
+Phase 1 prepares a review request with the acceptance criteria, test file
+hashes, and the observed RED error for each criterion. Review the assertions
+against the ticket and confirm the RED failure is the expected missing behavior,
+not a selector, setup, or environment error. Phase 2 refuses to run until the
+review decision is recorded; edits to the spec, tests, or RED report invalidate
+that decision. The local reviewer name is self-declared, so use required human
+PR reviews and branch protection when applying this gate in a team.
+
+The launcher permits three phase-2 verifications per reviewed baseline: the
+initial run and two attempts after repairs. On a failure, send the compact
+`qa/summary.mjs` output to the repair agent, rerun the affected test, then run
+the full suite before accepting the change. A new phase-1 baseline and review
+are required after the attempt limit. The example's `npm run verify:final`
+provides that full-suite command; adapt it to the real application.
 
 Exit codes: `0` = ready/passed; `1` = failed; `2` = blocked;
 `3` = technical failure or invalid verdict. Costs reported by Claude are
@@ -157,6 +195,9 @@ recorded per run in `reports/TICKET-42-phase2.json`.
   reports are insufficient to claim `pass`.
 - **Testing discipline:** the post-edit scan and CI catch disabled/focused tests;
   they do **not** semantically prove tests are good. A developer reviews assertions.
+- **Review receipt:** the launcher checks that the reviewed spec, tests, and RED
+  report have not changed. The receipt does not authenticate the reviewer or
+  prove that their interpretation is correct.
 - **Untrusted tests:** running agent-generated tests executes code. A malicious
   test can make changes through its runner. Use a disposable isolated test
   environment with no credentials; do not run generated tests in production.
@@ -176,15 +217,12 @@ set of well-specified, low-risk features.
 
 ## What has and hasn't been verified
 
-- **Verified locally for this upgrade:** JavaScript syntax; Bash syntax;
-  built-in Node strict-evidence/hook tests; legacy guard and verdict tests;
-  basic demonstration search behavior with Node TypeScript stripping.
-- **Not run in the upgrade creation environment:** npm dependency install,
-  actual React rendering, Playwright Chromium tests, or an end-to-end Claude
-  Code run (network and Claude CLI unavailable in that environment).
-- **Pending before claiming production readiness:** lockfile, GitHub Actions
-  green on the target commit, a true real-MFE shell integration, adversarial
-  tests and security review.
+- **Verified:** Node evidence/hook tests, guard and verdict tests, React build,
+  Vitest RED → Green → Regression, and Playwright Chromium browser tests.
+- **Still needed for production use:** a true application and shell integration,
+  independent human review of generated scenarios, adversarial tests, and
+  security review of the execution environment. The example does not contact
+  Jira or run a Claude Code agent end to end in CI.
 
 See [HOW_TO_APPLY.md](HOW_TO_APPLY.md) for installation instructions and
 integration limitations.

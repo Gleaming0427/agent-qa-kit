@@ -42,8 +42,12 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - run: npm run build
+      - name: Critical user journey smoke test
+        run: npm run test:smoke
       - run: npm run demo:unit
       - run: npm run demo:e2e
+      - name: Final full suite on the current code
+        run: npm run verify:final
       - name: Upload demo reports (even on failure)
         if: always()
         uses: actions/upload-artifact@v4
