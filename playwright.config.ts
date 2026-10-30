@@ -2,20 +2,20 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  // Un test en échec est rejoué une fois ; s'il passe, il est classé « instable ».
+  // A failing test is retried once; if it then passes, it is reported as flaky.
   retries: 1,
-  // « dot » garde la console courte ; le JSON alimente qa/summary.mjs.
+  // "dot" keeps the console short; the JSON report feeds qa/summary.mjs.
   reporter: [['dot'], ['json', { outputFile: 'reports/playwright.json' }]],
   use: {
     baseURL: 'http://localhost:9000',
-    // La trace est enregistrée au second essai : elle sert de preuve en cas d'échec.
+    // The trace is recorded on the retry: it serves as evidence when a test fails.
     trace: 'on-first-retry',
   },
   webServer: {
-    // À remplacer : la commande qui démarre le shell avec le MFE modifié.
+    // Replace with the command that starts the shell with the modified MFE.
     command: 'yarn start:shell',
     url: 'http://localhost:9000',
-    // Toujours démarrer le code courant, jamais un serveur déjà lancé.
+    // Always start the current code, never a server that is already running.
     reuseExistingServer: false,
   },
 });

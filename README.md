@@ -1,66 +1,66 @@
-# Agent QA
+# QA agent kit
 
-Deux agents QA qui prouvent que chaque micro-frontend (MFE) modifié respecte la spec Jira, d'abord seul puis intégré dans le shell. Le premier écrit les tests, le second les exécute sans pouvoir modifier aucun fichier. Aucun des deux ne peut toucher au code, et un contrôle automatique refuse tout verdict incomplet ou contredit par les rapports de tests.
+Two QA agents that prove each modified micro-frontend (MFE) meets its Jira spec, first on its own, then integrated into the shell. The first writes the tests; the second runs them without being able to modify any file. Neither can touch application code, and an automatic check rejects any verdict that is incomplete or contradicted by the test reports.
 
-## Ce que contient le kit
+## What the kit contains
 
-| Fichier | Rôle |
+| File | Role |
 |---|---|
-| `.claude/agents/agent-qa-ecriture.md` | Passe 1 : écrit les tests (Sonnet) |
-| `.claude/agents/agent-qa-verification.md` | Passe 2 : exécute les tests, sans aucun outil d'écriture (Haiku, effort bas) |
-| `.claude/hooks/garde-fou-qa.sh` | Le garde-fou, qui contrôle chaque action avant qu'elle s'exécute |
-| `.claude/hooks/controle-verdict.mjs` | Le contrôle du verdict, qui empêche l'agent de terminer avec un verdict invalide |
-| `.claude/qa-settings.json` | Les réglages de sécurité du mode pipeline : permissions, hooks, bac à sable |
-| `qa/run-qa.sh` | Le lanceur, appelé par l'orchestrateur |
-| `qa/summary.mjs` | Le résumé condensé des résultats de tests |
-| `qa/check-scope.sh` | Le contrôle CI : chacun reste dans son couloir |
-| `qa/tester-garde-fou.sh` | La démonstration du garde-fou (36 cas) |
-| `qa/tester-controle-verdict.sh` | La démonstration du contrôle du verdict (25 cas) |
-| `playwright.config.ts` | La configuration des tests dans le shell |
-| `.github/workflows/garde-qa.yml` | Les contrôles exécutés sur chaque PR |
-| `specs/TICKET-42.md` | Une spec d'exemple |
+| `.claude/agents/qa-writer.md` | Phase 1: writes the tests (Sonnet) |
+| `.claude/agents/qa-verifier.md` | Phase 2: runs the tests, with no write tools at all (Haiku, low effort) |
+| `.claude/hooks/qa-guard.sh` | The guard, which checks every action before it runs |
+| `.claude/hooks/verdict-check.mjs` | The verdict check, which stops the agent from finishing with an invalid verdict |
+| `.claude/qa-settings.json` | Security settings for pipeline mode: permissions, hooks, sandbox |
+| `qa/run-qa.sh` | The launcher, called by the orchestrator |
+| `qa/summary.mjs` | The condensed summary of the test results |
+| `qa/check-scope.sh` | The CI check: everyone stays in their lane |
+| `qa/test-guard.sh` | Demonstration of the guard (36 cases) |
+| `qa/test-verdict-check.sh` | Demonstration of the verdict check (25 cases) |
+| `playwright.config.ts` | Configuration of the tests inside the shell |
+| `.github/workflows/qa-guard.yml` | The checks run on every PR |
+| `specs/TICKET-42.md` | An example spec |
 
-## Comment il fonctionne
+## How it works
 
-**Passe 1, dès que la spec est prête : `agent-qa-ecriture`.** Pour chaque critère d'acceptation, il écrit un test de composant (le MFE seul, avec un faux shell) et un scénario Playwright (le MFE dans le vrai shell). Il vérifie ensuite que ses tests échouent : rien n'est encore codé, donc un test qui passe déjà ne teste pas la nouveauté.
+**Phase 1, as soon as the spec is ready: `qa-writer`.** For each acceptance criterion, it writes a component test (the MFE on its own, with a fake shell) and a Playwright scenario (the MFE inside the real shell). It then checks that its tests fail: nothing is implemented yet, so a test that already passes does not test the new behavior.
 
-**Passe 2, à chaque livraison de l'agent de dev : `agent-qa-verification`.** Il lance les tests du MFE modifié puis, s'ils passent, les scénarios dans le shell. Il rend un verdict : `pass`, `fail`, ou `blocked` si la spec ne permet pas de conclure. Il n'a aucun outil d'écriture : il ne peut pas « réparer » un test, seulement rapporter l'échec.
+**Phase 2, on each delivery from the development agent: `qa-verifier`.** It runs the tests of the modified MFE and, if they pass, the scenarios inside the shell. It returns a verdict: `pass`, `fail`, or `blocked` if the spec does not allow a conclusion. It has no write tools: it cannot "fix" a test, only report the failure.
 
-**Le contrôle du verdict, avant chaque arrêt.** Quand un agent veut terminer, un hook de fin vérifie son verdict :
-- le JSON est complet, et chaque critère a ses deux tests, au niveau MFE et au niveau shell ;
-- en passe 1, les scénarios du shell existent et les nouveaux tests échouent bien ;
-- en passe 2, le verdict concorde avec les rapports de tests réels : pas de « pass » s'il reste un échec, pas de « fail » sans échec, tests instables signalés.
+**The verdict check, before every stop.** When an agent wants to finish, a stop hook checks its verdict:
+- the JSON is complete, and every criterion has both tests, at the MFE level and at the shell level;
+- in phase 1, the shell scenarios exist and the new tests do fail;
+- in phase 2, the verdict matches the actual test reports: no `pass` while a failure remains, no `fail` without a failure, flaky tests reported.
 
-Si quelque chose ne va pas, l'agent est renvoyé au travail avec la liste précise de ce qu'il doit corriger, trois fois au maximum. C'est le principe des évaluateurs séparés, mais en version déterministe : le contrôle ne coûte aucun token.
+If something is wrong, the agent is sent back to work with the exact list of what to fix, at most three times. This is the separate-evaluator principle, in a deterministic version: the check costs no tokens.
 
-## Sécurité : cinq verrous
+## Security: five locks
 
-1. **Des outils retirés.** L'agent de vérification n'a ni Write ni Edit : la règle « ne jamais modifier un test » ne dépend pas d'une consigne, elle est impossible à enfreindre.
-2. **Les permissions** (`qa-settings.json`). L'agent d'écriture ne peut écrire que des fichiers de test, et les deux agents ne lancent que des commandes de test. Ils ne lisent pas les secrets, n'accèdent pas au web et ne poussent pas sur git.
-3. **Le garde-fou** (`garde-fou-qa.sh`). Avant chaque action, il vérifie ce que l'agent s'apprête à faire et refuse ce qui sort du cadre. Il bloque aussi les tests désactivés (`.skip`, `.only`, `.fixme`) et la mise à jour des snapshots.
-4. **Le bac à sable.** Les commandes tournent isolées au niveau du système, sans réseau. Si le bac à sable n'est pas disponible, l'agent refuse de démarrer.
-5. **La CI.** Elle vérifie que la branche QA ne contient que des tests, que l'agent de dev n'a modifié aucun test, puis elle rejoue tous les tests sur le code réel, hors de l'environnement des agents.
+1. **Removed tools.** The verifier has neither Write nor Edit: the rule "never modify a test" does not depend on an instruction, it cannot be broken.
+2. **Permissions** (`qa-settings.json`). The writer can only write test files, and both agents only run test commands. They do not read secrets, do not access the web and do not push to git.
+3. **The guard** (`qa-guard.sh`). Before every action, it checks what the agent is about to do and refuses anything out of bounds. It also blocks disabled tests (`.skip`, `.only`, `.fixme`, `.todo`) and snapshot updates.
+4. **The sandbox.** Commands run isolated at the operating-system level, with no network. If the sandbox is not available, the agent refuses to start.
+5. **CI.** It checks that the QA branch contains only tests and that the development agent modified no test, then runs all the tests again on the real code, outside the agents' environment.
 
-La spec est transmise comme une donnée, jamais comme une instruction : un texte qui tenterait de donner des ordres à l'agent est ignoré et signalé dans `alertes`.
+The spec is passed as data, never as an instruction: any text that tries to give orders to the agent is ignored and reported in `alerts`.
 
-## Coût
+## Cost
 
-| Passe | Modèle | Plafond par défaut |
+| Phase | Model | Default cap |
 |---|---|---|
-| 1 : écrire les tests | Sonnet, effort moyen | 1,00 $ |
-| 2 : vérifier | Haiku 5.5, effort bas | 0,20 $ |
+| 1: write the tests | Sonnet, medium effort | $1.00 |
+| 2: verify | Haiku 5.5, low effort | $0.20 |
 
-- La passe 2 est mécanique : Haiku 5.5 suffit, et coûte environ 20 fois moins cher que Sonnet en entrée tant que chaque requête reste sous 100 000 tokens. Au-delà, toute la requête passe au tarif supérieur.
-- L'agent lit `npm run test:summary`, jamais les logs complets. Sur l'exemple testé, le rapport brut faisait environ 18 000 caractères, le résumé environ 700. C'est ce qui garde la passe 2 sous le seuil de 100 000 tokens.
-- Le niveau MFE passe avant le shell : s'il échoue, le niveau shell n'est pas lancé.
-- Chaque verdict enregistre son coût réel (`cout_usd`) dans `reports/`.
+- Phase 2 is mechanical: Haiku 5.5 is enough, and costs about 20 times less than Sonnet on input as long as each request stays under 100,000 tokens. Above that, the whole request is billed at the higher rate.
+- The agent reads `npm run test:summary`, never the full logs. In the tested example, the raw report was about 18,000 characters and the summary about 700. This is what keeps phase 2 under the 100,000-token threshold.
+- The MFE level runs before the shell: if it fails, the shell level is not run.
+- Each verdict records its actual cost (`cost_usd`) in `reports/`.
 
-Le modèle, l'effort et le nombre maximal de tours se règlent dans l'en-tête de chaque agent : le lanceur les y lit.
+The model, the effort and the maximum number of turns are set in the header of each agent: the launcher reads them from there.
 
 ## Installation
 
-1. Copiez `.claude/`, `qa/`, `playwright.config.ts` et `.github/workflows/garde-qa.yml` à la racine du dépôt.
-2. Ajoutez ces scripts au `package.json` :
+1. Copy `.claude/`, `qa/`, `playwright.config.ts` and `.github/workflows/qa-guard.yml` to the root of your repository.
+2. Add these scripts to `package.json`:
 
    ```json
    {
@@ -72,61 +72,61 @@ Le modèle, l'effort et le nombre maximal de tours se règlent dans l'en-tête d
    }
    ```
 
-   Le contrôle du verdict s'appuie sur `reports/vitest.json` et `reports/playwright.json` : gardez ces chemins.
-3. Sous Linux, installez le bac à sable : `sudo apt-get install bubblewrap socat`. Rien à installer sous macOS.
-4. Adaptez à votre dépôt :
-   - la commande de démarrage du shell dans `playwright.config.ts` ;
-   - le nom de la branche principale (`origin/master`) ;
-   - les emplacements des tests, définis à trois endroits à garder alignés : `garde-fou-qa.sh`, `qa-settings.json` et `check-scope.sh`.
+   The verdict check relies on `reports/vitest.json` and `reports/playwright.json`: keep these paths.
+3. On Linux, install the sandbox: `sudo apt-get install bubblewrap socat`. Nothing to install on macOS.
+4. Adapt to your repository:
+   - the command that starts the shell, in `playwright.config.ts`;
+   - the name of the main branch (`origin/master`);
+   - the test locations, defined in three places to keep aligned: `qa-guard.sh`, `qa-settings.json` and `check-scope.sh`.
 
-## Utilisation
+## Usage
 
-**Dans la chaîne, appelé par l'orchestrateur :**
-
-```bash
-qa/run-qa.sh TICKET-42 1 specs/TICKET-42.md services   # passe 1 : écrire les tests
-qa/run-qa.sh TICKET-42 2 specs/TICKET-42.md services   # passe 2 : vérifier une livraison
-```
-
-Le code de sortie indique la suite : `0` prêt ou validé, `1` échec (renvoyer à l'agent de dev), `2` bloqué (question à un humain), `3` erreur, budget dépassé ou verdict invalide. Le verdict est écrit dans `reports/TICKET-42-passe2.json`. Pour voir les réglages sans rien lancer : `QA_DRY_RUN=1 qa/run-qa.sh ...`.
-
-**En démonstration, dans Claude Code :**
-
-> Utilise l'agent agent-qa-verification pour le ticket TICKET-42, MFE services. La spec est dans specs/TICKET-42.md.
-
-Dans ce mode, les permissions et le bac à sable de `qa-settings.json` ne s'appliquent pas. Les hooks déclarés dans les agents (garde-fou et contrôle du verdict) ne s'exécutent que si Claude Code fait confiance au dossier, ce qu'il demande à la première ouverture. La protection complète passe par `run-qa.sh`.
-
-Pour montrer les verrous en action, sans rien dépenser :
+**In the pipeline, called by the orchestrator:**
 
 ```bash
-qa/tester-garde-fou.sh          # ce que l'agent a le droit de faire, et ce qui lui est refusé
-qa/tester-controle-verdict.sh   # les verdicts acceptés, et ceux qui renvoient l'agent au travail
+qa/run-qa.sh TICKET-42 1 specs/TICKET-42.md services   # phase 1: write the tests
+qa/run-qa.sh TICKET-42 2 specs/TICKET-42.md services   # phase 2: verify a delivery
 ```
 
-## Démarrer prudemment
+The exit code tells the orchestrator what to do next: `0` ready or passed, `1` failed (send back to the development agent), `2` blocked (question for a human), `3` error, budget exceeded or invalid verdict. The verdict is written to `reports/TICKET-42-phase2.json`. To see the settings without running anything: `QA_DRY_RUN=1 qa/run-qa.sh ...`.
 
-Pendant deux ou trois semaines, laissez les agents tourner sans bloquer : ignorez leur code de sortie et comparez leurs verdicts avec ce que constatent les humains, en vrais bugs attrapés et en fausses alertes. Donnez-leur le droit de veto une fois ces chiffres satisfaisants.
+**As a demo, inside Claude Code:**
 
-## Ce qui a été vérifié
+> Use the qa-verifier agent for ticket TICKET-42, MFE services. The spec is in specs/TICKET-42.md.
 
-Avec Claude Code 2.1.314 :
+In this mode, the permissions and the sandbox from `qa-settings.json` do not apply. The hooks declared in the agents (the guard and the verdict check) only run if Claude Code trusts the folder, which it asks the first time the folder is opened. Full protection goes through `run-qa.sh`.
 
-- **passe 2 réelle avec Haiku 5.5** sur un projet d'essai où un critère échouait au niveau MFE : verdict `fail` sur ce critère, niveau shell non lancé, environ 1 centime, code de sortie 1 ;
-- **renvoi au travail réel** : lors d'une passe 2, le contrôle a refusé un premier verdict, l'agent l'a corrigé, puis le verdict a été accepté ;
-- le hook de fin reçoit bien le dernier message de l'agent, et un refus le fait effectivement reprendre ;
-- en mode pipeline, l'écriture dans le code et l'ajout d'un `test.skip` ont été refusés, et l'écriture d'un fichier de test acceptée ;
-- sans bac à sable disponible, l'agent refuse de démarrer ;
-- le garde-fou (36 cas) et le contrôle du verdict (25 cas) se comportent comme attendu ;
-- `qa/summary.mjs` résume correctement un vrai rapport Playwright ;
-- `qa/check-scope.sh` a été validé sur sept scénarios dans un dépôt git de test.
+To show the locks in action, without spending anything:
 
-Non vérifié : en mode démo, dans un dossier qui n'était pas marqué « de confiance », les hooks du sous-agent ne se sont pas déclenchés, conformément à la règle de Claude Code. Le comportement dans un dossier de confiance n'a pas pu être testé ici.
+```bash
+qa/test-guard.sh           # what the agent is allowed to do, and what it is refused
+qa/test-verdict-check.sh   # the verdicts accepted, and those that send the agent back to work
+```
 
-## Limites connues
+## Start carefully
 
-- Sous Linux, si Chromium refuse de démarrer dans le bac à sable, lancez les tests du niveau shell dans un conteneur dédié plutôt que de désactiver le bac à sable.
-- En mode démo, les hooks des agents dépendent de la confiance accordée au dossier : la CI reste le dernier verrou.
-- Le contrôle de la passe 1 vérifie qu'il y a au moins autant de tests en échec que de critères au niveau MFE. C'est un indicateur, pas une preuve test par test.
-- Les estimations de coût sont des ordres de grandeur : mesurez.
-- Les chemins, les commandes et le faux shell sont des exemples à adapter à votre code.
-- Ce kit assemble des pratiques éprouvées (évaluateur séparé, boucles de vérification, tests ciblés), mais il n'existe pas de recette publiée clés en main pour des agents QA de micro-frontends.
+For two or three weeks, let the agents run without blocking anything: ignore their exit code and compare their verdicts with what humans find, in real bugs caught and false alarms. Give them a veto once these numbers are satisfactory.
+
+## What was verified
+
+With Claude Code 2.1.314:
+
+- **a real phase 2 with Haiku 5.5** on a test project where one criterion failed at the MFE level: `fail` verdict on that criterion, shell level not run, about 1 cent, exit code 1;
+- **a real send-back**: during a phase 2, the check rejected a first verdict, the agent corrected it, then the verdict was accepted;
+- the stop hook does receive the agent's last message, and a rejection does make the agent resume;
+- in pipeline mode, writing to application code and adding a `test.skip` were refused, and writing a test file was accepted;
+- without an available sandbox, the agent refuses to start;
+- the guard (36 cases) and the verdict check (25 cases) behave as expected;
+- `qa/summary.mjs` correctly summarizes a real Playwright report;
+- `qa/check-scope.sh` was validated on seven scenarios in a test git repository.
+
+Not verified: in demo mode, in a folder that was not marked as trusted, the subagent's hooks did not fire, in line with Claude Code's rules. The behavior in a trusted folder could not be tested here.
+
+## Known limits
+
+- On Linux, if Chromium refuses to start inside the sandbox, run the shell-level tests in a dedicated container rather than disabling the sandbox.
+- In demo mode, the agents' hooks depend on the trust granted to the folder: CI remains the last lock.
+- The phase 1 check verifies that there are at least as many failing tests as criteria at the MFE level. It is an indicator, not a test-by-test proof.
+- The cost estimates are orders of magnitude: measure.
+- The paths, the commands and the fake shell are examples to adapt to your code.
+- This kit combines proven practices (separate evaluator, verification loops, targeted tests), but there is no published turnkey recipe for micro-frontend QA agents.

@@ -1,121 +1,121 @@
 #!/usr/bin/env node
-// Résumé condensé des résultats de tests, pour l'agent QA.
+// Condensed test results, for the QA agent.
 //
-// Au lieu de lire des centaines de lignes de logs, l'agent lit ce résumé :
-// les compteurs, les tests en échec avec un message tronqué, les tests
-// instables et le chemin des traces. C'est la principale économie de tokens.
+// Instead of reading hundreds of log lines, the agent reads this summary:
+// the counts, the failing tests with a truncated message, the flaky tests
+// and the trace paths. This is the main token saving.
 //
-// Lit, s'ils existent :
-//   reports/vitest.json      rapport JSON de Vitest (niveau MFE)
-//   reports/playwright.json  rapport JSON de Playwright (niveau shell)
+// Reads, if they exist:
+//   reports/vitest.json      Vitest JSON report (MFE level)
+//   reports/playwright.json  Playwright JSON report (shell level)
 //
-// Usage : node qa/summary.mjs   (ou npm run test:summary)
+// Usage: node qa/summary.mjs   (or npm run test:summary)
 
 import { existsSync, readFileSync } from 'node:fs';
 
-const LONGUEUR_MAX = 300;
-const ECHECS_MAX = 10;
+const MAX_LENGTH = 300;
+const MAX_FAILURES = 10;
 
-const nettoyer = (texte = '') =>
-  String(texte)
-    .replace(/\u001b\[[0-9;]*m/g, '') // codes couleur
+const clean = (text = '') =>
+  String(text)
+    .replace(/\u001b\[[0-9;]*m/g, '') // color codes
     .replace(/\s+/g, ' ')
     .trim();
 
-const tronquer = (texte) => {
-  const propre = nettoyer(texte);
-  return propre.length > LONGUEUR_MAX ? `${propre.slice(0, LONGUEUR_MAX)}…` : propre;
+const truncate = (text) => {
+  const cleaned = clean(text);
+  return cleaned.length > MAX_LENGTH ? `${cleaned.slice(0, MAX_LENGTH)}…` : cleaned;
 };
 
-const lireJson = (chemin) => {
-  if (!existsSync(chemin)) return null;
+const readJson = (path) => {
+  if (!existsSync(path)) return null;
   try {
-    return JSON.parse(readFileSync(chemin, 'utf8'));
+    return JSON.parse(readFileSync(path, 'utf8'));
   } catch {
-    console.log(`${chemin} : rapport illisible.`);
+    console.log(`${path}: unreadable report.`);
     return null;
   }
 };
 
-function resumerVitest(rapport) {
-  const echecs = [];
-  for (const fichier of rapport.testResults ?? []) {
-    for (const test of fichier.assertionResults ?? []) {
+function summarizeVitest(report) {
+  const failures = [];
+  for (const file of report.testResults ?? []) {
+    for (const test of file.assertionResults ?? []) {
       if (test.status === 'failed') {
-        echecs.push({
-          titre: test.fullName ?? test.title,
-          message: tronquer((test.failureMessages ?? []).join(' ')),
+        failures.push({
+          title: test.fullName ?? test.title,
+          message: truncate((test.failureMessages ?? []).join(' ')),
         });
       }
     }
   }
-  const reussis = rapport.numPassedTests ?? 0;
-  const echoues = rapport.numFailedTests ?? echecs.length;
-  console.log(`Niveau MFE (Vitest) : ${reussis} réussis, ${echoues} en échec`);
-  afficherEchecs(echecs);
+  const passed = report.numPassedTests ?? 0;
+  const failed = report.numFailedTests ?? failures.length;
+  console.log(`MFE level (Vitest): ${passed} passed, ${failed} failed`);
+  printFailures(failures);
 }
 
-function parcourirSuites(suites, chemin, tests) {
+function walkSuites(suites, path, tests) {
   for (const suite of suites ?? []) {
-    const titres = suite.title ? [...chemin, suite.title] : chemin;
+    const titles = suite.title ? [...path, suite.title] : path;
     for (const spec of suite.specs ?? []) {
       for (const test of spec.tests ?? []) {
-        tests.push({ titre: [...titres, spec.title].join(' › '), test });
+        tests.push({ title: [...titles, spec.title].join(' › '), test });
       }
     }
-    parcourirSuites(suite.suites, titres, tests);
+    walkSuites(suite.suites, titles, tests);
   }
 }
 
-function resumerPlaywright(rapport) {
+function summarizePlaywright(report) {
   const tests = [];
-  parcourirSuites(rapport.suites, [], tests);
+  walkSuites(report.suites, [], tests);
 
-  const echecs = [];
-  const instables = [];
-  for (const { titre, test } of tests) {
-    const resultats = test.results ?? [];
-    const dernier = resultats.at(-1) ?? {};
-    const trace = resultats
+  const failures = [];
+  const flaky = [];
+  for (const { title, test } of tests) {
+    const results = test.results ?? [];
+    const last = results.at(-1) ?? {};
+    const trace = results
       .flatMap((r) => r.attachments ?? [])
       .find((a) => a.name === 'trace' && a.path)?.path;
 
     if (test.status === 'unexpected') {
-      const erreur = dernier.error?.message ?? dernier.errors?.[0]?.message ?? 'échec sans message';
-      echecs.push({ titre, message: tronquer(erreur), trace });
+      const error = last.error?.message ?? last.errors?.[0]?.message ?? 'failed without a message';
+      failures.push({ title, message: truncate(error), trace });
     } else if (test.status === 'flaky') {
-      instables.push({ titre, trace });
+      flaky.push({ title, trace });
     }
   }
 
-  const stats = rapport.stats ?? {};
+  const stats = report.stats ?? {};
   console.log(
-    `Niveau shell (Playwright) : ${stats.expected ?? 0} réussis, ` +
-      `${stats.unexpected ?? echecs.length} en échec, ${stats.flaky ?? instables.length} instables`,
+    `Shell level (Playwright): ${stats.expected ?? 0} passed, ` +
+      `${stats.unexpected ?? failures.length} failed, ${stats.flaky ?? flaky.length} flaky`,
   );
-  afficherEchecs(echecs);
-  for (const { titre, trace } of instables) {
-    console.log(`  ~ instable : ${titre}${trace ? ` (trace : ${trace})` : ''}`);
+  printFailures(failures);
+  for (const { title, trace } of flaky) {
+    console.log(`  ~ flaky: ${title}${trace ? ` (trace: ${trace})` : ''}`);
   }
 }
 
-function afficherEchecs(echecs) {
-  for (const { titre, message, trace } of echecs.slice(0, ECHECS_MAX)) {
-    console.log(`  ✗ ${titre}`);
+function printFailures(failures) {
+  for (const { title, message, trace } of failures.slice(0, MAX_FAILURES)) {
+    console.log(`  ✗ ${title}`);
     if (message) console.log(`    ${message}`);
-    if (trace) console.log(`    trace : ${trace}`);
+    if (trace) console.log(`    trace: ${trace}`);
   }
-  if (echecs.length > ECHECS_MAX) {
-    console.log(`  … et ${echecs.length - ECHECS_MAX} autres échecs`);
+  if (failures.length > MAX_FAILURES) {
+    console.log(`  … and ${failures.length - MAX_FAILURES} more failures`);
   }
 }
 
-const vitest = lireJson('reports/vitest.json');
-const playwright = lireJson('reports/playwright.json');
+const vitest = readJson('reports/vitest.json');
+const playwright = readJson('reports/playwright.json');
 
 if (!vitest && !playwright) {
-  console.log('Aucun rapport trouvé : lancez d’abord les tests.');
+  console.log('No report found: run the tests first.');
   process.exit(1);
 }
-if (vitest) resumerVitest(vitest);
-if (playwright) resumerPlaywright(playwright);
+if (vitest) summarizeVitest(vitest);
+if (playwright) summarizePlaywright(playwright);

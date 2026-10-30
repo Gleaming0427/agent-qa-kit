@@ -1,5 +1,5 @@
-# TICKET-42 — Filtrer les services par nom
+# TICKET-42 — Filter services by name
 
-- AC-1 : la page « Services » affiche la liste des services de l'utilisateur.
-- AC-2 : un champ de recherche filtre la liste par nom, sans tenir compte de la casse.
-- AC-3 : si aucun service ne correspond, le message « Aucun service trouvé » s'affiche.
+- AC-1: the "Services" page lists the user's services.
+- AC-2: a search field filters the list by name, case-insensitively.
+- AC-3: when no service matches, the message "No service found" is displayed.
