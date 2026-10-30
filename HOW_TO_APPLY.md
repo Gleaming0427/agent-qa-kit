@@ -18,6 +18,8 @@ creates one and publishes it as the `screenshot-baselines` artifact: commit its
 files to `e2e/smoke.spec.ts-snapshots/`. To accept an intended visual change,
 delete the old images, push, and commit the new artifact. When a comparison
 fails, the `qa-demo-reports` artifact holds the expected, actual and diff images.
+The CI runner is pinned to `ubuntu-24.04` for this reason: regenerate the
+baselines when you move it to a newer image.
 
 Keep these tests small, isolated, and stable. Add a new journey only when it
 protects a distinct user outcome.

@@ -8,13 +8,15 @@ on:
 permissions:
   contents: read
 
+# Pinned, not ubuntu-latest: the screenshot baselines depend on the runner's fonts.
+
 jobs:
   deterministic-controls:
     name: Guards + verdict evidence (no AI / no tokens)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - run: npm ci --no-audit --no-fund
@@ -33,13 +35,13 @@ jobs:
 
   react-demo:
     name: React MFE + Playwright red/green/regression
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: examples/server-console
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - run: npm ci --no-audit --no-fund
@@ -58,7 +60,7 @@ jobs:
           fi
       - name: Upload new screenshot baselines
         if: steps.smoke.outputs.created == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: screenshot-baselines
           path: examples/server-console/e2e/smoke.spec.ts-snapshots/
@@ -68,7 +70,7 @@ jobs:
         run: npm run verify:final
       - name: Upload demo reports (even on failure)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: qa-demo-reports
           path: |
@@ -77,10 +79,11 @@ jobs:
           if-no-files-found: ignore
 
   qa-scope:
+    name: QA branch changes only tests (qa/* pull requests)
     if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'qa/')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
       - name: QA branch may only change tests
         env:
@@ -88,10 +91,11 @@ jobs:
         run: qa/check-scope.sh scope "origin/$BASE"
 
   frozen-tests:
+    name: QA tests stay frozen (feat/* pull requests)
     if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'feat/')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
       - name: Development agent cannot alter QA tests
         env:
