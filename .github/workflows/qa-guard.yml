@@ -1,49 +1,81 @@
-name: QA guard
-
+name: QA agent kit - security, evidence and demo
 on:
   pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  qa-scope:
-    # QA agent branch: it must contain tests only.
-    if: startsWith(github.head_ref, 'qa/')
+  deterministic-controls:
+    name: Guards + verdict evidence (no AI / no tokens)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-      - name: Check that only tests are modified
+          node-version: 22
+      - name: Check existing hook guards
+        run: bash qa/test-guard.sh
+      - name: Check existing verdict tests
+        run: bash qa/test-verdict-check.sh
+      - name: Strict evidence regression suite
+        run: node --test qa/tests/*.test.mjs
+      - name: Check for skipped / focused tests
+        run: node qa/check-tests.mjs
+      - name: Validate authoritative ticket manifest
+        run: node qa/criteria-manifest.mjs TICKET-42 specs/TICKET-42.md /tmp/TICKET-42-criteria.json
+
+  react-demo:
+    name: React MFE + Playwright red/green/regression
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/server-console
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Until a lockfile is committed, npm install is used. Generate and commit
+      # package-lock.json to switch this to npm ci (recommended before release).
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run demo:unit
+      - run: npm run demo:e2e
+      - name: Upload demo reports (even on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-demo-reports
+          path: examples/server-console/reports/
+          if-no-files-found: ignore
+
+  qa-scope:
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'qa/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: QA branch may only change tests
         env:
           BASE: ${{ github.base_ref }}
         run: qa/check-scope.sh scope "origin/$BASE"
 
   frozen-tests:
-    # Development branch: the tests written by the QA agent have not changed.
-    if: startsWith(github.head_ref, 'feat/')
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'feat/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Check that the QA agent's tests are intact
+        with: { fetch-depth: 0 }
+      - name: Development agent cannot alter QA tests
         env:
           BASE: ${{ github.base_ref }}
         run: |
           TICKET="${GITHUB_HEAD_REF#feat/}"
           [[ "$TICKET" =~ ^[A-Z][A-Z0-9]*-[0-9]+$ ]] || { echo "Unexpected branch name: $GITHUB_HEAD_REF"; exit 1; }
+          git fetch --no-tags origin "qa/$TICKET:refs/remotes/origin/qa/$TICKET"
           qa/check-scope.sh frozen "origin/$BASE" "origin/qa/$TICKET"
-
-  tests-on-clean-code:
-    # The tests are run again here, on the real code, outside the agents' environment.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: yarn install --frozen-lockfile # adapt to your Yarn version
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:affected
-      - run: npm run test:e2e

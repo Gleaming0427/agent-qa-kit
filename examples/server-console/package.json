@@ -1,0 +1,30 @@
+{
+  "name": "agent-qa-kit-react-demo",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 4173 --strictPort",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "demo:unit": "node qa/demo-cycle.mjs",
+    "demo:e2e": "node qa/demo-cycle.mjs --e2e",
+    "build": "tsc --noEmit && vite build"
+  },
+  "dependencies": {
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.1",
+    "@testing-library/jest-dom": "6.8.0",
+    "@testing-library/react": "16.3.0",
+    "@types/react": "19.1.13",
+    "@types/react-dom": "19.1.9",
+    "@vitejs/plugin-react": "5.0.2",
+    "jsdom": "26.1.0",
+    "typescript": "5.9.2",
+    "vite": "7.1.6",
+    "vitest": "3.2.4"
+  }
+}

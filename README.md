@@ -1,132 +1,192 @@
-# QA agent kit
+# Agent QA Kit
 
-Two QA agents that prove each modified micro-frontend (MFE) meets its Jira spec, first on its own, then integrated into the shell. The first writes the tests; the second runs them without being able to modify any file. Neither can touch application code, and an automatic check rejects any verdict that is incomplete or contradicted by the test reports.
+**Two-stage QA for React micro-frontends, with independently checked acceptance criteria.**
 
-## What the kit contains
+`qa-writer` creates component tests and integrated-shell Playwright scenarios
+from a ticket. `qa-verifier` runs those tests **without Write/Edit tools**.
+A deterministic validator rejects a success verdict if an expected criterion
+is missing, an assertion was not executed, a test was skipped, or actual test
+results contradict the verdict.
 
-| File | Role |
+> **Status: experimental.** Includes a working-source React example and an
+> executable Red → Green → Regression test workflow. It is not production-ready
+> security isolation, nor proof that every generated assertion is meaningful.
+
+## What makes this different?
+
+```text
+                 Jira / specification
+                         │
+             Extract immutable AC manifest
+                         │
+             ┌───────────▼───────────┐
+             │  QA writer (Sonnet)   │
+             │  MFE + shell tests    │
+             └───────────┬───────────┘
+                         │
+                 RED tests expected
+                         │
+                Development agent
+                         │
+             ┌───────────▼───────────┐
+             │ QA verifier (Haiku)   │
+             │ No direct write tools │
+             └───────────┬───────────┘
+                         │
+                 Vitest + Playwright
+                         │
+             ┌───────────▼───────────┐
+             │ Deterministic check   │
+             │ AC IDs ↔ test results │
+             └───────────┬───────────┘
+                         │
+                  CI + human PR review
+```
+
+The *acceptance criteria manifest* is generated from the spec **before** an
+agent starts, not from the agent's own answer. The verdict checker requires
+actual named assertions for each criterion and for both test levels.
+
+### Files
+
+| File | Purpose |
 |---|---|
-| `.claude/agents/qa-writer.md` | Phase 1: writes the tests (Sonnet) |
-| `.claude/agents/qa-verifier.md` | Phase 2: runs the tests, with no write tools at all (Haiku, low effort) |
-| `.claude/hooks/qa-guard.sh` | The guard, which checks every action before it runs |
-| `.claude/hooks/verdict-check.mjs` | The verdict check, which stops the agent from finishing with an invalid verdict |
-| `.claude/qa-settings.json` | Security settings for pipeline mode: permissions, hooks, sandbox |
-| `qa/run-qa.sh` | The launcher, called by the orchestrator |
-| `qa/summary.mjs` | The condensed summary of the test results |
-| `qa/check-scope.sh` | The CI check: everyone stays in their lane |
-| `qa/test-guard.sh` | Demonstration of the guard (36 cases) |
-| `qa/test-verdict-check.sh` | Demonstration of the verdict check (25 cases) |
-| `playwright.config.ts` | Configuration of the tests inside the shell |
-| `.github/workflows/qa-guard.yml` | The checks run on every PR |
-| `specs/TICKET-42.md` | An example spec |
+| `.claude/agents/qa-writer.md` | Phase 1: author tests, establish failing baseline |
+| `.claude/agents/qa-verifier.md` | Phase 2: run tests and report findings |
+| `.claude/hooks/qa-guard.sh` | Block out-of-scope tool uses and commands |
+| `.claude/hooks/verdict-check.mjs` | Claude Code stop-hook + final launcher check |
+| `.claude/hooks/strict-evidence.mjs` | Independent per-criterion report comparison |
+| `qa/criteria-manifest.mjs` | Generate authoritative criterion IDs + spec hash |
+| `qa/coverage-report.mjs` | Report execution evidence by criterion |
+| `qa/check-tests.mjs` | Scan edited test files for disabled/focused cases |
+| `qa/run-qa.sh` | Orchestrate CLI agent phases and deterministic validation |
+| `qa/test-guard.sh`, `qa/test-verdict-check.sh` | Existing guard/validator regression matrices |
+| `qa/tests/` | Node's built-in strict-evidence and hook-integration tests |
+| `examples/server-console/` | Small React + TypeScript + Vitest + Playwright demonstration |
+| `.github/workflows/qa-guard.yml` | Deterministic checks and React demonstration in CI |
 
-## How it works
+## Quick start: validators without Claude or API costs
 
-**Phase 1, as soon as the spec is ready: `qa-writer`.** For each acceptance criterion, it writes a component test (the MFE on its own, with a fake shell) and a Playwright scenario (the MFE inside the real shell). It then checks that its tests fail: nothing is implemented yet, so a test that already passes does not test the new behavior.
+Requirements: Node.js 22+, bash, `jq`.
 
-**Phase 2, on each delivery from the development agent: `qa-verifier`.** It runs the tests of the modified MFE and, if they pass, the scenarios inside the shell. It returns a verdict: `pass`, `fail`, or `blocked` if the spec does not allow a conclusion. It has no write tools: it cannot "fix" a test, only report the failure.
+```bash
+bash qa/test-guard.sh
+bash qa/test-verdict-check.sh
+node --test qa/tests/*.test.mjs
+node qa/criteria-manifest.mjs TICKET-42 specs/TICKET-42.md reports/TICKET-42-criteria.json
+```
 
-**The verdict check, before every stop.** When an agent wants to finish, a stop hook checks its verdict:
-- the JSON is complete, and every criterion has both tests, at the MFE level and at the shell level;
-- in phase 1, the shell scenarios exist and the new tests do fail;
-- in phase 2, the verdict matches the actual test reports: no `pass` while a failure remains, no `fail` without a failure, flaky tests reported.
+This checks tool restrictions, verdict rejection behavior, missing criteria,
+empty test reports, skipped tests and mismatched evidence — without a model.
 
-If something is wrong, the agent is sent back to work with the exact list of what to fix, at most three times. This is the separate-evaluator principle, in a deterministic version: the check costs no tokens.
+## Live React demonstration
 
-## Security: five locks
+The example contains a simple list of services with case-insensitive search
+and an empty-state message. Its acceptance criteria are the existing
+`TICKET-42` example:
 
-1. **Removed tools.** The verifier has neither Write nor Edit: the rule "never modify a test" does not depend on an instruction, it cannot be broken.
-2. **Permissions** (`qa-settings.json`). The writer can only write test files, and both agents only run test commands. They do not read secrets, do not access the web and do not push to git.
-3. **The guard** (`qa-guard.sh`). Before every action, it checks what the agent is about to do and refuses anything out of bounds. It also blocks disabled tests (`.skip`, `.only`, `.fixme`, `.todo`) and snapshot updates.
-4. **The sandbox.** Commands run isolated at the operating-system level, with no network. If the sandbox is not available, the agent refuses to start.
-5. **CI.** It checks that the QA branch contains only tests and that the development agent modified no test, then runs all the tests again on the real code, outside the agents' environment.
+- `AC-1`: services are listed.
+- `AC-2`: search is case insensitive.
+- `AC-3`: empty search results display "No service found".
 
-The spec is passed as data, never as an instruction: any text that tries to give orders to the agent is ignored and reported in `alerts`.
+```bash
+cd examples/server-console
+npm install
+npx playwright install chromium
+npm run build
+npm run demo:unit
+npm run demo:e2e
+```
 
-## Cost
+Both `demo:*` commands run the same assertions through three stages:
 
-| Phase | Model | Default cap |
+| Stage | Code variant | Expected |
 |---|---|---|
-| 1: write the tests | Sonnet, medium effort | $1.00 |
-| 2: verify | Haiku 5.5, low effort | $0.20 |
+| Red | Deliberate case-sensitive bug | AC-2 fails |
+| Green | Correct implementation | All three pass |
+| Regression | Reintroduce the bug | AC-2 fails again |
 
-- Phase 2 is mechanical: Haiku 5.5 is enough, and costs about 20 times less than Sonnet on input as long as each request stays under 100,000 tokens. Above that, the whole request is billed at the higher rate.
-- The agent reads `npm run test:summary`, never the full logs. In the tested example, the raw report was about 18,000 characters and the summary about 700. This is what keeps phase 2 under the 100,000-token threshold.
-- The MFE level runs before the shell: if it fails, the shell level is not run.
-- Each verdict records its actual cost (`cost_usd`) in `reports/`.
+The code variant is selected using `VITE_DEMO_BUG`; assertions are **not
+edited** between stages. JSON reports are saved to the example's `reports/`
+directory. This tests the same UI at the component level (Vitest / Testing
+Library) and browser level (Playwright). **It is an isolated fake shell, not a real application or a multi-repo MFE integration.**
 
-The model, the effort and the maximum number of turns are set in the header of each agent: the launcher reads them from there.
+The current ZIP doesn't include an npm lockfile: generate and commit
+`examples/server-console/package-lock.json` on your development machine,
+then switch the CI install to `npm ci` to ensure dependency reproducibility.
 
-## Installation
+## Integrate into a real MFE project
 
-1. Copy `.claude/`, `qa/`, `playwright.config.ts` and `.github/workflows/qa-guard.yml` to the root of your repository.
-2. Add these scripts to `package.json`:
+Adapt the existing client's test scripts and Playwright configuration:
 
-   ```json
-   {
-     "scripts": {
-       "test:affected": "vitest run --changed origin/master --reporter=dot --reporter=json --outputFile.json=reports/vitest.json",
-       "test:e2e": "playwright test",
-       "test:summary": "node qa/summary.mjs"
-     }
-   }
-   ```
-
-   The verdict check relies on `reports/vitest.json` and `reports/playwright.json`: keep these paths.
-3. On Linux, install the sandbox: `sudo apt-get install bubblewrap socat`. Nothing to install on macOS.
-4. Adapt to your repository:
-   - the command that starts the shell, in `playwright.config.ts`;
-   - the name of the main branch (`origin/master`);
-   - the test locations, defined in three places to keep aligned: `qa-guard.sh`, `qa-settings.json` and `check-scope.sh`.
-
-## Usage
-
-**In the pipeline, called by the orchestrator:**
-
-```bash
-qa/run-qa.sh TICKET-42 1 specs/TICKET-42.md services   # phase 1: write the tests
-qa/run-qa.sh TICKET-42 2 specs/TICKET-42.md services   # phase 2: verify a delivery
+```json
+{
+  "scripts": {
+    "test:affected": "vitest run --reporter=dot --reporter=json --outputFile.json=reports/vitest.json",
+    "test:e2e": "playwright test",
+    "test:summary": "node qa/summary.mjs"
+  }
+}
 ```
 
-The exit code tells the orchestrator what to do next: `0` ready or passed, `1` failed (send back to the development agent), `2` blocked (question for a human), `3` error, budget exceeded or invalid verdict. The verdict is written to `reports/TICKET-42-phase2.json`. To see the settings without running anything: `QA_DRY_RUN=1 qa/run-qa.sh ...`.
+The validator expects JSON at `reports/vitest.json` and
+`reports/playwright.json`, with individual test cases in each report.
+Every test name must include `[TICKET-42][AC-1]` (adapt ticket and ID).
+The Playwright scenarios for the ticket belong in `e2e/TICKET-42.spec.ts`.
 
-**As a demo, inside Claude Code:**
-
-> Use the qa-verifier agent for ticket TICKET-42, MFE services. The spec is in specs/TICKET-42.md.
-
-In this mode, the permissions and the sandbox from `qa-settings.json` do not apply. The hooks declared in the agents (the guard and the verdict check) only run if Claude Code trusts the folder, which it asks the first time the folder is opened. Full protection goes through `run-qa.sh`.
-
-To show the locks in action, without spending anything:
+Then run:
 
 ```bash
-qa/test-guard.sh           # what the agent is allowed to do, and what it is refused
-qa/test-verdict-check.sh   # the verdicts accepted, and those that send the agent back to work
+QA_DRY_RUN=1 qa/run-qa.sh TICKET-42 1 specs/TICKET-42.md services
+qa/run-qa.sh TICKET-42 1 specs/TICKET-42.md services
+# Once implementation is delivered:
+qa/run-qa.sh TICKET-42 2 specs/TICKET-42.md services
 ```
 
-## Start carefully
+Exit codes: `0` = ready/passed; `1` = failed; `2` = blocked;
+`3` = technical failure or invalid verdict. Costs reported by Claude are
+recorded per run in `reports/TICKET-42-phase2.json`.
+`reports/TICKET-42-evidence-phase2.json` contains evidence for each criterion.
 
-For two or three weeks, let the agents run without blocking anything: ignore their exit code and compare their verdicts with what humans find, in real bugs caught and false alarms. Give them a veto once these numbers are satisfactory.
+## Safety design and its limits
 
-## What was verified
+- **Tools:** verifier receives no direct file-writing tools. The guard rejects
+  unknown tools, out-of-scope paths, snapshot updates and unsupported shell commands.
+- **Isolation:** the CLI settings request an OS sandbox and no network, but
+  availability and enforcement depend on Claude Code and the machine.
+- **Independent criteria:** the manifest is derived from the spec before agent
+  work. Every expected AC requires matching test results; stale summary-only
+  reports are insufficient to claim `pass`.
+- **Testing discipline:** the post-edit scan and CI catch disabled/focused tests;
+  they do **not** semantically prove tests are good. A developer reviews assertions.
+- **Untrusted tests:** running agent-generated tests executes code. A malicious
+  test can make changes through its runner. Use a disposable isolated test
+  environment with no credentials; do not run generated tests in production.
+- **Permissions:** hooks are defense in depth, not a substitute for strong OS
+  isolation, branch protection and a human review of the PR.
 
-With Claude Code 2.1.314:
+## Costs and quality evaluation
 
-- **a real phase 2 with Haiku 5.5** on a test project where one criterion failed at the MFE level: `fail` verdict on that criterion, shell level not run, about 1 cent, exit code 1;
-- **a real send-back**: during a phase 2, the check rejected a first verdict, the agent corrected it, then the verdict was accepted;
-- the stop hook does receive the agent's last message, and a rejection does make the agent resume;
-- in pipeline mode, writing to application code and adding a `test.skip` were refused, and writing a test file was accepted;
-- without an available sandbox, the agent refuses to start;
-- the guard (36 cases) and the verdict check (25 cases) behave as expected;
-- `qa/summary.mjs` correctly summarizes a real Playwright report;
-- `qa/check-scope.sh` was validated on seven scenarios in a test git repository.
+The example agent defaults are Sonnet (writer, $1 cap) and Haiku (verifier,
+$0.20 cap). These are **spending limits**, not predicted costs or savings.
+Collect cost, duration, defect detection, false positives and flaky-test rate
+on representative tickets before claiming improvements.
 
-Not verified: in demo mode, in a folder that was not marked as trusted, the subagent's hooks did not fire, in line with Claude Code's rules. The behavior in a trusted folder could not be tested here.
+For initial adoption, compare the automated agent verdict with independent
+human findings before making QA a mandatory merge gate. Start with a limited
+set of well-specified, low-risk features.
 
-## Known limits
+## What has and hasn't been verified
 
-- On Linux, if Chromium refuses to start inside the sandbox, run the shell-level tests in a dedicated container rather than disabling the sandbox.
-- In demo mode, the agents' hooks depend on the trust granted to the folder: CI remains the last lock.
-- The phase 1 check verifies that there are at least as many failing tests as criteria at the MFE level. It is an indicator, not a test-by-test proof.
-- The cost estimates are orders of magnitude: measure.
-- The paths, the commands and the fake shell are examples to adapt to your code.
-- This kit combines proven practices (separate evaluator, verification loops, targeted tests), but there is no published turnkey recipe for micro-frontend QA agents.
+- **Verified locally for this upgrade:** JavaScript syntax; Bash syntax;
+  built-in Node strict-evidence/hook tests; legacy guard and verdict tests;
+  basic demonstration search behavior with Node TypeScript stripping.
+- **Not run in the upgrade creation environment:** npm dependency install,
+  actual React rendering, Playwright Chromium tests, or an end-to-end Claude
+  Code run (network and Claude CLI unavailable in that environment).
+- **Pending before claiming production readiness:** lockfile, GitHub Actions
+  green on the target commit, a true real-MFE shell integration, adversarial
+  tests and security review.
+
+See [HOW_TO_APPLY.md](HOW_TO_APPLY.md) for installation instructions and
+integration limitations.

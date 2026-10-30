@@ -1,11 +1,17 @@
 {
   "permissions": {
     "allow": [
+      "Read(**)",
+      "Grep(**)",
+      "Glob(**)",
+      "Write(**/*.test.ts)",
+      "Write(**/*.test.tsx)",
+      "Write(e2e/*.spec.ts)",
       "Edit(**/*.test.ts)",
       "Edit(**/*.test.tsx)",
-      "Edit(e2e/**)",
+      "Edit(e2e/*.spec.ts)",
       "Bash(npm run test:affected)",
-      "Bash(npm run test:e2e *)",
+      "Bash(npm run test:e2e -- --grep *)",
       "Bash(npm run test:summary)",
       "Bash(npx vitest run *)",
       "Bash(git diff *)",
