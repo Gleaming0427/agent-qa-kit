@@ -7,7 +7,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "node --test qa/tests/*.test.ts",
-    "check": "npm run typecheck && npm test && bash qa/test-guard.sh && bash qa/test-verdict-check.sh && node qa/check-tests.ts"
+    "check": "npm run typecheck && npm test && bash qa/test-guard.sh && bash qa/test-verdict-check.sh && bash qa/test-check-scope.sh && node qa/check-tests.ts"
   },
   "devDependencies": {
     "@types/node": "22.18.6",

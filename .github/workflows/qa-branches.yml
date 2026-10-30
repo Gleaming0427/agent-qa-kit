@@ -1,0 +1,28 @@
+name: QA branch rules
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  qa-branch-rules:
+    name: QA branch rules (scope + frozen tests)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
+      - name: Fetch the base branch and every qa/ branch
+        env:
+          BASE: ${{ github.base_ref }}
+        run: git fetch --no-tags origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" '+refs/heads/qa/*:refs/remotes/origin/qa/*'
+      - name: A QA branch may only change tests
+        if: startsWith(github.head_ref, 'qa/')
+        env:
+          BASE: ${{ github.base_ref }}
+        run: bash qa/check-scope.sh scope "origin/$BASE"
+      - name: Tests of a ticket with a qa/ branch stay frozen
+        env:
+          BASE: ${{ github.base_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: bash qa/check-scope.sh pr "origin/$BASE" "$GITHUB_HEAD_REF" "$PR_TITLE"

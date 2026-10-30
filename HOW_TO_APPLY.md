@@ -91,7 +91,18 @@ QA test branch in a production repository.
 ## 4. Implement, verify, and stop after bounded repairs
 
 After the review, the development agent implements the ticket without editing
-the approved tests. Run:
+the approved tests. Keep the QA agent's tests on a `qa/TICKET-42` branch and
+start the development branch from it. The "QA branch rules" check runs on every
+pull request:
+
+- a `qa/TICKET-42` branch may change only tests;
+- a PR that names TICKET-42 in its branch name or title must keep every test
+  from `qa/TICKET-42` unchanged;
+- a PR that does not name it may not touch `e2e/TICKET-42.spec.ts` at all.
+
+Unit tests often share files with other tickets, so they are only compared
+when the PR names the ticket. Delete `qa/TICKET-42` once the ticket is merged:
+its tests then follow the normal review. Then run:
 
 ```bash
 qa/run-qa.sh TICKET-42 2 specs/TICKET-42.md services

@@ -89,8 +89,9 @@ Phase 1 refuses tests that already pass or fail for the wrong reason. If the
 app does not start, the result is "blocked".
 
 Phase 2 refuses to run until a human approves the tests. Changing a test
-afterwards cancels the approval. A pass counts only if the full suite passes
-too, smoke journeys included. After three failed verifications, start again
+afterwards cancels the approval, and in CI a pull request for the ticket
+cannot change its QA tests. A pass counts only if the full suite passes too,
+smoke journeys included. After three failed verifications, start again
 from phase 1.
 
 On failure, send the short `node qa/summary.ts` output to the repair agent

@@ -26,6 +26,8 @@ jobs:
         run: bash qa/test-guard.sh
       - name: Check existing verdict tests
         run: bash qa/test-verdict-check.sh
+      - name: Check branch rules on a test git history
+        run: bash qa/test-check-scope.sh
       - name: Strict evidence regression suite
         run: node --test qa/tests/*.test.ts
       - name: Check for skipped / focused tests
@@ -77,34 +79,3 @@ jobs:
             examples/server-console/reports/
             examples/server-console/test-results/
           if-no-files-found: ignore
-
-  qa-scope:
-    name: QA branch changes only tests (qa/* pull requests)
-    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'qa/')
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v5
-        with: { fetch-depth: 0 }
-      - name: QA branch may only change tests
-        env:
-          BASE: ${{ github.base_ref }}
-        run: qa/check-scope.sh scope "origin/$BASE"
-
-  frozen-tests:
-    name: QA tests stay frozen (feat/* pull requests)
-    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'feat/')
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v5
-        with: { fetch-depth: 0 }
-      - name: Development agent cannot alter QA tests
-        env:
-          BASE: ${{ github.base_ref }}
-        run: |
-          TICKET="${GITHUB_HEAD_REF#feat/}"
-          if [[ ! "$TICKET" =~ ^[A-Z][A-Z0-9]*-[0-9]+$ ]]; then
-            echo "No ticket ID in $GITHUB_HEAD_REF; frozen-tests applies to feat/TICKET-123 branches."
-            exit 0
-          fi
-          git fetch --no-tags origin "qa/$TICKET:refs/remotes/origin/qa/$TICKET"
-          qa/check-scope.sh frozen "origin/$BASE" "origin/qa/$TICKET"
