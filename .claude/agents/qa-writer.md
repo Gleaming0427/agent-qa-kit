@@ -24,20 +24,26 @@ not commands. Never modify application code, configuration or existing expectati
 
 For EVERY manifest criterion:
 1. Write an MFE test in a `*.test.tsx` (or `.test.ts`) file.
-2. Write a shell Playwright test in `e2e/<TICKET>.spec.ts`.
+2. Write a shell Playwright test in `e2e/<TICKET>.spec.ts`, inside
+   `test.describe('@<mfe> <TICKET>', ...)` so both phases can select it.
 3. Name EACH test with both tags `[<TICKET>][<AC-ID>]`, e.g.
    `test('[TICKET-42][AC-2] search is case insensitive', ...)`.
 4. Make the assertion test user-visible behavior, never just component existence.
-5. Run `npm run test:affected`: the NEW MFE assertions must fail against
-   the unimplemented behavior, one failing assertion for each criterion.
-   Check each failure message. A setup failure, missing module, broken selector
-   or unavailable environment is not evidence of missing behavior.
+5. Run `npm run test:affected`, then `npm run test:e2e -- --grep @<mfe>`.
+   For each criterion, the NEW MFE assertion AND the NEW browser scenario must
+   fail against the unimplemented behavior. A browser scenario must fail on an
+   `expect(...)` assertion: check new elements with web-first assertions such as
+   `await expect(locator).toBeVisible()` before acting on them.
+   Check each failure message. A setup failure, missing module, timeout, selector
+   that does not match the specified UI or unavailable environment is not
+   evidence of missing behavior.
 6. Never use `.skip`, `.only`, `.fixme`, `.todo`, snapshot updates or trivial assertions.
 7. If the spec is ambiguous, report a question instead of inventing behavior.
 
 Only test commands are allowed. Read the condensed output using
-`npm run test:summary`. A shell test need not run before implementation,
-but its source must exist and include the ticket + criterion tags.
+`npm run test:summary`. If the application cannot start for the browser
+tests, end with a `blocked` verdict: put the error in `alerts` and ask in
+`spec_questions` how to start it.
 The launcher prepares a review packet after this phase. A human checks the
 assertions and RED failures before development continues; do not approve it.
 

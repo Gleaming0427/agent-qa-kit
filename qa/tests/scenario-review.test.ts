@@ -30,7 +30,17 @@ function fixture() {
     }] }],
   };
   writeFileSync(join(root, 'reports/vitest.json'), JSON.stringify(report));
-  return { root, specPath, testFile, report };
+  const e2eReport = {
+    stats: { expected: 0, unexpected: 1, flaky: 0 },
+    suites: [{ title: 'TICKET-42.spec.ts', file: 'TICKET-42.spec.ts', specs: [{
+      title: '[TICKET-42][AC-1] shell search', file: 'TICKET-42.spec.ts',
+      tests: [{ status: 'unexpected', results: [{ status: 'failed', error: {
+        message: 'Error: \u001b[2mexpect(\u001b[22mlocator).toHaveCount(expected) failed\nExpected: 1\nReceived: 0',
+      } }] }],
+    }] }],
+  };
+  writeFileSync(join(root, 'reports/playwright.json'), JSON.stringify(e2eReport));
+  return { root, specPath, testFile, report, e2eReport };
 }
 
 test('review requires a reason and rejects changed tests', () => {
@@ -39,7 +49,10 @@ test('review requires a reason and rejects changed tests', () => {
     const args = { root: f.root, ticket: 'TICKET-42', specPath: f.specPath };
     const request = prepareReview(args);
     assert.equal(request.tests.length, 2);
-    assert.equal(request.criteria[0].failures[0].message, 'Unable to find Alpha after typing ALPHA');
+    assert.deepEqual(request.criteria[0].failures, [
+      { level: 'mfe', title: '[TICKET-42][AC-1] MFE search', message: 'Unable to find Alpha after typing ALPHA' },
+      { level: 'shell', title: 'TICKET-42.spec.ts [TICKET-42][AC-1] shell search', message: 'Error: expect(locator).toHaveCount(expected) failed Expected: 1 Received: 0' },
+    ]);
     const decisionFile = join(f.root, 'reports/TICKET-42-review-decision.json');
     writeFileSync(decisionFile, JSON.stringify({ reviewer: 'Reviewer', red_reasons: { 'AC-1': '' } }));
     assert.throws(() => approveReview(args), /explain why this RED failure/);
@@ -62,6 +75,23 @@ test('review refuses an unexplained RED test failure', () => {
     f.report.testResults[0].assertionResults[0].failureMessages = [];
     writeFileSync(join(f.root, 'reports/vitest.json'), JSON.stringify(f.report));
     assert.throws(() => prepareReview({ root: f.root, ticket: 'TICKET-42', specPath: f.specPath }), /no diagnostic message/);
+  } finally { rmSync(f.root, { recursive: true, force: true }); }
+});
+
+test('review refuses a browser scenario that did not fail on an assertion', () => {
+  const f = fixture();
+  try {
+    f.e2eReport.suites[0].specs[0].tests[0].results[0] = { status: 'timedOut', error: { message: 'Test timeout of 30000ms exceeded.' } };
+    writeFileSync(join(f.root, 'reports/playwright.json'), JSON.stringify(f.e2eReport));
+    assert.throws(() => prepareReview({ root: f.root, ticket: 'TICKET-42', specPath: f.specPath }), /AC-1 shell .*got timedOut/);
+  } finally { rmSync(f.root, { recursive: true, force: true }); }
+});
+
+test('review needs the browser report before it starts', () => {
+  const f = fixture();
+  try {
+    rmSync(join(f.root, 'reports/playwright.json'));
+    assert.throws(() => prepareReview({ root: f.root, ticket: 'TICKET-42', specPath: f.specPath }), /playwright\.json missing/);
   } finally { rmSync(f.root, { recursive: true, force: true }); }
 });
 

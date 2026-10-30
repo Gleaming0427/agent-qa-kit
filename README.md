@@ -16,16 +16,17 @@ verdict against the test reports.
  Ticket (AC-1, AC-2…)
         │
  1. QA writer      writes unit + Playwright tests from the ticket
-        │          → tests must fail (RED): the feature does not exist yet
+        │          → both must fail (RED): the feature does not exist yet
  2. Human review   checks the tests and why they fail
         │
  3. Dev agent      implements the feature (cannot edit the tests)
         │
- 4. QA verifier    runs the tests (cannot write files)
+ 4. QA verifier    runs the ticket's tests (cannot write files)
         │
- 5. Checker        compares the verdict with the real test reports
+ 5. Checker        compares the verdict with the real test reports,
+        │          then reruns every test, smoke journeys included
         │
- CI: fixed smoke test on every PR + human PR review
+ CI: smoke test on desktop + mobile, screenshots compared, on every PR
 ```
 
 Three rules make it trustworthy:
@@ -33,7 +34,8 @@ Three rules make it trustworthy:
 1. **Tests come from the ticket, not the code.** Otherwise they just confirm
    the code does what it does.
 2. **A RED test must fail for the right reason.** Missing feature: yes.
-   Broken selector or server crash: no.
+   Broken selector, crash, timeout or server that never starts: no. A
+   browser test must fail on an `expect()` assertion.
 3. **The agent's word is not proof.** A script checks every criterion
    against the JSON test reports. A missing, skipped or failing test means
    no "pass".
@@ -58,7 +60,7 @@ three criteria: list services, case-insensitive search, empty-state message.
 cd examples/server-console
 npm ci
 npx playwright install chromium
-npm run test:smoke     # fixed critical journey
+npm run test:smoke     # fixed critical journey, desktop + mobile
 npm run demo:unit      # RED → GREEN → REGRESSION, component level
 npm run demo:e2e       # same cycle in a real browser
 npm run verify:final   # full suite on the current code
@@ -70,7 +72,8 @@ fail with the bug, pass without it, and fail again when it comes back.
 ## Use it in your project
 
 1. **Start with a smoke suite.** Two or three Playwright tests for flows that
-   cost money if they break (login, checkout…). Run them on every PR.
+   cost money if they break (login, checkout…). Run them on every PR, on a
+   desktop and a phone screen, with a screenshot compared in CI.
 2. **Add ticket QA only for risky changes.** Name each test
    `[TICKET-42][AC-1] …` and write reports to `reports/vitest.json` and
    `reports/playwright.json`.
@@ -82,9 +85,13 @@ node qa/scenario-review.ts approve TICKET-42 specs/TICKET-42.md
 qa/run-qa.sh TICKET-42 2 specs/TICKET-42.md services   # verify after the dev
 ```
 
+Phase 1 refuses tests that already pass or fail for the wrong reason. If the
+app does not start, the result is "blocked".
+
 Phase 2 refuses to run until a human approves the tests. Changing a test
-afterwards cancels the approval. After three failed verifications, start
-again from phase 1.
+afterwards cancels the approval. A pass counts only if the full suite passes
+too, smoke journeys included. After three failed verifications, start again
+from phase 1.
 
 On failure, send the short `node qa/summary.ts` output to the repair agent
 instead of the full report. It costs far fewer tokens.
@@ -99,6 +106,7 @@ Step-by-step guide: [HOW_TO_APPLY.md](HOW_TO_APPLY.md).
 | `.claude/hooks/` | Tool guard and verdict checker |
 | `qa/run-qa.sh` | Runs a QA phase |
 | `qa/scenario-review.ts` | Human approval of the generated tests |
+| `qa/full-suite.ts` | Final check: every test passes, smoke included |
 | `qa/summary.ts` | Short test summary for agents |
 | `examples/server-console/` | React + Playwright demo |
 
@@ -106,8 +114,8 @@ All scripts are TypeScript, run directly by Node (no build step).
 
 ## Limits
 
-- Hooks are a safety net, not real isolation. Run generated tests in a
-  disposable environment with no secrets.
+- Hooks are a safety net, not real isolation. The final full suite runs
+  outside the agent. Run the kit in a disposable environment with no secrets.
 - The checks prove tests ran, not that they are good. A human still reviews
   the assertions.
 - The reviewer name is not authenticated. In a team, use branch protection

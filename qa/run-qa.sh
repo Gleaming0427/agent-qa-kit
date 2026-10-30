@@ -37,6 +37,7 @@ $(cat "$SPEC")
 if [[ "${QA_DRY_RUN:-0}" == 1 ]]; then
   echo "Preview only: ticket=$TICKET phase=$PHASE model=$MODEL effort=$EFFORT budget=\$$BUDGET"
   echo "strict per-criterion evidence validation is enabled; QA verifier has no write tools"
+  echo "phase 1 needs failing unit and browser tests; a phase 2 pass needs the full suite to pass"
   exit 0
 fi
 mkdir -p reports
@@ -64,8 +65,14 @@ COST="$(jq -r '.total_cost_usd // 0' "$OUTPUT")"
 if [[ "$(jq -r '.is_error // false' "$OUTPUT")" == true ]]; then
   fail "agent error (cost \$$COST): $(jq -r '.result // .terminal_reason // .subtype // "unknown"' "$OUTPUT")"
 fi
-VERDICT_JSON="$(jq -c '{last_assistant_message: .result}' "$OUTPUT" | CLAUDE_PROJECT_DIR="$PWD" node .claude/hooks/verdict-check.ts "$PHASE" --final)" \
-  || fail "invalid verdict (cost \$$COST); see $OUTPUT"
+if ! VERDICT_JSON="$(jq -c '{last_assistant_message: .result}' "$OUTPUT" | CLAUDE_PROJECT_DIR="$PWD" node .claude/hooks/verdict-check.ts "$PHASE" --final)"; then
+  # Browser tests that could not start mean a blocked environment, not a bad verdict.
+  if [[ "$PHASE" == 1 ]] && jq -e '(.errors // []) | length > 0' reports/playwright.json >/dev/null 2>&1; then
+    echo "QA agent $TICKET, phase 1: blocked, the browser tests could not start (cost \$$COST): $(jq -r '.errors[0].message' reports/playwright.json)" >&2
+    exit 2
+  fi
+  fail "invalid verdict (cost \$$COST); see $OUTPUT"
+fi
 # Reject focused/skipped tests, even when an Edit changed only part of a file.
 node qa/check-tests.ts || fail 'disabled or focused tests detected'
 jq --argjson cost "$COST" '. + {cost_usd: $cost}' <<<"$VERDICT_JSON" > "reports/$TICKET-phase$PHASE.json"
@@ -73,6 +80,20 @@ VERDICT="$(jq -r '.verdict' <<<"$VERDICT_JSON")"
 echo "QA agent $TICKET, phase $PHASE: $VERDICT, cost \$$COST"
 if [[ "$VERDICT" != 'blocked' ]]; then
   node qa/coverage-report.ts "$TICKET" "$PHASE" || fail 'Per-criterion coverage report failed'
+fi
+if [[ "$PHASE" == 2 && "$VERDICT" == pass ]]; then
+  # The ticket passes; accept it only if every other test still passes, smoke journeys included.
+  # The launcher runs this suite itself, so the agent cannot skip it.
+  echo "Full suite for $TICKET: npm run test:unit, then npm run test:e2e"
+  rm -f reports/vitest.json reports/playwright.json
+  npm run test:unit
+  npm run test:e2e
+  node qa/full-suite.ts "$TICKET"
+  case $? in
+    0) ;;
+    1) node qa/summary.ts; exit 1 ;;
+    *) fail 'cannot check the full suite: npm run test:unit and npm run test:e2e must write reports/vitest.json and reports/playwright.json' ;;
+  esac
 fi
 if [[ "$PHASE" == 1 && "$VERDICT" == ready ]]; then
   node qa/scenario-review.ts prepare "$TICKET" "$SPEC" || fail 'Cannot prepare the human scenario review'

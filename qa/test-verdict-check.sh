@@ -38,7 +38,7 @@ verdict() {
 }
 echo 'Phase 1: write the tests'
 touch "$PROJECT/e2e/TICKET-42.spec.ts"
-reports 3 absent
+reports 3 3
 run_case 0 'complete verdict, tests failing as expected'     1 "$(verdict 1 ready written written)"
 run_case 0 'verdict in a json block surrounded by text'      1 "Here is the verdict:
 \`\`\`json
@@ -52,11 +52,18 @@ run_case 2 'missing evidence'                                1 "$(verdict 1 read
 run_case 2 'blocked without a question'                      1 "$(verdict 1 blocked written written)"
 run_case 0 'blocked with a question'                         1 "$(verdict 1 blocked written written '| .spec_questions = ["Is the search case-sensitive?"]')"
 run_case 0 'untestable criterion with its question'          1 "$(verdict 1 ready written written '| .criteria |= map(if .id == "AC-3" then .status = "untestable" else . end) | .spec_questions = ["AC-3: which message?"]')"
-reports 1 absent
+reports 1 3
 run_case 2 'tests that already pass before implementation'   1 "$(verdict 1 ready written written)"
+reports 3 0
+run_case 2 'browser scenarios that already pass'             1 "$(verdict 1 ready written written)"
+reports 3 absent
+run_case 2 'browser scenarios never run'                     1 "$(verdict 1 ready written written)"
+reports 3 absent
+echo '{"errors": [{"message": "Error: http://127.0.0.1:4173 is already used"}], "stats": {"expected": 0, "unexpected": 0}}' > "$PROJECT/reports/playwright.json"
+run_case 2 'application did not start for the browser tests' 1 "$(verdict 1 ready written written)"
 reports absent absent
 run_case 2 'tests never run'                                 1 "$(verdict 1 ready written written)"
-reports 3 absent; rm -f "$PROJECT/e2e/TICKET-42.spec.ts"
+reports 3 3; rm -f "$PROJECT/e2e/TICKET-42.spec.ts"
 run_case 2 'shell scenarios not written'                     1 "$(verdict 1 ready written written)"
 echo 'Phase 2: verify'
 reports 0 0

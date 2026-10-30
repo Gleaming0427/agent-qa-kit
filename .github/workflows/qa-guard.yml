@@ -45,8 +45,23 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - run: npm run build
-      - name: Critical user journey smoke test
-        run: npm run test:smoke
+      - name: Critical user journey smoke test (desktop + mobile, screenshots compared)
+        id: smoke
+        run: |
+          if ls e2e/smoke.spec.ts-snapshots/*.png >/dev/null 2>&1; then
+            npm run test:smoke
+          else
+            # No baselines committed yet: create them on this CI machine and publish them.
+            npm run test:smoke -- --update-snapshots=all
+            echo "created=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::Screenshots were created, not compared. Commit the screenshot-baselines artifact to examples/server-console/e2e/smoke.spec.ts-snapshots/."
+          fi
+      - name: Upload new screenshot baselines
+        if: steps.smoke.outputs.created == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-baselines
+          path: examples/server-console/e2e/smoke.spec.ts-snapshots/
       - run: npm run demo:unit
       - run: npm run demo:e2e
       - name: Final full suite on the current code
@@ -56,7 +71,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: qa-demo-reports
-          path: examples/server-console/reports/
+          path: |
+            examples/server-console/reports/
+            examples/server-console/test-results/
           if-no-files-found: ignore
 
   qa-scope:

@@ -32,6 +32,9 @@ The launcher checks the human review receipt before starting this phase.
 6. Never declare pass on zero tests, skipped tests, stale reports or flaky E2E.
 7. Ask a question instead of fabricating a test or endpoint.
 
+You only run the ticket's tests. After a pass, the launcher itself reruns every
+unit and browser test, smoke journeys included, before accepting the result.
+
 End with JSON only:
 ```json
 {

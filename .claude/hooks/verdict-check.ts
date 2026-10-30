@@ -90,6 +90,13 @@ function checkPhase1(v: RawVerdict): string[] {
   const problems: string[] = [];
   const shell = v.criteria.filter((c) => c.level === 'shell' && c.status === 'written');
   if (shell.length && !existsSync(join(PROJECT, 'e2e', `${v.ticket}.spec.ts`))) problems.push(`Missing e2e/${v.ticket}.spec.ts.`);
+  if (shell.length) {
+    const report = readReport<PlaywrightReport>('playwright.json');
+    if (report === null) problems.push('Run the shell scenarios (npm run test:e2e -- --grep @<mfe>) before completing phase 1.');
+    else if (report === undefined) problems.push('Playwright report unreadable.');
+    else if (report.errors?.length) problems.push('Playwright could not run the shell scenarios: fix the test environment or end with a blocked verdict.');
+    else if ((report.stats?.unexpected ?? 0) < shell.length) problems.push('Not enough failing shell scenarios before implementation.');
+  }
   const mfe = v.criteria.filter((c) => c.level === 'mfe' && c.status === 'written');
   if (mfe.length) {
     const report = readReport<VitestReport>('vitest.json');
