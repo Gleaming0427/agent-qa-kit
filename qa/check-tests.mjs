@@ -9,7 +9,7 @@ const forbidden = [
   /\b(?:xit|xdescribe|xtest)\s*\(/,
   /\b(?:test|it)\.skipIf\s*\(/,
 ];
-function testFile(path) { return path.startsWith('e2e/') && /\.spec\.ts$/.test(path) || /\.test\.tsx?$/.test(path); }
+function testFile(path) { return /\.(?:spec|test)\.[cm]?[jt]sx?$/.test(path); }
 export function scanFiles(files) {
   const errors = [];
   for (const file of files.filter(testFile)) {

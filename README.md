@@ -91,7 +91,7 @@ and an empty-state message. Its acceptance criteria are the existing
 
 ```bash
 cd examples/server-console
-npm install
+npm ci
 npx playwright install chromium
 npm run build
 npm run demo:unit
@@ -111,9 +111,7 @@ edited** between stages. JSON reports are saved to the example's `reports/`
 directory. This tests the same UI at the component level (Vitest / Testing
 Library) and browser level (Playwright). **It is an isolated fake shell, not a real application or a multi-repo MFE integration.**
 
-The current ZIP doesn't include an npm lockfile: generate and commit
-`examples/server-console/package-lock.json` on your development machine,
-then switch the CI install to `npm ci` to ensure dependency reproducibility.
+The example includes `package-lock.json`; CI uses `npm ci` for reproducible installs.
 
 ## Integrate into a real MFE project
 

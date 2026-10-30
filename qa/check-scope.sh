@@ -22,7 +22,7 @@ usage() {
 
 is_test() {
   case "$1" in
-    e2e/*.spec.ts|*.test.ts|*.test.tsx) return 0 ;;
+    *.spec.ts|*.test.ts|*.test.tsx|*.test.mjs) return 0 ;;
     *) return 1 ;;
   esac
 }
