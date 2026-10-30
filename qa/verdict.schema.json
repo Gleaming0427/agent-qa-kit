@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "properties": {
+    "ticket": { "type": "string" },
+    "passe": { "type": "integer", "enum": [1, 2] },
+    "verdict": { "type": "string", "enum": ["pret", "pass", "fail", "blocked"] },
+    "criteres": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "niveau": { "type": "string", "enum": ["mfe", "shell"] },
+          "statut": { "type": "string", "enum": ["ecrit", "pass", "fail", "non_testable"] },
+          "preuve": { "type": "string" }
+        },
+        "required": ["id", "niveau", "statut", "preuve"]
+      }
+    },
+    "tests_instables": { "type": "array", "items": { "type": "string" } },
+    "questions_spec": { "type": "array", "items": { "type": "string" } },
+    "alertes": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["ticket", "passe", "verdict", "criteres", "tests_instables", "questions_spec", "alertes"]
+}

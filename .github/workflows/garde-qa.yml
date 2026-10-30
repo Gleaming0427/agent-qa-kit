@@ -1,0 +1,49 @@
+name: Garde QA
+
+on:
+  pull_request:
+
+jobs:
+  perimetre-qa:
+    # Branche de l'agent QA : elle ne doit contenir que des tests.
+    if: startsWith(github.head_ref, 'qa/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Vérifier que seuls des tests sont modifiés
+        env:
+          BASE: ${{ github.base_ref }}
+        run: qa/check-scope.sh perimetre "origin/$BASE"
+
+  tests-figes:
+    # Branche de dev : les tests écrits par l'agent QA n'ont pas bougé.
+    if: startsWith(github.head_ref, 'feat/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Vérifier que les tests de l'agent QA sont intacts
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          TICKET="${GITHUB_HEAD_REF#feat/}"
+          [[ "$TICKET" =~ ^[A-Z][A-Z0-9]*-[0-9]+$ ]] || { echo "Nom de branche inattendu : $GITHUB_HEAD_REF"; exit 1; }
+          qa/check-scope.sh figes "origin/$BASE" "origin/qa/$TICKET"
+
+  tests-sur-code-propre:
+    # Les tests sont rejoués ici, sur le code réel, hors de l'environnement des agents.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: yarn install --frozen-lockfile # à adapter à votre version de Yarn
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:affected
+      - run: npm run test:e2e

@@ -1,0 +1,52 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(**/*.test.ts)",
+      "Edit(**/*.test.tsx)",
+      "Edit(e2e/**)",
+      "Bash(npm run test:affected)",
+      "Bash(npm run test:e2e *)",
+      "Bash(npm run test:summary)",
+      "Bash(npx vitest run *)",
+      "Bash(git diff *)",
+      "Bash(git status *)",
+      "Bash(git log *)"
+    ],
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/.npmrc)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "WebFetch",
+      "WebSearch",
+      "Bash(git push *)",
+      "Bash(curl *)",
+      "Bash(wget *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Grep|Glob|Write|Edit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/garde-fou-qa.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "autoAllowBashIfSandboxed": false,
+    "network": {
+      "allowedDomains": []
+    }
+  }
+}
