@@ -1,22 +1,23 @@
 #!/usr/bin/env node
 /** Human-readable, per-criterion proof from reports, not the agent's prose.
- * Usage: node qa/coverage-report.mjs TICKET-42 [phase 1|2]
+ * Usage: node qa/coverage-report.ts TICKET-42 [phase 1|2]
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { validateEvidence } from '../.claude/hooks/strict-evidence.mjs';
+import { validateEvidence } from '../.claude/hooks/strict-evidence.ts';
+import type { Manifest, PlaywrightReport, Verdict, VitestReport } from '../.claude/hooks/strict-evidence.ts';
 
-const ticket = process.argv[2];
+const ticket = process.argv[2] ?? '';
 const phase = Number(process.argv[3] || 2);
-if (!/^[A-Z][A-Z0-9]*-[0-9]+$/.test(ticket || '') || ![1, 2].includes(phase)) {
-  console.error('Usage: node qa/coverage-report.mjs TICKET-42 [1|2]');
+if (!/^[A-Z][A-Z0-9]*-[0-9]+$/.test(ticket) || ![1, 2].includes(phase)) {
+  console.error('Usage: node qa/coverage-report.ts TICKET-42 [1|2]');
   process.exit(2);
 }
-function read(path) { try { return JSON.parse(readFileSync(path, 'utf8')); } catch { return null; } }
-const manifest = read(`reports/${ticket}-criteria.json`);
-const verdict = read(`reports/${ticket}-phase${phase}.json`);
-const vitest = read('reports/vitest.json');
-const playwright = read('reports/playwright.json');
+function read<T>(path: string): T | null { try { return JSON.parse(readFileSync(path, 'utf8')) as T; } catch { return null; } }
+const manifest = read<Manifest>(`reports/${ticket}-criteria.json`);
+const verdict = read<Verdict>(`reports/${ticket}-phase${phase}.json`);
+const vitest = read<VitestReport>('reports/vitest.json');
+const playwright = read<PlaywrightReport>('reports/playwright.json');
 if (!manifest || !verdict) { console.error('Manifest or final verdict missing.'); process.exit(2); }
 const { problems, evidence } = validateEvidence({ manifest, verdict, phase, vitest, playwright, root: process.cwd() });
 const output = { ticket, phase, verdict: verdict.verdict, validated: problems.length === 0, problems, evidence };

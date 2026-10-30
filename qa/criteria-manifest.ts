@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 /** Extract the ticket's acceptance criteria BEFORE any QA agent runs.
- * CLI: node qa/criteria-manifest.mjs TICKET-42 specs/TICKET-42.md reports/TICKET-42-criteria.json
+ * CLI: node qa/criteria-manifest.ts TICKET-42 specs/TICKET-42.md reports/TICKET-42-criteria.json
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import type { Criterion, Manifest } from '../.claude/hooks/strict-evidence.ts';
 
-export function buildManifest(ticket, specText) {
+export function buildManifest(ticket: string, specText: string): Manifest {
   if (!/^[A-Z][A-Z0-9]*-[0-9]+$/.test(ticket)) throw new Error('Invalid ticket identifier.');
-  const criteria = [];
-  const seen = new Set();
+  const criteria: Criterion[] = [];
+  const seen = new Set<string>();
   for (const line of specText.split(/\r?\n/)) {
     // Supports: '- AC-1: ...', '### AC-2 — ...', '**AC-3:** ...'.
     const match = line.match(/^\s*(?:[-*]\s*|#{1,6}\s*)?(?:\*\*)?(AC-[1-9]\d*)(?:\*\*)?\s*[:—–-]\s*(.*)/);
@@ -30,16 +32,16 @@ export function buildManifest(ticket, specText) {
   };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname)) {
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const [, , ticket, specFile, outputFile] = process.argv;
-    if (!ticket || !specFile || !outputFile) throw new Error('Usage: node qa/criteria-manifest.mjs TICKET specs/file.md reports/TICKET-criteria.json');
+    if (!ticket || !specFile || !outputFile) throw new Error('Usage: node qa/criteria-manifest.ts TICKET specs/file.md reports/TICKET-criteria.json');
     const manifest = buildManifest(ticket, readFileSync(specFile, 'utf8'));
     mkdirSync(dirname(outputFile), { recursive: true });
     writeFileSync(outputFile, `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 });
     console.log(`Manifest: ${manifest.criteria.map(({ id }) => id).join(', ')}`);
   } catch (error) {
-    console.error(`Cannot build criteria manifest: ${error.message}`);
+    console.error(`Cannot build criteria manifest: ${(error as Error).message}`);
     process.exitCode = 1;
   }
 }

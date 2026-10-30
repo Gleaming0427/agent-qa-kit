@@ -3,8 +3,8 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSyn
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { buildManifest } from '../criteria-manifest.mjs';
-import { approveReview, prepareReview, reserveVerifyAttempt, verifyReview } from '../scenario-review.mjs';
+import { buildManifest } from '../criteria-manifest.ts';
+import { approveReview, prepareReview, reserveVerifyAttempt, verifyReview } from '../scenario-review.ts';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'qa-scenario-review-'));

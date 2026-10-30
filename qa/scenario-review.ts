@@ -5,17 +5,40 @@ import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { isAbsolute, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validateEvidence } from '../.claude/hooks/strict-evidence.mjs';
-import { buildManifest } from './criteria-manifest.mjs';
+import { validateEvidence } from '../.claude/hooks/strict-evidence.ts';
+import type { Manifest, Verdict, VitestReport } from '../.claude/hooks/strict-evidence.ts';
+import { buildManifest } from './criteria-manifest.ts';
 
-const digest = (value) => createHash('sha256').update(value).digest('hex');
-const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
-const fileDigest = (path) => digest(readFileSync(path));
-const reportPath = (root, ticket, suffix) => resolve(root, 'reports', `${ticket}-${suffix}.json`);
-function checkTicket(ticket) {
+interface ReviewedCriterion { id: string; description: string; failures: { title: string; message: string }[] }
+export interface ReviewRequest {
+  schema_version: number;
+  ticket: string;
+  spec_sha256: string;
+  manifest_sha256: string;
+  phase1_verdict_sha256: string;
+  red_report_sha256: string;
+  tests: { path: string; sha256: string }[];
+  criteria: ReviewedCriterion[];
+}
+interface ReviewDecision { reviewer?: string; red_reasons?: Record<string, string> }
+export interface Approval {
+  schema_version: number;
+  ticket: string;
+  request_sha256: string;
+  reviewer: string;
+  red_reasons: Record<string, string>;
+  approved_at: string;
+}
+interface ReviewArgs { root: string; ticket: string; specPath: string }
+
+const digest = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
+const readJson = <T>(path: string): T => JSON.parse(readFileSync(path, 'utf8')) as T;
+const fileDigest = (path: string) => digest(readFileSync(path));
+const reportPath = (root: string, ticket: string, suffix: string) => resolve(root, 'reports', `${ticket}-${suffix}.json`);
+function checkTicket(ticket: string) {
   if (!/^[A-Z][A-Z0-9]*-[0-9]+$/.test(ticket)) throw new Error(`Invalid ticket: ${ticket}`);
 }
-function insideProject(root, path) {
+function insideProject(root: string, path: string): string {
   const absolute = isAbsolute(path) ? resolve(path) : resolve(root, path);
   const local = relative(root, absolute);
   if (!local || local === '..' || local.startsWith('../') || isAbsolute(local)) {
@@ -29,30 +52,30 @@ function insideProject(root, path) {
   }
   return local;
 }
-function buildRequest(root, ticket, specFile, vitestFile) {
+function buildRequest(root: string, ticket: string, specFile: string, vitestFile: string): ReviewRequest {
   const specText = readFileSync(specFile, 'utf8');
   const manifestFile = reportPath(root, ticket, 'criteria');
-  const manifest = readJson(manifestFile);
+  const manifest = readJson<Manifest>(manifestFile);
   if (JSON.stringify(manifest) !== JSON.stringify(buildManifest(ticket, specText))) {
     throw new Error('Criteria manifest does not match the ticket spec.');
   }
   const verdictFile = reportPath(root, ticket, 'phase1');
-  const verdict = readJson(verdictFile);
-  const vitest = readJson(vitestFile);
+  const verdict = readJson<Verdict>(verdictFile);
+  const vitest = readJson<VitestReport>(vitestFile);
   if (verdict.verdict !== 'ready') throw new Error('Phase 1 must have a ready verdict before review.');
   const { problems } = validateEvidence({ manifest, verdict, phase: 1, vitest, specText, root });
   if (problems.length) throw new Error(`Invalid phase 1 evidence: ${problems.join(' ')}`);
 
   const files = new Set([insideProject(root, `e2e/${ticket}.spec.ts`)]);
   const criteria = manifest.criteria.map(({ id, description }) => {
-    const failures = [];
+    const failures: ReviewedCriterion['failures'] = [];
     for (const file of vitest.testResults ?? []) {
       for (const item of file.assertionResults ?? []) {
         const title = item.fullName ?? item.title ?? '';
         if (item.status !== 'failed' || !title.includes(`[${ticket}]`) || !title.includes(`[${id}]`)) continue;
         const message = (item.failureMessages ?? []).join(' ').replace(/\u001b\[[0-9;]*m/g, '').replace(/\s+/g, ' ').trim();
         if (!message) throw new Error(`${id}: failed assertion has no diagnostic message to review.`);
-        files.add(insideProject(root, file.name));
+        files.add(insideProject(root, file.name ?? ''));
         failures.push({ title, message: message.slice(0, 500) });
       }
     }
@@ -69,7 +92,7 @@ function buildRequest(root, ticket, specFile, vitestFile) {
     criteria,
   };
 }
-function checkCurrentFiles(root, ticket, specFile, request) {
+function checkCurrentFiles(root: string, ticket: string, specFile: string, request: ReviewRequest) {
   if (request.schema_version !== 1 || request.ticket !== ticket) throw new Error('Review request does not match the ticket.');
   const current = buildRequest(root, ticket, specFile, reportPath(root, ticket, 'red-vitest'));
   if (request.spec_sha256 !== current.spec_sha256) throw new Error('Ticket spec changed after review preparation.');
@@ -80,7 +103,7 @@ function checkCurrentFiles(root, ticket, specFile, request) {
   if (JSON.stringify(request.criteria) !== JSON.stringify(current.criteria)) throw new Error('RED failure review request changed.');
 }
 
-export function prepareReview({ root, ticket, specPath }) {
+export function prepareReview({ root, ticket, specPath }: ReviewArgs): ReviewRequest {
   root = resolve(root); checkTicket(ticket);
   const reportDir = resolve(root, 'reports');
   mkdirSync(reportDir, { recursive: true });
@@ -95,11 +118,11 @@ export function prepareReview({ root, ticket, specPath }) {
   return request;
 }
 
-export function approveReview({ root, ticket, specPath }) {
+export function approveReview({ root, ticket, specPath }: ReviewArgs): Approval {
   root = resolve(root); checkTicket(ticket);
-  const request = readJson(reportPath(root, ticket, 'review-request'));
+  const request = readJson<ReviewRequest>(reportPath(root, ticket, 'review-request'));
   checkCurrentFiles(root, ticket, resolve(specPath), request);
-  const decision = readJson(reportPath(root, ticket, 'review-decision'));
+  const decision = readJson<ReviewDecision>(reportPath(root, ticket, 'review-decision'));
   const reviewer = String(decision.reviewer ?? '').trim();
   if (!reviewer) throw new Error('Reviewer name is required.');
   for (const { id } of request.criteria) {
@@ -107,19 +130,19 @@ export function approveReview({ root, ticket, specPath }) {
       throw new Error(`${id}: explain why this RED failure shows missing behavior, not a broken test or environment.`);
     }
   }
-  const approval = {
+  const approval: Approval = {
     schema_version: 1, ticket, request_sha256: fileDigest(reportPath(root, ticket, 'review-request')),
-    reviewer, red_reasons: decision.red_reasons, approved_at: new Date().toISOString(),
+    reviewer, red_reasons: decision.red_reasons ?? {}, approved_at: new Date().toISOString(),
   };
   writeFileSync(reportPath(root, ticket, 'approved'), `${JSON.stringify(approval, null, 2)}\n`);
   return approval;
 }
 
-export function verifyReview({ root, ticket, specPath }) {
+export function verifyReview({ root, ticket, specPath }: ReviewArgs): Approval {
   root = resolve(root); checkTicket(ticket);
   const requestFile = reportPath(root, ticket, 'review-request');
-  const request = readJson(requestFile);
-  const approval = readJson(reportPath(root, ticket, 'approved'));
+  const request = readJson<ReviewRequest>(requestFile);
+  const approval = readJson<Approval>(reportPath(root, ticket, 'approved'));
   checkCurrentFiles(root, ticket, resolve(specPath), request);
   if (approval.schema_version !== 1 || approval.ticket !== ticket || approval.request_sha256 !== fileDigest(requestFile)) {
     throw new Error('Scenario approval does not match the current review request.');
@@ -131,14 +154,14 @@ export function verifyReview({ root, ticket, specPath }) {
   return approval;
 }
 
-export function reserveVerifyAttempt({ root, ticket, specPath, maxAttempts = 3 }) {
+export function reserveVerifyAttempt({ root, ticket, specPath, maxAttempts = 3 }: ReviewArgs & { maxAttempts?: number }): number {
   root = resolve(root);
   if (!Number.isInteger(maxAttempts) || maxAttempts < 1) throw new Error('Maximum verify attempts must be a positive integer.');
   const approval = verifyReview({ root, ticket, specPath });
   const path = reportPath(root, ticket, 'verify-attempts');
-  let previous;
+  let previous: { request_sha256?: string; count: number } | null;
   try { previous = readJson(path); } catch { previous = null; }
-  const count = previous?.request_sha256 === approval.request_sha256 ? previous.count : 0;
+  const count = previous && previous.request_sha256 === approval.request_sha256 ? previous.count : 0;
   if (count >= maxAttempts) {
     throw new Error(`${maxAttempts} verification attempts used. Reassess the tests and RED baseline before another QA cycle.`);
   }
@@ -151,7 +174,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   try {
     const [command, ticket, specPath] = process.argv.slice(2);
     if (!['prepare', 'approve', 'verify', 'reserve'].includes(command) || !ticket || !specPath) {
-      throw new Error('Usage: node qa/scenario-review.mjs <prepare|approve|verify|reserve> TICKET specs/TICKET.md');
+      throw new Error('Usage: node qa/scenario-review.ts <prepare|approve|verify|reserve> TICKET specs/TICKET.md');
     }
     const args = { root: resolve(import.meta.dirname, '..'), ticket, specPath };
     if (command === 'prepare') {
@@ -170,7 +193,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.log(`QA verification attempt ${attempt}/${maxAttempts} reserved for ${ticket}.`);
     }
   } catch (error) {
-    console.error(`Scenario review: ${error.message}`);
+    console.error(`Scenario review: ${(error as Error).message}`);
     process.exitCode = 1;
   }
 }

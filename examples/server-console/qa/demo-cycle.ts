@@ -5,6 +5,18 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+interface Observation { title: string; status?: string; message: string }
+interface VitestReport { testResults?: { assertionResults?: { fullName?: string; title?: string; status?: string; failureMessages?: string[] }[] }[] }
+interface PlaywrightSuite {
+  specs?: { title?: string; tests?: { status?: string; results?: { error?: { message?: string }; errors?: { message?: string }[] }[] }[] }[];
+  suites?: PlaywrightSuite[];
+}
+interface PlaywrightReport { suites?: PlaywrightSuite[] }
+interface StageResult {
+  stage: string; bugEnabled: boolean; passed: boolean; expectedPass: boolean;
+  evidenceMatches: boolean; failedTests: string[]; report: string | null;
+}
+
 const e2e = process.argv.includes('--e2e');
 const root = resolve(import.meta.dirname, '..');
 const steps = [
@@ -12,19 +24,19 @@ const steps = [
   { name: '02-green', bug: '0', expectPass: true },
   { name: '03-regression', bug: '1', expectPass: false },
 ];
-function observations(report) {
+function observations(report: VitestReport & PlaywrightReport): Observation[] {
   if (!e2e) return (report.testResults ?? []).flatMap((file) => (file.assertionResults ?? []).map((item) => ({
-    title: item.fullName ?? item.title,
+    title: item.fullName ?? item.title ?? '',
     status: item.status,
     message: (item.failureMessages ?? []).join(' '),
   })));
-  const found = [];
-  function visit(suites) {
+  const found: Observation[] = [];
+  function visit(suites: PlaywrightSuite[] | undefined) {
     for (const suite of suites ?? []) {
       for (const spec of suite.specs ?? []) {
         for (const item of spec.tests ?? []) {
-          const last = item.results?.at(-1) ?? {};
-          found.push({ title: spec.title, status: item.status, message: last.error?.message ?? last.errors?.[0]?.message ?? '' });
+          const last = item.results?.at(-1);
+          found.push({ title: spec.title ?? '', status: item.status, message: last?.error?.message ?? last?.errors?.[0]?.message ?? '' });
         }
       }
       visit(suite.suites);
@@ -34,7 +46,7 @@ function observations(report) {
   return found;
 }
 mkdirSync(resolve(root, 'reports'), { recursive: true });
-const results = [];
+const results: StageResult[] = [];
 for (const step of steps) {
   console.log(`\n========== ${step.name} / ${e2e ? 'E2E' : 'MFE'} ==========`);
   const report = resolve(root, 'reports', e2e ? 'playwright.json' : 'vitest.json');
@@ -48,7 +60,7 @@ for (const step of steps) {
   });
   const passed = run.status === 0;
   if (existsSync(report)) copyFileSync(report, savedReport);
-  let tests = [];
+  let tests: Observation[] = [];
   try { tests = observations(JSON.parse(readFileSync(report, 'utf8'))); } catch {}
   const failures = tests.filter((item) => item.status === (e2e ? 'unexpected' : 'failed'));
   const expectedRed = failures.length === 1 && failures[0].title.includes('[TICKET-42][AC-2]') && Boolean(failures[0].message);

@@ -17,16 +17,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - run: npm ci --no-audit --no-fund
+      - name: Type-check the kit scripts
+        run: npm run typecheck
       - name: Check existing hook guards
         run: bash qa/test-guard.sh
       - name: Check existing verdict tests
         run: bash qa/test-verdict-check.sh
       - name: Strict evidence regression suite
-        run: node --test qa/tests/*.test.mjs
+        run: node --test qa/tests/*.test.ts
       - name: Check for skipped / focused tests
-        run: node qa/check-tests.mjs
+        run: node qa/check-tests.ts
       - name: Validate authoritative ticket manifest
-        run: node qa/criteria-manifest.mjs TICKET-42 specs/TICKET-42.md /tmp/TICKET-42-criteria.json
+        run: node qa/criteria-manifest.ts TICKET-42 specs/TICKET-42.md /tmp/TICKET-42-criteria.json
 
   react-demo:
     name: React MFE + Playwright red/green/regression

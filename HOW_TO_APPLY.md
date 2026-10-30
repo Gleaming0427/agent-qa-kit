@@ -23,9 +23,23 @@ Resolve ambiguous criteria before the agent writes tests.
 
 ## 3. Establish and review the RED baseline
 
-Adapt the real application's `test:affected`, `test:e2e`, and `test:summary`
-scripts as described in the README. The QA writer must work from the ticket
-before seeing the implementation. Then run:
+Add these scripts to the real application's `package.json` (copy
+`qa/summary.ts` and `.claude/hooks/strict-evidence.ts`, which it imports):
+
+```json
+{
+  "scripts": {
+    "test:affected": "vitest run --reporter=dot --reporter=json --outputFile.json=reports/vitest.json",
+    "test:e2e": "playwright test",
+    "test:summary": "node qa/summary.ts"
+  }
+}
+```
+
+Every test name must contain `[TICKET-42][AC-1]` (adapt ticket and ID), and
+the Playwright scenarios for the ticket belong in `e2e/TICKET-42.spec.ts`.
+The QA writer must work from the ticket before seeing the implementation.
+Then run:
 
 ```bash
 qa/run-qa.sh TICKET-42 1 specs/TICKET-42.md services
@@ -43,7 +57,7 @@ Copy `reports/TICKET-42-review-decision.template.json` to
 `red_reasons` explanation per criterion, then run:
 
 ```bash
-node qa/scenario-review.mjs approve TICKET-42 specs/TICKET-42.md
+node qa/scenario-review.ts approve TICKET-42 specs/TICKET-42.md
 ```
 
 This local receipt detects changes to the spec, tests, and initial report. It
@@ -61,7 +75,7 @@ qa/run-qa.sh TICKET-42 2 specs/TICKET-42.md services
 
 The launcher accepts at most three verification runs per reviewed baseline:
 the first run and two after repairs. When a run fails, send the short output
-from `qa/summary.mjs` to the repair agent, inspect a full trace only when
+from `qa/summary.ts` to the repair agent, inspect a full trace only when
 needed, and rerun the affected test. After a pass, run the full suite and fixed
 smoke journey. If all attempts fail, reassess the spec and tests with a human
 and establish a new RED baseline.

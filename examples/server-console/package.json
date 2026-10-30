@@ -8,8 +8,8 @@
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test:smoke": "playwright test e2e/smoke.spec.ts",
-    "demo:unit": "node qa/demo-cycle.mjs",
-    "demo:e2e": "node qa/demo-cycle.mjs --e2e",
+    "demo:unit": "node qa/demo-cycle.ts",
+    "demo:e2e": "node qa/demo-cycle.ts --e2e",
     "verify:final": "npm run build && npm run test:unit && npm run test:e2e",
     "build": "tsc --noEmit && vite build"
   },

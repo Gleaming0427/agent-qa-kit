@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
-import { scanFiles } from '../check-tests.mjs';
+import { scanFiles } from '../check-tests.ts';
 
 test('disabled Playwright cases in nested projects are scanned', () => {
   const root = mkdtempSync(join(tmpdir(), 'qa-test-scan-'));

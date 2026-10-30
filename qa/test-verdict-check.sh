@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Original regression cases; retained for backwards compatibility.
 cd "$(dirname "$0")/.." || exit 1
-CHECK="$PWD/.claude/hooks/verdict-check.mjs"
+CHECK="$PWD/.claude/hooks/verdict-check.ts"
 PROJECT="$(mktemp -d)"
 export TMPDIR="$(mktemp -d)" CLAUDE_PROJECT_DIR="$PROJECT"
 trap 'rm -rf "$PROJECT" "$TMPDIR"' EXIT

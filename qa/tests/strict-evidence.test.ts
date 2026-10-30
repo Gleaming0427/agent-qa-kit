@@ -3,19 +3,20 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildManifest } from '../criteria-manifest.mjs';
-import { validateEvidence } from '../../.claude/hooks/strict-evidence.mjs';
+import { buildManifest } from '../criteria-manifest.ts';
+import { validateEvidence } from '../../.claude/hooks/strict-evidence.ts';
+import type { PlaywrightReport, Verdict, VitestReport } from '../../.claude/hooks/strict-evidence.ts';
 
 const specText = '# TICKET-42\n- AC-1: list servers\n- AC-2: filter servers\n- AC-3: empty state\n';
 const manifest = buildManifest('TICKET-42', specText);
-function verdict(status = 'pass', ids = ['AC-1', 'AC-2', 'AC-3']) {
+function verdict(status = 'pass', ids = ['AC-1', 'AC-2', 'AC-3']): Verdict {
   return {
     ticket: 'TICKET-42', phase: 2, verdict: status,
-    criteria: ids.flatMap((id) => ['mfe', 'shell'].map((level) => ({ id, level, status: 'pass', evidence: `${id} test` }))),
+    criteria: ids.flatMap((id) => (['mfe', 'shell'] as const).map((level) => ({ id, level, status: 'pass', evidence: `${id} test` }))),
     flaky_tests: [], spec_questions: [], alerts: [],
   };
 }
-function reports({ bug = false, skipped = false } = {}) {
+function reports({ bug = false, skipped = false } = {}): { vitest: VitestReport; playwright: PlaywrightReport } {
   return {
     vitest: {
       numFailedTests: bug ? 1 : 0,
@@ -34,7 +35,7 @@ function reports({ bug = false, skipped = false } = {}) {
     },
   };
 }
-function validate(v, r = reports(), phase = 2, root) {
+function validate(v: Verdict, r = reports(), phase = 2, root?: string) {
   return validateEvidence({ verdict: v, manifest, phase, ...r, specText, root });
 }
 test('extracts the authoritative criteria and rejects duplicates', () => {
@@ -68,7 +69,7 @@ test('rejects fake pass where a corresponding actual assertion failed', () => {
   assert(validate(verdict(), r).problems.some((p) => p.includes('AC-2 mfe')));
 });
 test('rejects E2E test without actual execution results', () => {
-  const r = reports(); r.playwright.suites[0].specs[1].tests[0].results = [];
+  const r = reports(); r.playwright.suites![0].specs![1].tests![0].results = [];
   assert(validate(verdict(), r).problems.some((p) => p.includes('AC-2 shell')));
 });
 test('rejects mismatched ticket spec hash', () => {
@@ -85,7 +86,7 @@ test('phase 1 requires an individual failing test and a shell scenario for each 
     const r = reports({ bug: true });
     let result = validate(v, r, 1, root);
     assert(result.problems.some((p) => p.includes('AC-1 MFE must have a failing')));
-    r.vitest.testResults[0].assertionResults.forEach((a) => { a.status = 'failed'; });
+    r.vitest.testResults![0].assertionResults!.forEach((a) => { a.status = 'failed'; });
     assert.deepEqual(validate(v, r, 1, root).problems, []);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

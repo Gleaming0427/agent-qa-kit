@@ -9,41 +9,44 @@
 //   reports/vitest.json      Vitest JSON report (MFE level)
 //   reports/playwright.json  Playwright JSON report (shell level)
 //
-// Usage: node qa/summary.mjs   (or npm run test:summary)
+// Usage: node qa/summary.ts   (or npm run test:summary)
 
 import { existsSync, readFileSync } from 'node:fs';
+import type { PlaywrightReport, PlaywrightSuite, PlaywrightTest, VitestReport } from '../.claude/hooks/strict-evidence.ts';
+
+interface Failure { title: string; message?: string; trace?: string }
 
 const MAX_LENGTH = 300;
 const MAX_FAILURES = 10;
 
-const clean = (text = '') =>
+const clean = (text: unknown = '') =>
   String(text)
     .replace(/\u001b\[[0-9;]*m/g, '') // color codes
     .replace(/\s+/g, ' ')
     .trim();
 
-const truncate = (text) => {
+const truncate = (text: unknown) => {
   const cleaned = clean(text);
   return cleaned.length > MAX_LENGTH ? `${cleaned.slice(0, MAX_LENGTH)}…` : cleaned;
 };
 
-const readJson = (path) => {
+const readJson = <T>(path: string): T | null => {
   if (!existsSync(path)) return null;
   try {
-    return JSON.parse(readFileSync(path, 'utf8'));
+    return JSON.parse(readFileSync(path, 'utf8')) as T;
   } catch {
     console.log(`${path}: unreadable report.`);
     return null;
   }
 };
 
-function summarizeVitest(report) {
-  const failures = [];
+function summarizeVitest(report: VitestReport) {
+  const failures: Failure[] = [];
   for (const file of report.testResults ?? []) {
     for (const test of file.assertionResults ?? []) {
       if (test.status === 'failed') {
         failures.push({
-          title: test.fullName ?? test.title,
+          title: test.fullName ?? test.title ?? '',
           message: truncate((test.failureMessages ?? []).join(' ')),
         });
       }
@@ -55,7 +58,7 @@ function summarizeVitest(report) {
   printFailures(failures);
 }
 
-function walkSuites(suites, path, tests) {
+function walkSuites(suites: PlaywrightSuite[] | undefined, path: string[], tests: { title: string; test: PlaywrightTest }[]) {
   for (const suite of suites ?? []) {
     const titles = suite.title ? [...path, suite.title] : path;
     for (const spec of suite.specs ?? []) {
@@ -67,21 +70,21 @@ function walkSuites(suites, path, tests) {
   }
 }
 
-function summarizePlaywright(report) {
-  const tests = [];
+function summarizePlaywright(report: PlaywrightReport) {
+  const tests: { title: string; test: PlaywrightTest }[] = [];
   walkSuites(report.suites, [], tests);
 
-  const failures = [];
-  const flaky = [];
+  const failures: Failure[] = [];
+  const flaky: Omit<Failure, 'message'>[] = [];
   for (const { title, test } of tests) {
     const results = test.results ?? [];
-    const last = results.at(-1) ?? {};
+    const last = results.at(-1);
     const trace = results
       .flatMap((r) => r.attachments ?? [])
       .find((a) => a.name === 'trace' && a.path)?.path;
 
     if (test.status === 'unexpected') {
-      const error = last.error?.message ?? last.errors?.[0]?.message ?? 'failed without a message';
+      const error = last?.error?.message ?? last?.errors?.[0]?.message ?? 'failed without a message';
       failures.push({ title, message: truncate(error), trace });
     } else if (test.status === 'flaky') {
       flaky.push({ title, trace });
@@ -99,7 +102,7 @@ function summarizePlaywright(report) {
   }
 }
 
-function printFailures(failures) {
+function printFailures(failures: Failure[]) {
   for (const { title, message, trace } of failures.slice(0, MAX_FAILURES)) {
     console.log(`  ✗ ${title}`);
     if (message) console.log(`    ${message}`);
@@ -110,8 +113,8 @@ function printFailures(failures) {
   }
 }
 
-const vitest = readJson('reports/vitest.json');
-const playwright = readJson('reports/playwright.json');
+const vitest = readJson<VitestReport>('reports/vitest.json');
+const playwright = readJson<PlaywrightReport>('reports/playwright.json');
 
 if (!vitest && !playwright) {
   console.log('No report found: run the tests first.');

@@ -41,10 +41,10 @@ if [[ "${QA_DRY_RUN:-0}" == 1 ]]; then
 fi
 mkdir -p reports
 if [[ "$PHASE" == 2 ]]; then
-  node qa/scenario-review.mjs reserve "$TICKET" "$SPEC" || fail 'review generated tests and RED failures, or reassess the attempt limit, before phase 2'
+  node qa/scenario-review.ts reserve "$TICKET" "$SPEC" || fail 'review generated tests and RED failures, or reassess the attempt limit, before phase 2'
 fi
 # This spec-derived manifest is produced independently BEFORE the agent writes anything.
-node qa/criteria-manifest.mjs "$TICKET" "$SPEC" "reports/$TICKET-criteria.json" || fail 'Cannot build authoritative manifest'
+node qa/criteria-manifest.ts "$TICKET" "$SPEC" "reports/$TICKET-criteria.json" || fail 'Cannot build authoritative manifest'
 rm -f reports/vitest.json reports/playwright.json
 OUTPUT="reports/$TICKET-phase$PHASE-run.json"
 export QA_PHASE="$PHASE" QA_STRICT_EVIDENCE=1
@@ -64,18 +64,18 @@ COST="$(jq -r '.total_cost_usd // 0' "$OUTPUT")"
 if [[ "$(jq -r '.is_error // false' "$OUTPUT")" == true ]]; then
   fail "agent error (cost \$$COST): $(jq -r '.result // .terminal_reason // .subtype // "unknown"' "$OUTPUT")"
 fi
-VERDICT_JSON="$(jq -c '{last_assistant_message: .result}' "$OUTPUT" | CLAUDE_PROJECT_DIR="$PWD" node .claude/hooks/verdict-check.mjs "$PHASE" --final)" \
+VERDICT_JSON="$(jq -c '{last_assistant_message: .result}' "$OUTPUT" | CLAUDE_PROJECT_DIR="$PWD" node .claude/hooks/verdict-check.ts "$PHASE" --final)" \
   || fail "invalid verdict (cost \$$COST); see $OUTPUT"
 # Reject focused/skipped tests, even when an Edit changed only part of a file.
-node qa/check-tests.mjs || fail 'disabled or focused tests detected'
+node qa/check-tests.ts || fail 'disabled or focused tests detected'
 jq --argjson cost "$COST" '. + {cost_usd: $cost}' <<<"$VERDICT_JSON" > "reports/$TICKET-phase$PHASE.json"
 VERDICT="$(jq -r '.verdict' <<<"$VERDICT_JSON")"
 echo "QA agent $TICKET, phase $PHASE: $VERDICT, cost \$$COST"
 if [[ "$VERDICT" != 'blocked' ]]; then
-  node qa/coverage-report.mjs "$TICKET" "$PHASE" || fail 'Per-criterion coverage report failed'
+  node qa/coverage-report.ts "$TICKET" "$PHASE" || fail 'Per-criterion coverage report failed'
 fi
 if [[ "$PHASE" == 1 && "$VERDICT" == ready ]]; then
-  node qa/scenario-review.mjs prepare "$TICKET" "$SPEC" || fail 'Cannot prepare the human scenario review'
+  node qa/scenario-review.ts prepare "$TICKET" "$SPEC" || fail 'Cannot prepare the human scenario review'
 fi
 case "$VERDICT" in
   ready|pass) exit 0 ;;

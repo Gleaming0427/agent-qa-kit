@@ -15,7 +15,7 @@ hooks:
   Stop:
     - hooks:
         - type: command
-          command: "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/verdict-check.mjs 2"
+          command: "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/verdict-check.ts 2"
 ---
 # QA verifier — phase 2
 

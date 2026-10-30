@@ -4,10 +4,11 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { buildManifest } from '../criteria-manifest.mjs';
+import { buildManifest } from '../criteria-manifest.ts';
+import type { Verdict } from '../../.claude/hooks/strict-evidence.ts';
 
 const root = resolve(import.meta.dirname, '../..');
-const hook = join(root, '.claude/hooks/verdict-check.mjs');
+const hook = join(root, '.claude/hooks/verdict-check.ts');
 const guard = join(root, '.claude/hooks/qa-guard.sh');
 const spec = '- AC-1: list services\n- AC-2: filter services\n';
 function setup() {
@@ -27,10 +28,10 @@ function setup() {
   }));
   return project;
 }
-function verdict(ids = ['AC-1', 'AC-2']) {
-  return { ticket: 'TICKET-42', phase: 2, verdict: 'pass', criteria: ids.flatMap((id) => ['mfe', 'shell'].map((level) => ({ id, level, status: 'pass', evidence: 'test' }))), flaky_tests: [], spec_questions: [], alerts: [] };
+function verdict(ids = ['AC-1', 'AC-2']): Verdict {
+  return { ticket: 'TICKET-42', phase: 2, verdict: 'pass', criteria: ids.flatMap((id) => (['mfe', 'shell'] as const).map((level) => ({ id, level, status: 'pass', evidence: 'test' }))), flaky_tests: [], spec_questions: [], alerts: [] };
 }
-function check(project, v, strict = true) {
+function check(project: string, v: Verdict, strict = true) {
   return spawnSync('node', [hook, '2', '--final'], {
     input: JSON.stringify({ last_assistant_message: JSON.stringify(v) }),
     encoding: 'utf8',
@@ -68,7 +69,7 @@ test('guard blocks unknown tools, hidden secrets behind symlinks and app writes'
     mkdirSync(join(project, 'src'));
     writeFileSync(join(project, '.env'), 'SECRET=abc');
     symlinkSync(join(project, '.env'), join(project, 'secret.test.ts'));
-    function action(tool_name, tool_input) {
+    function action(tool_name: string, tool_input: Record<string, unknown>) {
       return spawnSync('bash', [guard], { input: JSON.stringify({ tool_name, tool_input }), encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: project } });
     }
     assert.equal(action('Write', { file_path: 'src/new.test.tsx', content: "test('ok', ()=>{})" }).status, 0);

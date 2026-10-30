@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: './e2e',
   // A failing test is retried once; if it then passes, it is reported as flaky.
   retries: 1,
-  // "dot" keeps the console short; the JSON report feeds qa/summary.mjs.
+  // "dot" keeps the console short; the JSON report feeds qa/summary.ts.
   reporter: [['dot'], ['json', { outputFile: 'reports/playwright.json' }]],
   use: {
     baseURL: 'http://localhost:9000',
