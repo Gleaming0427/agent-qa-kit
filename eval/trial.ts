@@ -78,9 +78,10 @@ function runPhase(phase: 1 | 2, label: string): AgentRun {
     encoding: 'utf8',
     timeout: 45 * 60_000,
     // Phase 2 measures the verifier's verdict only: the full suite stays out of this process, which
-    // holds the API key (as in qa-verify.yml), and CI is cleared so that no screenshot is compared,
-    // since the variants change the page on purpose.
-    env: { ...process.env, QA_PROJECT_DIR: ws, ...(phase === 2 ? { CI: '', QA_FULL_SUITE: 'later' } : {}) },
+    // holds the API key, as in qa-verify.yml. CI keeps its value, so Playwright runs one worker, as
+    // in phase 1 and in the kit's own CI: several workers against one dev server in the sandbox
+    // made the browser tests time out.
+    env: { ...process.env, QA_PROJECT_DIR: ws, ...(phase === 2 ? { QA_FULL_SUITE: 'later' } : {}) },
   });
   writeFileSync(join(out, `${label}.log`), `${run.stdout ?? ''}\n--- stderr ---\n${run.stderr ?? ''}`);
   const runJson = readJson(join(ws, `reports/${ticketName}-phase${phase}-run.json`));
@@ -122,6 +123,12 @@ if (command === 'prepare') {
   rmSync(root, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
   copyApp(ws, { link: false });
+  // The shop finds the kit's summary script through a path relative to examples/shop; the
+  // workspace lives elsewhere, so it points to the script directly (part of the baseline commit).
+  const pkgPath = join(ws, 'package.json');
+  const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { scripts: Record<string, string> };
+  pkg.scripts['test:summary'] = `node ${join(KIT, 'qa/summary.ts')}`;
+  writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
   copyFileSync(ticket.spec, specPath);
   git('init', '-q');
   git('add', '-A');
@@ -160,7 +167,11 @@ if (command === 'write') {
   }
   const runJson = readJson(join(ws, `reports/${ticketName}-phase1-run.json`));
   const transcript = typeof runJson?.session_id === 'string' ? findTranscript(runJson.session_id) : null;
-  if (transcript) copyFileSync(transcript, join(out, 'phase1-transcript.jsonl'));
+  if (transcript) {
+    copyFileSync(transcript, join(out, 'phase1-transcript.jsonl'));
+    // Each action the guard hook refused shows up once in the transcript.
+    state.phase1.guard_blocks = (readFileSync(transcript, 'utf8').match(/Blocked by QA guard/g) ?? []).length;
+  }
   saveState(state);
   console.log(`Phase 1: exit ${state.phase1.exit_code}, verdict ${state.phase1.verdict}, $${state.phase1.cost_usd}, ${state.generated_test_files.length} new test file(s), ${state.changed_non_test_files.length} other change(s)`);
 }

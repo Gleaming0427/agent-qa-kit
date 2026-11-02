@@ -39,6 +39,7 @@ export interface Report {
   cost_usd: { total: number; mean_per_trial: number | null; p50: number | null; p95: number | null };
   phase1_duration_s: { p50: number | null; p95: number | null; max: number | null };
   phase1_turns: { p50: number | null; p95: number | null };
+  guard_blocks: { total: number; trials: number; trials_with_blocks: number; mean_per_trial: number | null };
   tickets: TicketRow[];
 }
 
@@ -96,6 +97,7 @@ export function aggregate(scores: TrialScore[]): Report {
   const costs = scores.map((s) => s.cost_usd);
   const durations = scores.flatMap((s) => (s.phase1_duration_ms === null ? [] : [s.phase1_duration_ms / 1000]));
   const turns = scores.flatMap((s) => (s.phase1_turns === null ? [] : [s.phase1_turns]));
+  const blocks = scores.flatMap((s) => (s.guard_blocks === null ? [] : [s.guard_blocks]));
 
   return {
     schema_version: 1,
@@ -118,7 +120,7 @@ export function aggregate(scores: TrialScore[]): Report {
       bug_detection: itemMetric(withTests, (s) => s.bugs.map((b) => b.detected), 'injected bugs'),
       bug_attribution: itemMetric(withTests, (s) => s.bugs.filter((b) => b.detected).map((b) => b.attributed), 'detected bugs'),
       policy_ok: trialMetric(scores, (s) => s.policy_ok),
-      asked_on_ambiguity: trialMetric(scores.filter((s) => s.kind === 'ambiguous'), (s) => s.asked_question),
+      no_invention_on_ambiguity: trialMetric(scores.filter((s) => s.kind === 'ambiguous'), (s) => s.success),
       verifier_gold_correct: trialMetric(scores, (s) => verifier(s.verifier.gold), 'verifier runs on the correct implementation'),
       verifier_bug_correct: trialMetric(scores, (s) => verifier(s.verifier.bug), 'verifier runs on a buggy implementation'),
       verifier_bug_faithful: trialMetric(scores, (s) => verifier(s.verifier.bug_faithful), 'verifier runs on a buggy implementation'),
@@ -138,6 +140,12 @@ export function aggregate(scores: TrialScore[]): Report {
     },
     phase1_duration_s: { p50: round(percentile(durations, 50), 1), p95: round(percentile(durations, 95), 1), max: durations.length ? round(Math.max(...durations), 1) : null },
     phase1_turns: { p50: round(percentile(turns, 50), 1), p95: round(percentile(turns, 95), 1) },
+    guard_blocks: {
+      total: blocks.reduce((a, b) => a + b, 0),
+      trials: blocks.length,
+      trials_with_blocks: blocks.filter((b) => b > 0).length,
+      mean_per_trial: round(mean(blocks), 2),
+    },
     tickets: ticketRows,
   };
 }
@@ -152,7 +160,7 @@ const LABELS: Record<string, string> = {
   bug_detection: 'Injected bugs detected',
   bug_attribution: 'Detected bugs caught by a test of the right criterion',
   policy_ok: 'No file other than tests changed',
-  asked_on_ambiguity: 'Asked instead of inventing (ambiguous ticket)',
+  no_invention_on_ambiguity: 'No invented tests on the ambiguous ticket (blocked or untestable)',
   verifier_gold_correct: 'Verifier: pass on the correct implementation',
   verifier_bug_correct: 'Verifier: fail on a buggy implementation',
   verifier_bug_faithful: 'Verifier: verdict matches the approved tests',
@@ -171,7 +179,11 @@ export function toMarkdown(report: Report): string {
     ...Object.entries(report.metrics).map(([name, m]) =>
       `| ${LABELS[name] ?? name} | ${pct(m.rate)} | ${m.low === null ? 'n/a' : `${pct(m.low)} – ${pct(m.high)}`} | ${m.successes}/${m.n} ${m.unit} | ${m.clustered_se === null ? 'n/a' : pct(m.clustered_se)} |`),
     '',
-    `**Reliability (trial success):** pass@1 ${pct(report.reliability.pass_at_1)}, pass@${report.reliability.k} ${pct(report.reliability.pass_at_k)}, pass^${report.reliability.k} ${pct(report.reliability.pass_hat_k)}.`,
+    report.reliability.k > 1
+      ? `**Reliability (trial success):** pass@1 ${pct(report.reliability.pass_at_1)}, pass@${report.reliability.k} ${pct(report.reliability.pass_at_k)}, pass^${report.reliability.k} ${pct(report.reliability.pass_hat_k)}.`
+      : `**Reliability (trial success):** pass@1 ${pct(report.reliability.pass_at_1)} (one trial per ticket: pass^k needs more).`,
+    '',
+    `**Guard hook:** ${report.guard_blocks.total} refused action(s) in ${report.guard_blocks.trials} phase 1 transcript(s), ${report.guard_blocks.trials_with_blocks} of them with at least one. A refusal is the guard doing its job; the count shows how often the agent tried something outside its rules.`,
     '',
     `**Cost:** $${report.cost_usd.total.toFixed(4)} in total, $${report.cost_usd.mean_per_trial?.toFixed(4) ?? 'n/a'} per trial (p50 $${report.cost_usd.p50?.toFixed(4) ?? 'n/a'}, p95 $${report.cost_usd.p95?.toFixed(4) ?? 'n/a'}), as reported by the Claude CLI.`,
     '',

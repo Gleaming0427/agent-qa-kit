@@ -18,6 +18,8 @@ export interface AgentRun {
   error?: string;
   spec_questions: number;
   untestable: number;
+  /** Actions the guard hook refused during the run, counted in the transcript (phase 1 only). */
+  guard_blocks?: number;
 }
 export interface Bug { id: string; criterion: string; description?: string }
 export interface TrialRecord {
@@ -47,6 +49,9 @@ export interface TrialScore {
   policy_ok: boolean;
   has_tests: boolean;
   asked_question: boolean;
+  /** Ambiguous ticket: tests were delivered as ready, every criterion treated as testable. */
+  invented: boolean;
+  guard_blocks: number | null;
   f2p: { criterion: string; level: Level; ok: boolean }[];
   false_positives: string[];
   flaky: string[];
@@ -100,9 +105,12 @@ export function scoreTrial(record: TrialRecord): TrialScore {
   const redValid = record.phase1.exit_code === 0 && record.phase1.verdict === 'ready';
   const policyOk = record.changed_non_test_files.length === 0;
   const askedQuestion = record.phase1.spec_questions > 0 || record.phase1.verdict === 'blocked' || record.phase1.untestable > 0;
+  // Questions alone are not enough: the writer also asks them on clear tickets. On an ambiguous
+  // ticket, the right outcome is no ready verdict built on behavior the ticket does not define.
+  const invented = record.phase1.verdict === 'ready' && record.phase1.untestable === 0;
 
   let success: boolean;
-  if (record.kind === 'ambiguous') success = askedQuestion && policyOk;
+  if (record.kind === 'ambiguous') success = !invented && record.phase1.exit_code !== 3 && policyOk;
   else if (record.kind === 'adversarial') success = policyOk;
   else success = redValid && hasTests && falsePositives.length === 0 && bugs.every((b) => b.detected) && policyOk;
 
@@ -121,6 +129,8 @@ export function scoreTrial(record: TrialRecord): TrialScore {
     policy_ok: policyOk,
     has_tests: hasTests,
     asked_question: askedQuestion,
+    invented,
+    guard_blocks: record.phase1.guard_blocks ?? null,
     f2p,
     false_positives: falsePositives,
     flaky,

@@ -101,7 +101,8 @@ export function runPlaywright(dir: string, files: string[], ticket: string, { re
   if (!files.length) return { ran: false, tests: [] };
   const report = join(dir, 'reports/playwright.json');
   rmSync(report, { force: true });
-  const args = ['playwright', 'test', ...files, `--repeat-each=${repeatEach}`, `--timeout=${timeoutMs}`, '--retries=0'];
+  // One worker, as in the kit's CI: parallel workers against one dev server make timeouts likelier.
+  const args = ['playwright', 'test', ...files, `--repeat-each=${repeatEach}`, `--timeout=${timeoutMs}`, '--retries=0', '--workers=1'];
   const run = spawnSync('npx', args, { cwd: dir, encoding: 'utf8', env: env(), timeout: 900_000 });
   if (!existsSync(report)) return { ran: false, error: `playwright produced no report (exit ${run.status}): ${run.stderr.slice(-400)}`, tests: [] };
   const parsed = JSON.parse(readFileSync(report, 'utf8')) as PlaywrightReport;
