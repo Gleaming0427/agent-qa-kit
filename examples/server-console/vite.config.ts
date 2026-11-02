@@ -8,6 +8,6 @@ export default defineConfig({
     globals: true,
     reporters: ['default', 'json'],
     outputFile: { json: 'reports/vitest.json' },
-    include: ['src/**/*.test.tsx'],
+    include: ['src/**/*.test.{ts,tsx}'],
   },
 });

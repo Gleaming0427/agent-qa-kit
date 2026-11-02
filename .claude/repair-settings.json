@@ -1,0 +1,68 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Grep(**)",
+      "Edit(**)",
+      "Bash(npm run test:affected)",
+      "Bash(npm run test:e2e -- --grep *)",
+      "Bash(npm run test:summary)",
+      "Bash(npx vitest run *)",
+      "Bash(npm run build)",
+      "Bash(git diff *)",
+      "Bash(git status *)",
+      "Bash(git log *)"
+    ],
+    "deny": [
+      "Edit(**/*.test.*)",
+      "Edit(**/*.spec.*)",
+      "Edit(**/*-snapshots/**)",
+      "Edit(**/__snapshots__/**)",
+      "Edit(**/e2e/**)",
+      "Edit(qa/**)",
+      "Edit(.claude/**)",
+      "Edit(.github/**)",
+      "Edit(reports/**)",
+      "Edit(specs/**)",
+      "Edit(**/package.json)",
+      "Edit(**/package-lock.json)",
+      "Edit(**/playwright.config.*)",
+      "Edit(**/vite.config.*)",
+      "Edit(**/vitest.config.*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/.npmrc)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "WebFetch",
+      "WebSearch",
+      "Bash(git push *)",
+      "Bash(curl *)",
+      "Bash(wget *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Grep|Glob|Write|Edit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "QA_GUARD_MODE=repair \"${QA_KIT_DIR:-$CLAUDE_PROJECT_DIR}\"/.claude/hooks/qa-guard.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "autoAllowBashIfSandboxed": false,
+    "network": {
+      "allowedDomains": []
+    }
+  }
+}

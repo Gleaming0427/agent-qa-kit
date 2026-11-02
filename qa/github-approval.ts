@@ -1,0 +1,96 @@
+#!/usr/bin/env node
+// Finds the human approval of a ticket's QA pull request (head qa/<TICKET>).
+// It counts only if a collaborator approved the latest commit of the tests and
+// nobody's latest review asks for changes.
+//
+// Usage: node qa/github-approval.ts pull TICKET OWNER/REPO pulls.json
+//        node qa/github-approval.ts approval TICKET OWNER/REPO pulls.json reviews.json
+//   pulls.json    gh api --paginate --slurp "repos/OWNER/REPO/pulls?state=all&head=OWNER:qa/TICKET"
+//   reviews.json  gh api --paginate --slurp "repos/OWNER/REPO/pulls/NUMBER/reviews"
+// Prints the pull request {number, head_sha} (null when the ticket has none), or
+// the approval {number, head_sha, reviewer, body}, as JSON; otherwise explains
+// the refusal (exit 1).
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+export interface PullRequest {
+  number: number;
+  state: string;
+  merged_at?: string | null;
+  head: { ref: string; sha: string; repo?: { full_name?: string } | null };
+}
+export interface Review {
+  id: number;
+  user?: { login?: string } | null;
+  state: string;
+  commit_id?: string | null;
+  body?: string | null;
+  author_association?: string;
+  submitted_at?: string | null;
+}
+export interface FoundApproval { number: number; head_sha: string; reviewer: string; body: string }
+
+// People who can push to the repository; anyone else's approval is only a comment.
+const TRUSTED = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
+const short = (sha: string) => sha.slice(0, 7);
+
+/** The QA pull request of a ticket: the latest one opened from qa/<TICKET> in this repository. */
+export function findQaPull(pulls: PullRequest[], ticket: string, repo: string): PullRequest | null {
+  const own = pulls
+    .filter((pull) => pull.head.ref === `qa/${ticket}` && pull.head.repo?.full_name === repo)
+    .sort((a, b) => b.number - a.number);
+  if (!own.length) return null;
+  const [pull] = own;
+  if (pull.state === 'closed' && !pull.merged_at) {
+    throw new Error(`The QA pull request #${pull.number} was closed without merging: its tests were not accepted.`);
+  }
+  return pull;
+}
+
+export function findApproval(pull: PullRequest, reviews: Review[]): FoundApproval {
+  // Each reviewer's latest decision; comments do not change it.
+  const latest = new Map<string, Review>();
+  for (const review of [...reviews].sort((a, b) => a.id - b.id)) {
+    const login = review.user?.login;
+    if (login && ['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(review.state)) latest.set(login, review);
+  }
+  const decisions = [...latest.entries()];
+  const blocking = decisions.filter(([, review]) => review.state === 'CHANGES_REQUESTED').map(([login]) => `@${login}`);
+  if (blocking.length) throw new Error(`${blocking.join(', ')} requested changes on the QA pull request #${pull.number}.`);
+
+  const approvals = decisions.filter(([, review]) => review.state === 'APPROVED');
+  const valid = approvals.filter(([, review]) => TRUSTED.has(review.author_association ?? '') && review.commit_id === pull.head.sha);
+  if (!valid.length) {
+    const reasons = approvals.map(([login, review]) => !TRUSTED.has(review.author_association ?? '')
+      ? `@${login} cannot approve: not a collaborator of the repository`
+      : `@${login} approved an older version of the tests (${short(review.commit_id ?? '')}, latest ${short(pull.head.sha)})`);
+    throw new Error(`The QA pull request #${pull.number} has no valid approval${reasons.length ? `: ${reasons.join('; ')}` : ''}.`);
+  }
+  // Prefer the latest approval that gives reasons, written as "AC-N: reason".
+  const withReasons = valid.filter(([, review]) => /AC-[1-9]\d*/.test(review.body ?? ''));
+  const [reviewer, review] = (withReasons.length ? withReasons : valid).sort(([, a], [, b]) => b.id - a.id)[0];
+  return { number: pull.number, head_sha: pull.head.sha, reviewer: `@${reviewer}`, body: review.body ?? '' };
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  try {
+    const [command, ticket, repo, pullsFile, reviewsFile] = process.argv.slice(2);
+    if (!ticket || !repo || !pullsFile || !(command === 'pull' || command === 'approval' && reviewsFile)) {
+      throw new Error('Usage: node qa/github-approval.ts pull TICKET OWNER/REPO pulls.json\n'
+        + '       node qa/github-approval.ts approval TICKET OWNER/REPO pulls.json reviews.json');
+    }
+    // With --slurp, gh writes every page as one array of pages.
+    const items = <T>(file: string) => (JSON.parse(readFileSync(file, 'utf8')) as (T | T[])[]).flat() as T[];
+    const pull = findQaPull(items<PullRequest>(pullsFile), ticket, repo);
+    if (command === 'pull') {
+      console.log(JSON.stringify(pull && { number: pull.number, head_sha: pull.head.sha }));
+    } else {
+      if (!pull) throw new Error(`No pull request from qa/${ticket}: run the "QA write tests" workflow for ${ticket} first.`);
+      console.log(JSON.stringify(findApproval(pull, items<Review>(reviewsFile!))));
+    }
+  } catch (error) {
+    console.error(`QA approval: ${(error as Error).message}`);
+    process.exitCode = 1;
+  }
+}

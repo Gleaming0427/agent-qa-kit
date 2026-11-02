@@ -11,11 +11,11 @@ hooks:
     - matcher: "Read|Grep|Glob|Bash"
       hooks:
         - type: command
-          command: "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/qa-guard.sh"
+          command: "\"${QA_KIT_DIR:-$CLAUDE_PROJECT_DIR}\"/.claude/hooks/qa-guard.sh"
   Stop:
     - hooks:
         - type: command
-          command: "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/verdict-check.ts 2"
+          command: "node \"${QA_KIT_DIR:-$CLAUDE_PROJECT_DIR}\"/.claude/hooks/verdict-check.ts 2"
 ---
 # QA verifier — phase 2
 

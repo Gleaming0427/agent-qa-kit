@@ -1,0 +1,63 @@
+name: QA verify
+# On a pull request that names a ticket with QA tests (in its branch or title):
+# the tests must be the ones a collaborator approved, the QA verifier agent checks
+# every acceptance criterion, then the full suite runs. Make "QA verify" a
+# required check to block the merge when it fails. Other pull requests pass.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: qa-verify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: QA verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      BASE_REF: ${{ github.base_ref }}
+      HEAD_REF: ${{ github.head_ref }}
+      PR_TITLE: ${{ github.event.pull_request.title }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          # No token on disk while the agent and the pull request's code run.
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Check that the tests are the approved ones
+        id: prepare
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash qa/ci-verify.sh prepare
+      - name: Install the application, its browser and the agent sandbox
+        if: steps.prepare.outputs.count != '0'
+        run: bash qa/ci-verify.sh install
+      - name: QA verifier agent checks each criterion (phase 2)
+        if: steps.prepare.outputs.count != '0'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DISABLE_AUTOUPDATER: 1
+        run: bash qa/ci-verify.sh agent
+      # A step of its own, without the API key: the pull request's code runs here.
+      - name: Full suite, smoke journeys included
+        if: steps.prepare.outputs.count != '0'
+        run: bash qa/ci-verify.sh suite
+      - name: Upload the QA reports (even on failure)
+        if: always() && steps.prepare.outputs.count != '0'
+        uses: actions/upload-artifact@v6
+        with:
+          name: qa-verify-reports
+          path: |
+            **/reports/
+            **/test-results/
+            !**/node_modules/**
+          if-no-files-found: ignore

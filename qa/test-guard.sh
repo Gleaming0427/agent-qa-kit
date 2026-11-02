@@ -3,11 +3,12 @@
 cd "$(dirname "$0")/.." || exit 1
 GUARD="$PWD/.claude/hooks/qa-guard.sh"
 export CLAUDE_PROJECT_DIR=/project
+MODE=qa
 failures=0; n=0
 check() {
   local expected="$1" description="$2" json="$3" message code
   n=$((n + 1))
-  message="$(printf '%s' "$json" | "$GUARD" 2>&1)"; code=$?
+  message="$(printf '%s' "$json" | QA_GUARD_MODE="$MODE" "$GUARD" 2>&1)"; code=$?
   if [[ "$code" == "$expected" ]]; then
     [[ "$code" == 0 ]] && printf ' ok   allowed  %s\n' "$description" || printf ' ok   blocked  %s\n' "$description"
   else
@@ -60,5 +61,26 @@ check 2 'invalid JSON'                       'not json'
 check 2 'tool name missing'                  '{"tool_input":{}}'
 check 2 'unknown tool'                       '{"tool_name":"Computer","tool_input":{}}'
 check 2 'unsafe E2E options'                 "$(action Bash command 'npm run test:e2e -- --grep @services --update-snapshots')"
+echo 'Repair mode: the agent fixes the application, never the tests'
+MODE=repair
+check 0 'fix a component'                     "$(file_action Edit apps/services/src/ServiceList.tsx 'export const x = 1')"
+check 0 'add a source file'                   "$(file_action Write src/search.ts 'export const search = 1')"
+check 0 'build the app'                       "$(action Bash command 'npm run build')"
+check 0 'run the failing tests'               "$(action Bash command 'npm run test:affected')"
+check 2 'edit a unit test'                    "$(file_action Edit apps/services/src/ServiceList.test.tsx "it('AC-2', () => {})")"
+check 2 'edit a browser test'                 "$(file_action Write e2e/TICKET-42.spec.ts "test('AC-2', () => {})")"
+check 2 'edit a nested e2e helper'            "$(file_action Edit examples/demo/e2e/helpers.ts 'export {}')"
+check 2 'replace a screenshot baseline'       "$(file_action Write e2e/smoke.spec.ts-snapshots/home-linux.png 'x')"
+check 2 'edit package.json'                   "$(file_action Edit apps/services/package.json '{}')"
+check 2 'edit Playwright config'              "$(file_action Edit playwright.config.ts 'retries: 5')"
+check 2 'edit Vite config'                    "$(file_action Edit vite.config.ts 'test: {}')"
+check 2 'edit the kit'                        "$(file_action Edit qa/run-qa.sh 'exit 0')"
+check 2 'edit the guard'                      "$(file_action Edit .claude/hooks/qa-guard.sh 'exit 0')"
+check 2 'edit CI'                             "$(file_action Edit .github/workflows/qa-guard.yml 'on: []')"
+check 2 'write a report'                      "$(file_action Write reports/TICKET-42-phase2.json '{}')"
+check 2 'edit the ticket'                     "$(file_action Edit specs/TICKET-42.md '- AC-1: anything')"
+check 2 'read .env'                           "$(action Read file_path /project/.env)"
+check 2 'install a package'                   "$(action Bash command 'npm install left-pad')"
+check 2 'edit through sed'                    "$(action Bash command 'sed -i s/a/b/ src/App.test.tsx')"
 echo
 [[ "$failures" == 0 ]] && echo "All $n guard cases passed." || { echo "$failures of $n failed"; exit 1; }

@@ -53,7 +53,8 @@ for (const step of steps) {
   const savedReport = resolve(root, 'reports', `${step.name}-${e2e ? 'playwright' : 'vitest'}.json`);
   rmSync(report, { force: true });
   rmSync(savedReport, { force: true });
-  const args = e2e ? ['run', 'test:e2e', '--', 'e2e/TICKET-42.spec.ts'] : ['run', 'test:unit'];
+  // Only TICKET-42's tests: other tickets may add tests to the same app.
+  const args = e2e ? ['run', 'test:e2e', '--', 'e2e/TICKET-42.spec.ts'] : ['run', 'test:unit', '--', '--testNamePattern', '\\[TICKET-42\\]'];
   const run = spawnSync('npm', args, {
     cwd: root, encoding: 'utf8', stdio: 'inherit',
     env: { ...process.env, VITE_DEMO_BUG: step.bug },
@@ -61,7 +62,7 @@ for (const step of steps) {
   const passed = run.status === 0;
   if (existsSync(report)) copyFileSync(report, savedReport);
   let tests: Observation[] = [];
-  try { tests = observations(JSON.parse(readFileSync(report, 'utf8'))); } catch {}
+  try { tests = observations(JSON.parse(readFileSync(report, 'utf8'))).filter((item) => item.title.includes('[TICKET-42]')); } catch {}
   const failures = tests.filter((item) => item.status === (e2e ? 'unexpected' : 'failed'));
   const expectedRed = failures.length === 1 && failures[0].title.includes('[TICKET-42][AC-2]') && Boolean(failures[0].message);
   const expectedGreen = failures.length === 0 && tests.every((item) => item.status === (e2e ? 'expected' : 'passed'));

@@ -1,0 +1,74 @@
+name: QA write tests
+# Started by hand for one ticket. The QA writer agent turns specs/<ticket>.md into
+# unit and browser tests that fail for the right reason, then opens a pull request
+# into feat/<ticket>. Approving that pull request is the human review of the tests.
+on:
+  workflow_dispatch:
+    inputs:
+      ticket:
+        description: Ticket key; its acceptance criteria must be in specs/<ticket>.md
+        required: true
+        type: string
+      mfe:
+        description: Feature area; it tags the browser tests (@services)
+        required: true
+        default: services
+        type: string
+      app:
+        description: Application folder, relative to the repository
+        required: true
+        default: examples/server-console
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: qa-write-${{ inputs.ticket }}
+
+jobs:
+  write:
+    name: Write the RED tests (QA writer agent)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      TICKET: ${{ inputs.ticket }}
+      MFE: ${{ inputs.mfe }}
+      APP: ${{ inputs.app }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          # No token on disk while the agent and the application's code run.
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Check the request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HAS_API_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        run: bash qa/ci-write-tests.sh check
+      - name: Install the application, its browser and the agent sandbox
+        run: |
+          (cd "$APP" && npm ci --no-audit --no-fund && npx playwright install --with-deps chromium)
+          bash qa/ci-install-agents.sh
+      - name: Write the tests; each must fail for the right reason (phase 1)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DISABLE_AUTOUPDATER: 1
+        run: bash qa/ci-write-tests.sh write
+      - name: Open the pull request for the human review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash qa/ci-write-tests.sh publish
+      - name: Upload the QA reports (even on failure)
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: qa-write-reports
+          path: |
+            ${{ inputs.app }}/reports/
+            ${{ inputs.app }}/test-results/
+          if-no-files-found: ignore

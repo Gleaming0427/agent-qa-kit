@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Runs two-phase QA agents with independent acceptance-criteria evidence checking.
 # Usage: qa/run-qa.sh TICKET-42 1 specs/TICKET-42.md services
+# The application may live outside the kit: set QA_PROJECT_DIR to its folder.
+# QA_FULL_SUITE=later leaves the full suite after a phase 2 pass to the caller
+# (qa/full-suite.sh), so that CI can run it in a step without the API key.
 # Codes: 0 ready/pass; 1 fail; 2 blocked; 3 infrastructure/invalid verdict.
 set -uo pipefail
 fail() { echo "run-qa: $1" >&2; exit 3; }
@@ -11,12 +14,14 @@ TICKET="$1"; PHASE="$2"; SPEC="$3"; MFE="$4"
 [[ "$MFE" =~ ^[a-z0-9-]+$ ]] || fail 'invalid MFE name'
 [[ -f "$SPEC" ]] || fail "spec not found: $SPEC"
 SPEC="$(cd "$(dirname "$SPEC")" && pwd)/$(basename "$SPEC")"
-cd "$(dirname "$0")/.." || fail 'Cannot locate project root'
+KIT="$(cd "$(dirname "$0")/.." && pwd)" || fail 'Cannot locate the kit'
+cd "${QA_PROJECT_DIR:-$KIT}" || fail "Cannot enter the project: ${QA_PROJECT_DIR:-$KIT}"
+export QA_KIT_DIR="$KIT"
 for tool in claude jq awk node; do command -v "$tool" >/dev/null 2>&1 || fail "$tool is required"; done
 if [[ "$PHASE" == 1 ]]; then
-  AGENT='.claude/agents/qa-writer.md'; BUDGET="${QA_BUDGET_USD:-1.00}"; RESTRICTIONS=()
+  AGENT="$KIT/.claude/agents/qa-writer.md"; BUDGET="${QA_BUDGET_USD:-1.00}"; RESTRICTIONS=()
 else
-  AGENT='.claude/agents/qa-verifier.md'; BUDGET="${QA_BUDGET_USD:-0.20}";
+  AGENT="$KIT/.claude/agents/qa-verifier.md"; BUDGET="${QA_BUDGET_USD:-0.20}";
   RESTRICTIONS=(--disallowedTools 'Write,Edit,NotebookEdit')
 fi
 [[ -f "$AGENT" ]] || fail "agent not found: $AGENT"
@@ -42,17 +47,20 @@ if [[ "${QA_DRY_RUN:-0}" == 1 ]]; then
 fi
 mkdir -p reports
 if [[ "$PHASE" == 2 ]]; then
-  node qa/scenario-review.ts reserve "$TICKET" "$SPEC" || fail 'review generated tests and RED failures, or reassess the attempt limit, before phase 2'
+  node "$KIT/qa/scenario-review.ts" reserve "$TICKET" "$SPEC" || fail 'review generated tests and RED failures, or reassess the attempt limit, before phase 2'
 fi
 # This spec-derived manifest is produced independently BEFORE the agent writes anything.
-node qa/criteria-manifest.ts "$TICKET" "$SPEC" "reports/$TICKET-criteria.json" || fail 'Cannot build authoritative manifest'
+node "$KIT/qa/criteria-manifest.ts" "$TICKET" "$SPEC" "reports/$TICKET-criteria.json" || fail 'Cannot build authoritative manifest'
 rm -f reports/vitest.json reports/playwright.json
 OUTPUT="reports/$TICKET-phase$PHASE-run.json"
 export QA_PHASE="$PHASE" QA_STRICT_EVIDENCE=1
 export QA_SPEC_PATH="$SPEC" QA_MANIFEST_PATH="$PWD/reports/$TICKET-criteria.json"
 export QA_RUN_ID="$TICKET-phase$PHASE-$(date +%s)-$$"
+# Commands the agent starts (the application's tests included) get no credentials,
+# and on Linux cannot read other processes' environments.
+export CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1
 claude -p "$REQUEST" \
-  --settings .claude/qa-settings.json \
+  --settings "$KIT/.claude/qa-settings.json" \
   --append-system-prompt-file "$SYSTEM_PROMPT" \
   --model "$MODEL" --effort "$EFFORT" \
   ${RESTRICTIONS[@]+"${RESTRICTIONS[@]}"} \
@@ -65,7 +73,7 @@ COST="$(jq -r '.total_cost_usd // 0' "$OUTPUT")"
 if [[ "$(jq -r '.is_error // false' "$OUTPUT")" == true ]]; then
   fail "agent error (cost \$$COST): $(jq -r '.result // .terminal_reason // .subtype // "unknown"' "$OUTPUT")"
 fi
-if ! VERDICT_JSON="$(jq -c '{last_assistant_message: .result}' "$OUTPUT" | CLAUDE_PROJECT_DIR="$PWD" node .claude/hooks/verdict-check.ts "$PHASE" --final)"; then
+if ! VERDICT_JSON="$(jq -c '{last_assistant_message: .result}' "$OUTPUT" | CLAUDE_PROJECT_DIR="$PWD" node "$KIT/.claude/hooks/verdict-check.ts" "$PHASE" --final)"; then
   # Browser tests that could not start mean a blocked environment, not a bad verdict.
   if [[ "$PHASE" == 1 ]] && jq -e '(.errors // []) | length > 0' reports/playwright.json >/dev/null 2>&1; then
     echo "QA agent $TICKET, phase 1: blocked, the browser tests could not start (cost \$$COST): $(jq -r '.errors[0].message' reports/playwright.json)" >&2
@@ -74,29 +82,28 @@ if ! VERDICT_JSON="$(jq -c '{last_assistant_message: .result}' "$OUTPUT" | CLAUD
   fail "invalid verdict (cost \$$COST); see $OUTPUT"
 fi
 # Reject focused/skipped tests, even when an Edit changed only part of a file.
-node qa/check-tests.ts || fail 'disabled or focused tests detected'
+node "$KIT/qa/check-tests.ts" || fail 'disabled or focused tests detected'
 jq --argjson cost "$COST" '. + {cost_usd: $cost}' <<<"$VERDICT_JSON" > "reports/$TICKET-phase$PHASE.json"
 VERDICT="$(jq -r '.verdict' <<<"$VERDICT_JSON")"
 echo "QA agent $TICKET, phase $PHASE: $VERDICT, cost \$$COST"
 if [[ "$VERDICT" != 'blocked' ]]; then
-  node qa/coverage-report.ts "$TICKET" "$PHASE" || fail 'Per-criterion coverage report failed'
+  node "$KIT/qa/coverage-report.ts" "$TICKET" "$PHASE" || fail 'Per-criterion coverage report failed'
 fi
 if [[ "$PHASE" == 2 && "$VERDICT" == pass ]]; then
   # The ticket passes; accept it only if every other test still passes, smoke journeys included.
-  # The launcher runs this suite itself, so the agent cannot skip it.
-  echo "Full suite for $TICKET: npm run test:unit, then npm run test:e2e"
-  rm -f reports/vitest.json reports/playwright.json
-  npm run test:unit
-  npm run test:e2e
-  node qa/full-suite.ts "$TICKET"
-  case $? in
-    0) ;;
-    1) node qa/summary.ts; exit 1 ;;
-    *) fail 'cannot check the full suite: npm run test:unit and npm run test:e2e must write reports/vitest.json and reports/playwright.json' ;;
-  esac
+  if [[ "${QA_FULL_SUITE:-now}" == later ]]; then
+    echo "QA agent $TICKET: the full suite is left to the next step (qa/full-suite.sh $TICKET)"
+  else
+    QA_PROJECT_DIR="$PWD" bash "$KIT/qa/full-suite.sh" "$TICKET"
+    case $? in
+      0) ;;
+      1) exit 1 ;;
+      *) fail 'cannot check the full suite' ;;
+    esac
+  fi
 fi
 if [[ "$PHASE" == 1 && "$VERDICT" == ready ]]; then
-  node qa/scenario-review.ts prepare "$TICKET" "$SPEC" || fail 'Cannot prepare the human scenario review'
+  node "$KIT/qa/scenario-review.ts" prepare "$TICKET" "$SPEC" || fail 'Cannot prepare the human scenario review'
 fi
 case "$VERDICT" in
   ready|pass) exit 0 ;;

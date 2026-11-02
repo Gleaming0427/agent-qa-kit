@@ -3,18 +3,20 @@
 #
 # Usage:
 #   qa/check-scope.sh scope <base>
-#       On the QA agent's branch: fails if any file other than a test
-#       was modified compared with <base>.
+#       On the QA agent's branch: fails if any file other than a test or the
+#       review package (qa-reviews/<ticket>/) was modified compared with <base>.
 #
 #   qa/check-scope.sh frozen <base> <qa-branch>
-#       On the final branch: fails if a test written by the QA agent has been
-#       modified or deleted since. The development agent does not touch tests.
+#       On the final branch: fails if a test or review file written by the QA
+#       agent has been modified or deleted since. The development agent does
+#       not touch tests.
 #
 #   qa/check-scope.sh pr <base> <head-branch> [pr-title]
 #       On every pull request, for each ticket that has an origin/qa/<ticket>
 #       branch: if the branch name or the title names the ticket, its tests
 #       must match the QA branch ("frozen"); otherwise the PR may not touch
-#       the ticket's browser tests, e2e/<ticket>.spec.ts, at all.
+#       the ticket's browser tests, e2e/<ticket>.spec.ts, or its review
+#       package, qa-reviews/<ticket>/, at all.
 #
 # This check does not depend on the agents: even if a guard were bypassed
 # during the work, the PR could not be merged.
@@ -26,9 +28,11 @@ usage() {
   exit 2
 }
 
-is_test() {
+# Files the QA agent writes: tests, and the review package that CI uses to
+# check the human approval of those tests.
+is_qa_file() {
   case "$1" in
-    *.spec.ts|*.test.ts|*.test.tsx|*.test.mjs) return 0 ;;
+    *.spec.ts|*.test.ts|*.test.tsx|*.test.mjs|qa-reviews/*|*/qa-reviews/*) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -46,12 +50,12 @@ check_frozen() {
   local modified=()
   while IFS= read -r file; do
     [[ -n "$file" ]] || continue
-    is_test "$file" || continue
+    is_qa_file "$file" || continue
     git diff --quiet "$qa" HEAD -- "$file" || modified+=("$file")
   done < <(git diff --name-only "$base"..."$qa")
 
   if (( ${#modified[@]} > 0 )); then
-    echo "These tests differ from the version written by the QA agent on $qa:"
+    echo "These tests or review files differ from the version written by the QA agent on $qa:"
     printf '  %s\n' "${modified[@]}"
     echo "Any change to a test must be reviewed by a human."
     return 1
@@ -67,15 +71,15 @@ case "$MODE" in
     out_of_scope=()
     while IFS= read -r file; do
       [[ -n "$file" ]] || continue
-      is_test "$file" || out_of_scope+=("$file")
+      is_qa_file "$file" || out_of_scope+=("$file")
     done < <(git diff --name-only "$BASE"...HEAD)
 
     if (( ${#out_of_scope[@]} > 0 )); then
-      echo "The QA branch modifies files that are not tests:"
+      echo "The QA branch modifies files that are neither tests nor its review package:"
       printf '  %s\n' "${out_of_scope[@]}"
       exit 1
     fi
-    echo "QA scope respected: only tests were modified."
+    echo "QA scope respected: only tests and the review package were modified."
     ;;
 
   frozen)
@@ -97,8 +101,8 @@ case "$MODE" in
       checked=$((checked + 1))
       if [[ "$named" == *" $ticket "* ]]; then
         check_frozen "$BASE" "$qa" || failed=1
-      elif [[ -n "$(git diff --name-only "$BASE"...HEAD -- ":(glob)**/e2e/$ticket.spec.ts")" ]]; then
-        echo "This PR changes the browser tests of $ticket without naming the ticket."
+      elif [[ -n "$(git diff --name-only "$BASE"...HEAD -- ":(glob)**/e2e/$ticket.spec.ts" ":(glob)**/qa-reviews/$ticket/**")" ]]; then
+        echo "This PR changes the browser tests or the review package of $ticket without naming the ticket."
         echo "Name $ticket in the branch or the title, so its tests are compared with $qa."
         failed=1
       fi
