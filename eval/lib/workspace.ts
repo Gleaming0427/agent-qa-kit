@@ -70,6 +70,35 @@ export function makeVariant(ticket: Ticket & { dir: string }, variant: string, d
   if (variant !== 'gold') applyDiff(dest, join(ticket.dir, 'bugs', `${variant}.diff`));
 }
 
+/**
+ * Empty files that the agents' sandbox creates at the project root so that it can protect
+ * those paths. They appeared, all fifteen, in every trial of the first pilot (workflow run
+ * 41494361776), with no agent tool call touching them.
+ */
+export const SANDBOX_PLACEHOLDERS = new Set([
+  '.env', '.env.development', '.env.development.local', '.env.local', '.env.production', '.env.production.local',
+  '.env.test', '.env.test.local', '.gitmodules', '.npmrc', '.yarnrc', '.yarnrc.yml', 'bunfig.toml', 'pnpm-lock.yaml', 'yarn.lock',
+]);
+
+const isTestFile = (path: string) => /\.(test|spec)\.[cm]?[jt]sx?$/.test(path);
+
+/**
+ * Sorts the workspace changes after phase 1: new test files are the writer's output; new, empty
+ * sandbox placeholders at the root are left aside; anything else breaks the writer's rules.
+ * A placeholder name with content still counts as a change.
+ */
+export function classifyChanges(files: { code: string; path: string; size: number }[]): { tests: string[]; placeholders: string[]; others: string[] } {
+  const tests: string[] = [];
+  const placeholders: string[] = [];
+  const others: string[] = [];
+  for (const f of files) {
+    if (f.code === '??' && isTestFile(f.path)) tests.push(f.path);
+    else if (f.code === '??' && f.size === 0 && !f.path.includes('/') && SANDBOX_PLACEHOLDERS.has(f.path)) placeholders.push(f.path);
+    else others.push(f.path);
+  }
+  return { tests, placeholders, others };
+}
+
 export function criteriaOf(title: string, ticket: string): string[] {
   const escaped = ticket.replace(/[-]/g, '\\-');
   return [...title.matchAll(new RegExp(`\\[${escaped}\\]\\[(AC-[1-9]\\d*)\\]`, 'g'))].map((m) => m[1]);

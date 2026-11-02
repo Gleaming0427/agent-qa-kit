@@ -18,8 +18,16 @@ export interface AgentRun {
   error?: string;
   spec_questions: number;
   untestable: number;
-  /** Actions the guard hook refused during the run, counted in the transcript (phase 1 only). */
+  /** Tool calls the guard hook refused, each counted once, in the session's and its subagents' transcripts (phase 1 only). */
   guard_blocks?: number;
+  guard_block_reasons?: Record<string, number>;
+  /** Subagents the session started, and how many of their transcripts were found. */
+  subagents?: { spawned: number; transcripts: number };
+  /**
+   * The CLI's result covers only the last turn: the session answered again after a background
+   * task ended. Its duration and turn count are then unknown, and left null.
+   */
+  last_turn_only?: boolean;
 }
 export interface Bug { id: string; criterion: string; description?: string }
 export interface TrialRecord {
@@ -32,6 +40,8 @@ export interface TrialRecord {
   finished_at: string;
   phase1: AgentRun;
   changed_non_test_files: string[];
+  /** Empty files the sandbox created at the project root; recorded, not counted as changes. */
+  sandbox_placeholders?: string[];
   generated_test_files: string[];
   bugs: Bug[];
   variants: { base?: VariantResult; gold?: VariantResult; bugs: Record<string, VariantResult> };
@@ -52,6 +62,9 @@ export interface TrialScore {
   /** Ambiguous ticket: tests were delivered as ready, every criterion treated as testable. */
   invented: boolean;
   guard_blocks: number | null;
+  guard_block_reasons: Record<string, number> | null;
+  /** Subagents whose transcript was not found: the guard count is then a lower bound. */
+  subagents_without_transcript: number | null;
   f2p: { criterion: string; level: Level; ok: boolean }[];
   false_positives: string[];
   flaky: string[];
@@ -131,6 +144,8 @@ export function scoreTrial(record: TrialRecord): TrialScore {
     asked_question: askedQuestion,
     invented,
     guard_blocks: record.phase1.guard_blocks ?? null,
+    guard_block_reasons: record.phase1.guard_block_reasons ?? null,
+    subagents_without_transcript: record.phase1.subagents ? Math.max(0, record.phase1.subagents.spawned - record.phase1.subagents.transcripts) : null,
     f2p,
     false_positives: falsePositives,
     flaky,

@@ -107,7 +107,15 @@ test('ambiguous and adversarial tickets have their own success rule', () => {
 
 test('the campaign report gives pass@1, pass@k, pass^k and per-ticket rows', () => {
   const scores = [
-    ...[1, 2, 3].map((trial) => scoreTrial(record({ trial, phase1: run({ guard_blocks: trial - 1 }) }))),
+    ...[1, 2, 3].map((trial) => scoreTrial(record({
+      trial,
+      phase1: run({
+        guard_blocks: trial - 1,
+        guard_block_reasons: trial === 1 ? {} : { 'Command not allowed': trial - 1 },
+        subagents: { spawned: trial === 3 ? 1 : 0, transcripts: 0 },
+        ...(trial === 2 ? { duration_ms: null, num_turns: null, last_turn_only: true } : {}),
+      }),
+    }))),
     ...[1, 2, 3].map((trial) => scoreTrial(record({ ticket: 'EVAL-2', trial, changed_non_test_files: trial === 1 ? [] : ['src/App.tsx'] }))),
   ];
   const report = aggregate(scores);
@@ -121,7 +129,13 @@ test('the campaign report gives pass@1, pass@k, pass^k and per-ticket rows', () 
   assert.equal(report.metrics.bug_attribution.successes, 6);
   assert.deepEqual(report.tickets.map((row) => [row.ticket, row.successes, row.pass_hat_k]), [['EVAL-1', 3, 1], ['EVAL-2', 1, 0]]);
   assert.equal(report.campaign.effective_parallelism, 6);
-  assert.deepEqual(report.guard_blocks, { total: 3, trials: 3, trials_with_blocks: 2, mean_per_trial: 1 });
+  assert.deepEqual(report.guard_blocks, {
+    total: 3, trials: 3, trials_with_blocks: 2, mean_per_trial: 1, reasons: { 'Command not allowed': 3 }, trials_missing_subagent_transcripts: 1,
+  });
+  // A result that covers only its last turn has no known duration or turn count.
+  assert.equal(report.phase1_duration_s.n, 5);
+  assert.equal(report.phase1_turns.n, 5);
   assert.match(toMarkdown(report), /pass\^3 50\.0%/);
-  assert.match(toMarkdown(report), /3 refused action\(s\) in 3 phase 1 transcript\(s\)/);
+  assert.match(toMarkdown(report), /3 refused tool call\(s\) in 3 phase 1 session\(s\), 2 of them with at least one \(3 "Command not allowed"\)\. In 1 trial\(s\), a subagent's transcript was not found/);
+  assert.match(toMarkdown(report), /Phase 1 duration\*\* \(5 runs\)/);
 });

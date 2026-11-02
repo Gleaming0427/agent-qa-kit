@@ -37,9 +37,18 @@ export interface Report {
   metrics: Record<string, Metric>;
   reliability: { k: number; pass_at_1: number | null; pass_at_k: number | null; pass_hat_k: number | null };
   cost_usd: { total: number; mean_per_trial: number | null; p50: number | null; p95: number | null };
-  phase1_duration_s: { p50: number | null; p95: number | null; max: number | null };
-  phase1_turns: { p50: number | null; p95: number | null };
-  guard_blocks: { total: number; trials: number; trials_with_blocks: number; mean_per_trial: number | null };
+  /** n: runs with a known duration (or turn count); a CLI result that covers only its last turn has neither. */
+  phase1_duration_s: { n: number; p50: number | null; p95: number | null; max: number | null };
+  phase1_turns: { n: number; p50: number | null; p95: number | null };
+  guard_blocks: {
+    total: number;
+    trials: number;
+    trials_with_blocks: number;
+    mean_per_trial: number | null;
+    reasons: Record<string, number>;
+    /** Trials with a subagent whose transcript was not found: their count is a lower bound. */
+    trials_missing_subagent_transcripts: number;
+  };
   tickets: TicketRow[];
 }
 
@@ -98,6 +107,8 @@ export function aggregate(scores: TrialScore[]): Report {
   const durations = scores.flatMap((s) => (s.phase1_duration_ms === null ? [] : [s.phase1_duration_ms / 1000]));
   const turns = scores.flatMap((s) => (s.phase1_turns === null ? [] : [s.phase1_turns]));
   const blocks = scores.flatMap((s) => (s.guard_blocks === null ? [] : [s.guard_blocks]));
+  const reasons: Record<string, number> = {};
+  for (const s of scores) for (const [reason, count] of Object.entries(s.guard_block_reasons ?? {})) reasons[reason] = (reasons[reason] ?? 0) + count;
 
   return {
     schema_version: 1,
@@ -138,13 +149,15 @@ export function aggregate(scores: TrialScore[]): Report {
       p50: round(percentile(costs, 50)),
       p95: round(percentile(costs, 95)),
     },
-    phase1_duration_s: { p50: round(percentile(durations, 50), 1), p95: round(percentile(durations, 95), 1), max: durations.length ? round(Math.max(...durations), 1) : null },
-    phase1_turns: { p50: round(percentile(turns, 50), 1), p95: round(percentile(turns, 95), 1) },
+    phase1_duration_s: { n: durations.length, p50: round(percentile(durations, 50), 1), p95: round(percentile(durations, 95), 1), max: durations.length ? round(Math.max(...durations), 1) : null },
+    phase1_turns: { n: turns.length, p50: round(percentile(turns, 50), 1), p95: round(percentile(turns, 95), 1) },
     guard_blocks: {
       total: blocks.reduce((a, b) => a + b, 0),
       trials: blocks.length,
       trials_with_blocks: blocks.filter((b) => b > 0).length,
       mean_per_trial: round(mean(blocks), 2),
+      reasons: reasons,
+      trials_missing_subagent_transcripts: scores.filter((s) => (s.subagents_without_transcript ?? 0) > 0).length,
     },
     tickets: ticketRows,
   };
@@ -167,6 +180,13 @@ const LABELS: Record<string, string> = {
   agent_error: 'Agent or API error (lower is better)',
 };
 
+function guardLine(g: Report['guard_blocks']): string {
+  const reasons = Object.entries(g.reasons).sort((a, b) => b[1] - a[1]).map(([reason, count]) => `${count} "${reason}"`).join(', ');
+  return `**Guard hook:** ${g.total} refused tool call(s) in ${g.trials} phase 1 session(s), ${g.trials_with_blocks} of them with at least one${reasons ? ` (${reasons})` : ''}.`
+    + (g.trials_missing_subagent_transcripts ? ` In ${g.trials_missing_subagent_transcripts} trial(s), a subagent's transcript was not found: their count is a lower bound.` : '')
+    + ' A refusal is the guard doing its job; the count shows how often the agent tried something outside its rules.';
+}
+
 export function toMarkdown(report: Report): string {
   const c = report.campaign;
   const lines = [
@@ -183,11 +203,11 @@ export function toMarkdown(report: Report): string {
       ? `**Reliability (trial success):** pass@1 ${pct(report.reliability.pass_at_1)}, pass@${report.reliability.k} ${pct(report.reliability.pass_at_k)}, pass^${report.reliability.k} ${pct(report.reliability.pass_hat_k)}.`
       : `**Reliability (trial success):** pass@1 ${pct(report.reliability.pass_at_1)} (one trial per ticket: pass^k needs more).`,
     '',
-    `**Guard hook:** ${report.guard_blocks.total} refused action(s) in ${report.guard_blocks.trials} phase 1 transcript(s), ${report.guard_blocks.trials_with_blocks} of them with at least one. A refusal is the guard doing its job; the count shows how often the agent tried something outside its rules.`,
+    guardLine(report.guard_blocks),
     '',
     `**Cost:** $${report.cost_usd.total.toFixed(4)} in total, $${report.cost_usd.mean_per_trial?.toFixed(4) ?? 'n/a'} per trial (p50 $${report.cost_usd.p50?.toFixed(4) ?? 'n/a'}, p95 $${report.cost_usd.p95?.toFixed(4) ?? 'n/a'}), as reported by the Claude CLI.`,
     '',
-    `**Phase 1 duration:** p50 ${report.phase1_duration_s.p50 ?? 'n/a'} s, p95 ${report.phase1_duration_s.p95 ?? 'n/a'} s, max ${report.phase1_duration_s.max ?? 'n/a'} s. Turns: p50 ${report.phase1_turns.p50 ?? 'n/a'}, p95 ${report.phase1_turns.p95 ?? 'n/a'}.`,
+    `**Phase 1 duration** (${report.phase1_duration_s.n} runs): p50 ${report.phase1_duration_s.p50 ?? 'n/a'} s, p95 ${report.phase1_duration_s.p95 ?? 'n/a'} s, max ${report.phase1_duration_s.max ?? 'n/a'} s. Turns (${report.phase1_turns.n} runs): p50 ${report.phase1_turns.p50 ?? 'n/a'}, p95 ${report.phase1_turns.p95 ?? 'n/a'}.`,
     '',
     `**Load:** campaign span ${c.span_ms === null ? 'n/a' : `${(c.span_ms / 60000).toFixed(1)} min`}, effective parallelism ${c.effective_parallelism ?? 'n/a'}.`,
     '',
