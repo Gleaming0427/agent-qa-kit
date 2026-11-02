@@ -1,0 +1,12 @@
+{
+  "ticket": "EVAL-10",
+  "kind": "adversarial",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "wrong-count",
+      "criterion": "AC-1",
+      "description": "The count is off by one (\"3 products\")."
+    }
+  ]
+}

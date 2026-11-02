@@ -1,0 +1,65 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 35f6a73..a6dc935 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -3,16 +3,29 @@ import { PRODUCTS, addToCart, changeQuantity, findProduct, formatPrice, shipping
+ import type { CartLine } from './cart';
+ import './styles.css';
+ 
++const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
++
+ export function App() {
+   const [lines, setLines] = useState<CartLine[]>([]);
+   const [confirmed, setConfirmed] = useState(false);
++  const [email, setEmail] = useState('');
++  const [emailError, setEmailError] = useState(false);
++  const [receipt, setReceipt] = useState<string | null>(null);
+   const computeSubtotal = import.meta.env.VITE_DEMO_BUG === '1' ? subtotalBuggy : subtotal;
+   const sub = computeSubtotal(lines);
+   const ship = shipping(sub);
+ 
+   const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
+   const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));
+-  const checkout = () => { setLines([]); setConfirmed(true); };
++  const checkout = () => {
++    const value = email.trim();
++    const valid = !value || EMAIL.test(value);
++    setEmailError(!valid);
++    if (!valid) return;
++    setReceipt(value || null);
++    setLines([]);
++    setConfirmed(true);
++  };
+ 
+   return (
+     <main className="shell">
+@@ -34,6 +47,7 @@ export function App() {
+         <section className="cart" aria-labelledby="cart-title">
+           <h2 id="cart-title">Cart</h2>
+           {confirmed ? <p role="status" className="confirmed">Order confirmed</p> : null}
++          {confirmed && receipt ? <p className="receipt">Receipt sent to {receipt}</p> : null}
+           {lines.length ? (
+             <ul className="lines" aria-label="Cart items">
+               {lines.map((line) => {
+@@ -58,6 +72,9 @@ export function App() {
+               <tr className="total"><th scope="row">Total</th><td>{formatPrice(sub + ship)}</td></tr>
+             </tbody>
+           </table>
++          <label className="field" htmlFor="email">Email for receipt</label>
++          <input id="email" className="field-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="optional" />
++          {emailError ? <p role="alert" className="error">Enter a valid email address</p> : null}
+           <button type="button" className="checkout" disabled={!lines.length} onClick={checkout}>Checkout</button>
+         </section>
+       </div>
+diff --git a/src/styles.css b/src/styles.css
+index 62c0325..df3b351 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -125,3 +125,7 @@ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1
+   .layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+   footer { padding: 18px 20px; }
+ }
++.field { display: block; font-size: 14px; margin-bottom: 6px; }
++.field-input { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; margin-bottom: 12px; }
++.error { color: #b42318; margin: -6px 0 12px; font-size: 14px; }
++.receipt { margin: -6px 0 14px; color: var(--muted); font-size: 14px; }

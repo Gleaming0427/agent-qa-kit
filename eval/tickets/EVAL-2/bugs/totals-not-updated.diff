@@ -1,0 +1,30 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index a72501c..723e84d 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -6,6 +6,7 @@ import './styles.css';
+ export function App() {
+   const [lines, setLines] = useState<CartLine[]>([]);
+   const [confirmed, setConfirmed] = useState(false);
++  const [removed, setRemoved] = useState<string[]>([]);
+   const computeSubtotal = import.meta.env.VITE_DEMO_BUG === '1' ? subtotalBuggy : subtotal;
+   const sub = computeSubtotal(lines);
+   const ship = shipping(sub);
+@@ -13,7 +14,7 @@ export function App() {
+   const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
+   const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));
+   const checkout = () => { setLines([]); setConfirmed(true); };
+-  const remove = (productId: string) => setLines((current) => current.filter((line) => line.productId !== productId));
++  const remove = (productId: string) => setRemoved((current) => [...current, productId]);
+ 
+   return (
+     <main className="shell">
+@@ -37,7 +38,7 @@ export function App() {
+           {confirmed ? <p role="status" className="confirmed">Order confirmed</p> : null}
+           {lines.length ? (
+             <ul className="lines" aria-label="Cart items">
+-              {lines.map((line) => {
++              {lines.filter((line) => !removed.includes(line.productId)).map((line) => {
+                 const product = findProduct(line.productId);
+                 return (
+                   <li key={line.productId}>

@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index c21aebb..cc9ab88 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -57,7 +57,7 @@ export function App() {
+                       <span>× {line.quantity}</span>
+                       <button type="button" aria-label={`Increase ${product.name} quantity`} disabled={atLimit(line.quantity)} onClick={() => change(line.productId, 1)}>+</button>
+                     </span>
+-                    {line.quantity >= MAX_PER_PRODUCT ? <span className="limit">Maximum 5 per product</span> : null}
++                    {null}
+                   </li>
+                 );
+               })}

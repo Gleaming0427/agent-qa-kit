@@ -12,5 +12,5 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
-  "include": ["qa/**/*.ts", ".claude/hooks/*.ts"]
+  "include": ["qa/**/*.ts", ".claude/hooks/*.ts", "eval/*.ts", "eval/lib/*.ts", "eval/tests/*.ts"]
 }

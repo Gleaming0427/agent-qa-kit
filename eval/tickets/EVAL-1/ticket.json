@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-1",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "discount-includes-shipping",
+      "criterion": "AC-1",
+      "description": "The 10% discount is computed on the subtotal plus shipping."
+    },
+    {
+      "id": "any-code-accepted",
+      "criterion": "AC-2",
+      "description": "Any non-empty code is accepted and takes 10% off."
+    }
+  ]
+}

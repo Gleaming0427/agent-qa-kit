@@ -1,0 +1,158 @@
+name: QA eval
+# Started by hand. Runs the QA agents on the evaluation corpus (eval/tickets): several trials
+# per ticket, each on a fresh runner, then aggregates the metrics. See eval/README.md.
+# The API key reaches only the steps that start an agent; the scoring runs without it.
+on:
+  workflow_dispatch:
+    inputs:
+      tickets:
+        description: Eval tickets, separated by spaces, or "all"
+        required: true
+        default: all
+        type: string
+      trials:
+        description: Trials per ticket (1-10)
+        required: true
+        default: '3'
+        type: string
+      max_parallel:
+        description: Trials running at the same time (1-20)
+        required: true
+        default: '6'
+        type: string
+      verify:
+        description: Also run phase 2 (the verifier) on the reference implementation and on one bug
+        required: true
+        default: true
+        type: boolean
+      dry_run:
+        description: No model call; the hidden reference tests stand in for the agent's tests (checks the harness)
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-eval
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Plan the trials
+    runs-on: ubuntu-24.04
+    outputs:
+      include: ${{ steps.plan.outputs.include }}
+      max_parallel: ${{ steps.plan.outputs.max_parallel }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - id: plan
+        env:
+          TICKETS: ${{ inputs.tickets }}
+          TRIALS: ${{ inputs.trials }}
+          MAX_PARALLEL: ${{ inputs.max_parallel }}
+        run: node eval/plan.ts >> "$GITHUB_OUTPUT"
+
+  trial:
+    name: ${{ matrix.ticket }} trial ${{ matrix.trial }}
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(needs.plan.outputs.max_parallel) }}
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.include) }}
+    env:
+      TICKET: ${{ matrix.ticket }}
+      TRIAL: ${{ matrix.trial }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # No token on disk while the agent and the application's code run.
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Move the corpus out of the checkout
+        # The reference implementations and hidden tests stay out of the repository the agent works next to.
+        run: |
+          mv eval/tickets "$RUNNER_TEMP/eval-tickets"
+          echo "EVAL_TICKETS=$RUNNER_TEMP/eval-tickets" >> "$GITHUB_ENV"
+          echo "EVAL_WORK=$RUNNER_TEMP/eval" >> "$GITHUB_ENV"
+      - name: Install the shop and its browser
+        working-directory: examples/shop
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Install Claude Code and the agent sandbox
+        if: ${{ !inputs.dry_run }}
+        run: bash qa/ci-install-agents.sh
+      - name: Prepare a fresh workspace
+        run: node eval/trial.ts prepare "$TICKET" "$TRIAL"
+      - name: Phase 1, QA writer agent
+        if: ${{ !inputs.dry_run }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DISABLE_AUTOUPDATER: 1
+        run: node eval/trial.ts write "$TICKET" "$TRIAL"
+      - name: Phase 1, dry run (the hidden tests stand in for the agent's)
+        if: ${{ inputs.dry_run }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/dry/e2e"
+          if [[ -f "$EVAL_TICKETS/$TICKET/hidden.spec.ts" ]]; then cp "$EVAL_TICKETS/$TICKET/hidden.spec.ts" "$RUNNER_TEMP/dry/e2e/$TICKET.spec.ts"; fi
+          EVAL_DRY_RUN_TESTS="$RUNNER_TEMP/dry" node eval/trial.ts write "$TICKET" "$TRIAL"
+      - name: Score the generated tests (no model call)
+        run: node eval/trial.ts score "$TICKET" "$TRIAL"
+      - name: Phase 2, QA verifier agent
+        if: ${{ inputs.verify && !inputs.dry_run }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DISABLE_AUTOUPDATER: 1
+        run: node eval/trial.ts verify "$TICKET" "$TRIAL"
+      - name: Record the trial
+        if: always()
+        run: node eval/trial.ts finish "$TICKET" "$TRIAL"
+      - name: Upload the trial
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: eval-${{ matrix.ticket }}-${{ matrix.trial }}
+          path: ${{ runner.temp }}/eval/${{ matrix.ticket }}-${{ matrix.trial }}/out/
+          if-no-files-found: warn
+
+  report:
+    name: Aggregate the metrics
+    needs: trial
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: eval-*
+          path: ${{ runner.temp }}/trials
+      - name: Compute the report
+        run: |
+          node eval/lib/aggregate.ts "$RUNNER_TEMP/trials" "$RUNNER_TEMP/eval-report.json" "$RUNNER_TEMP/eval-report.md"
+          cat "$RUNNER_TEMP/eval-report.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: eval-report
+          path: |
+            ${{ runner.temp }}/eval-report.json
+            ${{ runner.temp }}/eval-report.md
+          if-no-files-found: warn

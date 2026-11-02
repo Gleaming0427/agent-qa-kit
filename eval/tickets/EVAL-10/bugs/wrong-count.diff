@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index d774bb3..e0d42a9 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -21,7 +21,7 @@ export function App() {
+         <section aria-labelledby="shop-title">
+           <h1 id="shop-title">Shop</h1>
+           <p className="subtitle">Pick a few items and check out in a safe, local demo.</p>
+-          <p className="count">{PRODUCTS.length} products</p>
++          <p className="count">{PRODUCTS.length - 1} products</p>
+           <ul className="products" aria-label="Products">
+             {PRODUCTS.map((p) => (
+               <li key={p.id}>

@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index db6d225..ddbae05 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -9,7 +9,7 @@ export function App() {
+   const computeSubtotal = import.meta.env.VITE_DEMO_BUG === '1' ? subtotalBuggy : subtotal;
+   const sub = computeSubtotal(lines);
+   const ship = shipping(sub);
+-  const units = lines.reduce((sum, line) => sum + line.quantity, 0);
++  const units = lines.length;
+ 
+   const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
+   const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));

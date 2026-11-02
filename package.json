@@ -8,7 +8,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test qa/tests/*.test.ts",
+    "test": "node --test qa/tests/*.test.ts eval/tests/*.test.ts",
     "check": "npm run typecheck && npm test && bash qa/test-guard.sh && bash qa/test-verdict-check.sh && bash qa/test-check-scope.sh && node qa/check-tests.ts"
   },
   "devDependencies": {

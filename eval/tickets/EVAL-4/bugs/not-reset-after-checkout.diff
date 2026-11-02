@@ -1,0 +1,21 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index db6d225..8f9f2b5 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -6,13 +6,13 @@ import './styles.css';
+ export function App() {
+   const [lines, setLines] = useState<CartLine[]>([]);
+   const [confirmed, setConfirmed] = useState(false);
++  const [units, setUnits] = useState(0);
+   const computeSubtotal = import.meta.env.VITE_DEMO_BUG === '1' ? subtotalBuggy : subtotal;
+   const sub = computeSubtotal(lines);
+   const ship = shipping(sub);
+-  const units = lines.reduce((sum, line) => sum + line.quantity, 0);
+ 
+-  const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
+-  const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));
++  const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); setUnits((u) => u + 1); };
++  const change = (productId: string, delta: number) => { setLines((current) => changeQuantity(current, productId, delta)); setUnits((u) => Math.max(0, u + delta)); };
+   const checkout = () => { setLines([]); setConfirmed(true); };
+ 
+   return (

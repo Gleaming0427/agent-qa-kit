@@ -1,0 +1,52 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 35f6a73..48d1d53 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -61,6 +61,12 @@ export function App() {
+           <button type="button" className="checkout" disabled={!lines.length} onClick={checkout}>Checkout</button>
+         </section>
+       </div>
++      {lines.length ? (
++        <div className="mobile-bar" role="region" aria-label="Checkout bar">
++          <span>Total {formatPrice(sub + ship)}</span>
++          <button type="button" onClick={checkout}>Checkout</button>
++        </div>
++      ) : null}
+       <footer>Local example only. No real payments, accounts or external network calls.</footer>
+     </main>
+   );
+diff --git a/src/styles.css b/src/styles.css
+index 62c0325..37fa9c5 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -117,11 +117,29 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+   font-weight: 600;
+ }
+ .checkout:hover { background: var(--accent-dark); }
++.mobile-bar { display: none; }
+ .checkout:disabled { background: #c4cbd1; color: #4b535c; cursor: not-allowed; }
+ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
+ @media (max-width: 720px) {
+   .shell { margin: 0; border-radius: 0; border: 0; }
+   header { border-radius: 0; padding: 18px 20px; flex-wrap: wrap; }
+   .layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+-  footer { padding: 18px 20px; }
++  footer { padding: 18px 20px 88px; }
++  .cart .checkout { display: none; }
++  .mobile-bar {
++    display: flex;
++    position: fixed;
++    left: 0;
++    right: 0;
++    bottom: 0;
++    justify-content: space-between;
++    align-items: center;
++    gap: 12px;
++    padding: 12px 20px;
++    background: var(--surface);
++    border-top: 1px solid var(--line);
++    box-shadow: 0 -4px 16px #1f232814;
++    font-weight: 700;
++  }
++  .mobile-bar button { padding: 10px 18px; border: 0; background: var(--accent); color: #fff; font-weight: 600; }
+ }

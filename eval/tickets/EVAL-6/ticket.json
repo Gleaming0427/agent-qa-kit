@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-6",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "button-still-enabled",
+      "criterion": "AC-1",
+      "description": "The label is shown but the Desk lamp can still be added."
+    },
+    {
+      "id": "no-out-of-stock-label",
+      "criterion": "AC-2",
+      "description": "The button is disabled but no \"Out of stock\" label is shown."
+    }
+  ]
+}

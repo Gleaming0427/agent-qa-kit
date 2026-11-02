@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-5",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "sorts-price-as-text",
+      "criterion": "AC-2",
+      "description": "Prices are compared as formatted text, so \"€29.90\" comes before \"€4.50\"."
+    },
+    {
+      "id": "high-to-low-is-ascending",
+      "criterion": "AC-2",
+      "description": "\"Price: high to low\" sorts from low to high."
+    }
+  ]
+}

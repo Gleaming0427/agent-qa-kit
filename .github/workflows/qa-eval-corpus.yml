@@ -1,0 +1,33 @@
+name: QA eval corpus
+# Checks the evaluation corpus with no model call: every reference implementation and
+# injected bug still applies to the shop, and the hidden tests tell them apart.
+on:
+  pull_request:
+    paths:
+      - 'eval/**'
+      - 'examples/shop/**'
+      - '.github/workflows/qa-eval*.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  corpus:
+    name: Eval corpus is valid (no AI)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install the shop and its browser
+        working-directory: examples/shop
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Validate the corpus
+        run: node eval/validate-corpus.ts
