@@ -1,0 +1,38 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 35f6a73..2c3c021 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -13,6 +13,7 @@ export function App() {
+   const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
+   const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));
+   const checkout = () => { setLines([]); setConfirmed(true); };
++  const emptyCart = () => setLines([]);
+ 
+   return (
+     <main className="shell">
+@@ -35,6 +36,7 @@ export function App() {
+           <h2 id="cart-title">Cart</h2>
+           {confirmed ? <p role="status" className="confirmed">Order confirmed</p> : null}
+           {lines.length ? (
++            <>
+             <ul className="lines" aria-label="Cart items">
+               {lines.map((line) => {
+                 const product = findProduct(line.productId);
+@@ -50,6 +52,8 @@ export function App() {
+                 );
+               })}
+             </ul>
++            <button type="button" className="empty-cart" onClick={emptyCart}>Empty cart</button>
++            </>
+           ) : <p className="empty">Your cart is empty</p>}
+           <table className="summary" aria-label="Order summary">
+             <tbody>
+diff --git a/src/styles.css b/src/styles.css
+index 62c0325..7e2c047 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -125,3 +125,4 @@ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1
+   .layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+   footer { padding: 18px 20px; }
+ }
++.empty-cart { margin: 0 0 12px; border: 0; background: none; color: var(--accent); padding: 4px 0; text-decoration: underline; }

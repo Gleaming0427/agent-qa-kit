@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-15",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "case-sensitive",
+      "criterion": "AC-1",
+      "description": "The search only matches the exact upper and lower case of the name."
+    },
+    {
+      "id": "no-empty-message",
+      "criterion": "AC-2",
+      "description": "When nothing matches, the list disappears but no message is shown."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 638cf40..7068a5d 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -52,7 +52,7 @@ export function App() {
+             </ul>
+           ) : <p className="empty">Your cart is empty</p>}
+           {lines.length ? (
+-            <p className="shipping-hint">{sub >= FREE_SHIPPING_FROM_CENTS ? 'Free shipping unlocked' : `Add ${formatPrice(FREE_SHIPPING_FROM_CENTS - sub)} more for free shipping`}</p>
++            <p className="shipping-hint">{sub >= FREE_SHIPPING_FROM_CENTS ? 'Free shipping unlocked' : `Add ${formatPrice(FREE_SHIPPING_FROM_CENTS - subtotalBuggy(lines))} more for free shipping`}</p>
+           ) : null}
+           <table className="summary" aria-label="Order summary">
+             <tbody>

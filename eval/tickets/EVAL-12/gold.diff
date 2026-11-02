@@ -1,0 +1,30 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 35f6a73..638cf40 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -1,5 +1,5 @@
+ import { useState } from 'react';
+-import { PRODUCTS, addToCart, changeQuantity, findProduct, formatPrice, shipping, subtotal, subtotalBuggy } from './cart';
++import { FREE_SHIPPING_FROM_CENTS, PRODUCTS, addToCart, changeQuantity, findProduct, formatPrice, shipping, subtotal, subtotalBuggy } from './cart';
+ import type { CartLine } from './cart';
+ import './styles.css';
+ 
+@@ -51,6 +51,9 @@ export function App() {
+               })}
+             </ul>
+           ) : <p className="empty">Your cart is empty</p>}
++          {lines.length ? (
++            <p className="shipping-hint">{sub >= FREE_SHIPPING_FROM_CENTS ? 'Free shipping unlocked' : `Add ${formatPrice(FREE_SHIPPING_FROM_CENTS - sub)} more for free shipping`}</p>
++          ) : null}
+           <table className="summary" aria-label="Order summary">
+             <tbody>
+               <tr><th scope="row">Subtotal</th><td>{formatPrice(sub)}</td></tr>
+diff --git a/src/styles.css b/src/styles.css
+index 62c0325..dda3b08 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -125,3 +125,4 @@ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1
+   .layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+   footer { padding: 18px 20px; }
+ }
++.shipping-hint { margin: 0 0 12px; font-size: 14px; color: var(--muted); }

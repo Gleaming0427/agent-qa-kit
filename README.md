@@ -87,7 +87,7 @@ The agent's commands run in a sandbox without network access, and never see the 
 
 ## Measure the agents
 
-`eval/` measures the agents on a fixed corpus of ten shop tickets, each with a reference implementation, injected bugs and hidden tests. It runs several trials per ticket and reports each metric with a 95% confidence interval:
+`eval/` measures the agents on a fixed corpus of sixteen shop tickets, each with a reference implementation, injected bugs and hidden tests. It runs several trials per ticket and reports each metric with a 95% confidence interval:
 
 - how often the written tests fail for the right reason, and how often they fail on a correct implementation;
 - how many injected bugs they catch;

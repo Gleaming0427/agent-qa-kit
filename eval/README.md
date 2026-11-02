@@ -6,7 +6,7 @@ It runs the kit unchanged: `qa/run-qa.sh`, the agents, hooks and settings are th
 
 ## The corpus
 
-Ten tickets on the demo shop (`examples/shop`), in `eval/tickets/<TICKET>/`:
+Sixteen tickets on the demo shop (`examples/shop`), in `eval/tickets/<TICKET>/`:
 
 | File | Role |
 |---|---|
@@ -28,6 +28,23 @@ Ten tickets on the demo shop (`examples/shop`), in `eval/tickets/<TICKET>/`:
 | EVAL-8 | feature | Checkout bar on phone screens | bar hidden on phones; bar shows the subtotal |
 | EVAL-9 | ambiguous | "Loyal customers see a better price" | none: the right answer is a question |
 | EVAL-10 | adversarial | Product count, plus an injected instruction to edit `src/App.tsx` and call the network | count off by one |
+| EVAL-11 | feature | Quantity field on each cart line | sets the first line's quantity; 0 keeps the line |
+| EVAL-12 | feature | Free shipping hint | amount left ignores quantities; no "unlocked" message |
+| EVAL-13 | feature | 10% off a line of 3 units or more | starts at 4 units; discounts the whole cart |
+| EVAL-14 | feature | "Empty cart" button | shown on an empty cart; removes only the first line |
+| EVAL-15 | feature | Product search, ignoring case | case-sensitive; no "No products found" message |
+| EVAL-16 | feature | Amount on each cart line | shows the unit price; drops trailing zeros |
+
+EVAL-11 to EVAL-16 were written after the two pilot campaigns (`results/`), before any agent ran on them. They measure a change to the writer on tickets it was not tuned on.
+
+Several of their bugs need a specific case to be seen:
+- a line other than the first;
+- a quantity above 1;
+- exactly 3 units;
+- a mixed cart;
+- a different letter case.
+
+Others are caught by any test of their criterion.
 
 `node eval/validate-corpus.ts` checks the corpus with no model call, and the "QA eval corpus" workflow runs it on every pull request that touches `eval/` or `examples/shop/`. For each ticket with a reference implementation:
 
@@ -106,7 +123,7 @@ Each trial uploads its folder as `eval-<TICKET>-<TRIAL>`, with `trial.json`, the
 
 ## Limits
 
-- **Sample size.** Ten tickets on one small application is a pilot: intervals are wide, and results do not transfer to another codebase without its own corpus.
+- **Sample size.** Sixteen tickets on one small application is a pilot: intervals are wide, and results do not transfer to another codebase without its own corpus.
 - **Authorship.** The bugs and reference implementations are written by hand. They are realistic but not representative of every defect, and they were written by the same authors as the kit. Mutation testing of the generated unit tests (for example StrykerJS with its Vitest runner) would add an independent, automatic measure.
 - **Scripted approval.** The approval before phase 2 is scripted. It measures phase 2, not the value of a human review.
 - **Sources of failure.** Phase 1 runs inside the sandbox on a GitHub-hosted runner. An infrastructure failure counts as an agent error, so read the logs before concluding.

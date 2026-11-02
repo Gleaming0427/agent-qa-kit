@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 643c705..7815457 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -34,7 +34,7 @@ export function App() {
+               </li>
+             ))}
+           </ul>
+-          ) : <p className="no-results">No products found</p>}
++          ) : null}
+         </section>
+         <section className="cart" aria-labelledby="cart-title">
+           <h2 id="cart-title">Cart</h2>

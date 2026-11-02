@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-12",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "ignores-quantities",
+      "criterion": "AC-1",
+      "description": "The amount left is computed with one unit per line, whatever the quantities."
+    },
+    {
+      "id": "unlocked-message-missing",
+      "criterion": "AC-2",
+      "description": "No message is shown once the subtotal reaches €50.00."
+    }
+  ]
+}

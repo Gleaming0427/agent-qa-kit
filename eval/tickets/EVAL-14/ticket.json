@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-14",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "shown-when-empty",
+      "criterion": "AC-1",
+      "description": "The \"Empty cart\" button is also shown when the cart is already empty."
+    },
+    {
+      "id": "removes-only-first-line",
+      "criterion": "AC-2",
+      "description": "\"Empty cart\" removes only the first line."
+    }
+  ]
+}

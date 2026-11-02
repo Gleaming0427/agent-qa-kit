@@ -1,0 +1,12 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 2c3c021..dc47349 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -55,6 +55,7 @@ export function App() {
+             <button type="button" className="empty-cart" onClick={emptyCart}>Empty cart</button>
+             </>
+           ) : <p className="empty">Your cart is empty</p>}
++          {lines.length ? null : <button type="button" className="empty-cart" onClick={emptyCart}>Empty cart</button>}
+           <table className="summary" aria-label="Order summary">
+             <tbody>
+               <tr><th scope="row">Subtotal</th><td>{formatPrice(sub)}</td></tr>

@@ -1,0 +1,32 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 35f6a73..721bd5c 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -13,6 +13,9 @@ export function App() {
+   const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
+   const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));
+   const checkout = () => { setLines([]); setConfirmed(true); };
++  const setQuantity = (productId: string, quantity: number) => setLines((current) => current
++    .map((line) => (line.productId === productId ? { ...line, quantity } : line))
++    .filter((line) => line.quantity > 0));
+ 
+   return (
+     <main className="shell">
+@@ -46,6 +49,8 @@ export function App() {
+                       <span>× {line.quantity}</span>
+                       <button type="button" aria-label={`Increase ${product.name} quantity`} onClick={() => change(line.productId, 1)}>+</button>
+                     </span>
++                    <input type="number" min={0} className="qty-input" aria-label={`Quantity of ${product.name}`} value={line.quantity}
++                      onChange={(event) => { const value = Number.parseInt(event.target.value, 10); if (Number.isInteger(value) && value >= 0) setQuantity(line.productId, value); }} />
+                   </li>
+                 );
+               })}
+diff --git a/src/styles.css b/src/styles.css
+index 62c0325..f6dd5f8 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -125,3 +125,4 @@ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1
+   .layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+   footer { padding: 18px 20px; }
+ }
++.qty-input { width: 56px; font: inherit; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; }

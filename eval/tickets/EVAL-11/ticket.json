@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-11",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "updates-first-line",
+      "criterion": "AC-1",
+      "description": "The number entered always sets the quantity of the first cart line."
+    },
+    {
+      "id": "zero-keeps-line",
+      "criterion": "AC-2",
+      "description": "Entering 0 leaves the line in the cart with a quantity of 0."
+    }
+  ]
+}
