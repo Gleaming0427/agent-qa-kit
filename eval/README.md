@@ -42,7 +42,9 @@ A grader is only as good as its tasks: a broken task shows up here, not as a 0% 
 
 `eval/trial.ts` runs one trial in steps, so that CI can keep the API key out of the steps that run application code:
 
-1. **prepare**: a fresh copy of the shop with its own `node_modules`, a git baseline, and the ticket.
+1. **prepare**: the workspace and the ticket.
+   - In CI (`EVAL_IN_PLACE=1`), each trial has a fresh runner and the agents work in `examples/shop` itself, with the dependencies `npm ci` installed, as in "QA write tests". The untouched shop is saved first, for scoring.
+   - Locally, the workspace is a copy of the shop with a git baseline. A copied workspace made the dev server drop connections inside the agent sandbox in CI.
 2. **write**: phase 1 with `qa/run-qa.sh`. It records the exit code, the verdict, the cost, duration and turns reported by the Claude CLI, the transcript when the CLI saved one, the new test files, and any other file the agent changed.
 3. **score** (no model call): the generated tests run on three kinds of variant:
    - the shop as it is;
