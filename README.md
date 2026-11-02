@@ -1,21 +1,52 @@
 # Agent QA Kit
 
-**Write tests from the ticket before implementation, then check the app in a browser.**
+**Prove that AI-written code works for the user before it is accepted.**
 
-An AI PR review can flag suspicious code, but it cannot prove that a user journey still works. Agent QA Kit adds two Claude Code QA agents, Playwright browser tests, and checks that compare the agents' verdicts with actual test reports.
+AI agents now write code, and other AI agents review it. That pipeline has a blind spot: nothing proves that the application still works for the person using it. Agent QA Kit adds an independent QA step that produces this proof, with Claude Code agents, Playwright browser tests and deterministic checks.
 
-> **Experimental:** the demo and deterministic CI checks are included. The full agent workflow has not been measured on real project tickets yet.
+> **Experimental:** the demo and the deterministic CI checks are included and tested. The full agent workflow has not been measured on real project tickets yet.
 
-## The approach
+## Why a code review is not enough
 
-1. **Start with the ticket.** Before development, the QA writer turns each `AC-N` criterion in a local Markdown ticket into a unit test and a Playwright scenario. The launcher requires initial failing evidence (RED) at both levels for every criterion.
-2. **Review the tests.** A human checks the assertions and explains, for each criterion, why the RED failures show missing behavior rather than a broken test or environment. Approval records hashes of the ticket, tests, and initial reports; changing them invalidates it.
-3. **Implement and verify.** Your developer or development agent implements the feature. The QA verifier runs the approved tests without write tools. A separate checker compares its verdict with the JSON reports for every criterion.
-4. **Check the whole app.** After a passing verdict, the launcher runs the full unit and browser suites itself. It rejects failures and flaky browser tests, rechecks the ticket criteria, and requires at least one passing `@smoke` journey. By default, verification is limited to three runs per approved baseline.
+| What usually happens | Why it is not proof |
+|---|---|
+| The coding agent says "done" | It grades its own work. |
+| An AI reviews the pull request | It reads the code, not the screen: a button that disappears on mobile looks fine in a diff. |
+| An AI writes tests after the code | The tests follow the implementation, so they confirm a bug as built. |
 
-Keep a small, fixed Playwright smoke suite for critical journeys on every PR. Use ticket-specific QA for changes where a broken user flow would matter. The CI demo runs smoke checks on desktop and mobile and compares committed screenshots; it does not call an AI agent.
+What is missing is evidence from an independent source: tests derived from what the ticket asks for, run in a real browser, and checked by a script rather than by the agent that wrote the code.
 
-For example, the demo ticket says search is case-insensitive. Its browser test enters `ALPHA` and expects to see `Alpha`. A deliberate bug makes that test fail; removing the bug makes it pass; restoring it makes the same test fail again.
+## How the kit closes the gap
+
+```text
+ Ticket with acceptance criteria (AC-1, AC-2…)
+        │
+ 1. QA writer      turns each criterion into a unit test and a browser test
+        │          → both must fail: the feature does not exist yet
+ 2. Human review   approves the tests and why they fail; they are then frozen
+        │
+ 3. Developer      implements the feature (a person or an agent)
+        │
+ 4. QA verifier    runs the approved tests, with no write access
+        │
+ 5. Checker        compares the verdict with the real test reports,
+                   then reruns every test, critical journeys included
+```
+
+Each step answers a specific risk:
+
+1. **Tests are written from the ticket, before the code.** They describe what was asked, not what was built, so they can catch a feature that works as coded but not as intended.
+2. **Every new test must fail first, for the right reason.** A test that already passes before the feature exists proves nothing. For browser tests, only a failed `expect()` counts: a crash, a timeout or a server that never started is refused, and an app that cannot start makes the run "blocked".
+3. **A person approves the tests once.** An AI can misread an ambiguous ticket. Checking its interpretation before development is cheap; finding out afterwards is not. The approval stores hashes of the ticket, the tests and the first reports: changing any of them cancels it.
+4. **The verifier cannot edit anything, and its word is not trusted.** A script checks every criterion against the JSON test reports. A missing, skipped or failing test means no "pass".
+5. **The whole app is checked, not only the ticket.** After a pass, the launcher reruns every unit and browser test itself, including fixed `@smoke` journeys on desktop and mobile. A regression elsewhere, or a flaky browser test, fails the ticket. Verification stops after three runs per approved baseline.
+
+The demo makes this concrete. Its ticket says search is case-insensitive: the browser test types `ALPHA` and expects to see `Alpha`. With a deliberate bug the test fails, without it the test passes, and when the bug comes back the same, unchanged test fails again.
+
+## When to use it
+
+- **On every pull request:** a small, fixed Playwright smoke suite for the journeys that cost money when they break (login, search, checkout), on desktop and mobile, with screenshots compared in CI. It calls no AI.
+- **On risky tickets:** the full workflow above, for changes where a broken user flow would matter. A low-risk change only needs the smoke suite and a normal review.
 
 ## Try the demo
 
@@ -51,6 +82,13 @@ After integration, run phase 1, review the generated tests and RED report, fill 
 One writer run plus one verifier run has **$1.20 in configured budget ceilings**; three verifier runs bring those ceilings to **$1.60**. These are limits passed to the CLI, **not measured costs or a per-ticket price**. The development agent, any new writing cycle, and CI compute are separate. Claude's reported cost is saved under `reports/`. You can override the QA budget, model, and effort with `QA_BUDGET_USD`, `QA_MODEL`, and `QA_EFFORT`.
 
 On failure, `qa/summary.ts` extracts short error excerpts and trace paths from the JSON reports. A repair agent can read that summary first and open a full trace only when needed; summarizing the reports takes no model call.
+
+## Maintenance
+
+- **Smoke tests:** a few stable journeys. Update them only when a critical flow changes.
+- **Screenshots:** the baselines are made in CI. After an intended visual change, delete them and commit the new ones from the `screenshot-baselines` artifact.
+- **Ticket tests:** frozen while the ticket is developed. Delete the `qa/<TICKET>` branch once it is merged: they become ordinary tests.
+- **Dependencies:** keep Playwright, Vitest and Vite up to date and check `npm audit`.
 
 ## Current limits
 
