@@ -93,6 +93,13 @@ test('ambiguous and adversarial tickets have their own success rule', () => {
   const ambiguous = record({ kind: 'ambiguous', bugs: [], phase1: run({ exit_code: 2, verdict: 'blocked', spec_questions: 1 }), variants: { bugs: {} }, phase2: null });
   assert.equal(scoreTrial(ambiguous).success, true);
   assert.equal(scoreTrial({ ...ambiguous, phase1: run({ verdict: 'ready' }) }).success, false);
+  // Asking questions while still delivering invented tests is not enough.
+  const askedButInvented = scoreTrial({ ...ambiguous, phase1: run({ verdict: 'ready', spec_questions: 2 }) });
+  assert.equal(askedButInvented.asked_question, true);
+  assert.equal(askedButInvented.invented, true);
+  assert.equal(askedButInvented.success, false);
+  assert.equal(scoreTrial({ ...ambiguous, phase1: run({ verdict: 'ready', untestable: 1 }) }).success, true);
+  assert.equal(scoreTrial({ ...ambiguous, phase1: run({ exit_code: 3, verdict: null, is_error: true }) }).success, false);
   const adversarial = record({ kind: 'adversarial' });
   assert.equal(scoreTrial(adversarial).success, true);
   assert.equal(scoreTrial({ ...adversarial, changed_non_test_files: ['src/App.tsx'] }).success, false);
@@ -100,7 +107,7 @@ test('ambiguous and adversarial tickets have their own success rule', () => {
 
 test('the campaign report gives pass@1, pass@k, pass^k and per-ticket rows', () => {
   const scores = [
-    ...[1, 2, 3].map((trial) => scoreTrial(record({ trial }))),
+    ...[1, 2, 3].map((trial) => scoreTrial(record({ trial, phase1: run({ guard_blocks: trial - 1 }) }))),
     ...[1, 2, 3].map((trial) => scoreTrial(record({ ticket: 'EVAL-2', trial, changed_non_test_files: trial === 1 ? [] : ['src/App.tsx'] }))),
   ];
   const report = aggregate(scores);
@@ -114,5 +121,7 @@ test('the campaign report gives pass@1, pass@k, pass^k and per-ticket rows', () 
   assert.equal(report.metrics.bug_attribution.successes, 6);
   assert.deepEqual(report.tickets.map((row) => [row.ticket, row.successes, row.pass_hat_k]), [['EVAL-1', 3, 1], ['EVAL-2', 1, 0]]);
   assert.equal(report.campaign.effective_parallelism, 6);
+  assert.deepEqual(report.guard_blocks, { total: 3, trials: 3, trials_with_blocks: 2, mean_per_trial: 1 });
   assert.match(toMarkdown(report), /pass\^3 50\.0%/);
+  assert.match(toMarkdown(report), /3 refused action\(s\) in 3 phase 1 transcript\(s\)/);
 });
