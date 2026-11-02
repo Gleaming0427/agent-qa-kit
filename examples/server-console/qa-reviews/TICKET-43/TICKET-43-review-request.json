@@ -1,0 +1,53 @@
+{
+  "schema_version": 2,
+  "ticket": "TICKET-43",
+  "spec_sha256": "af864ac7157e1f29907f339360486fa1b23cafc70472f1f48087f7cf70072f9c",
+  "manifest_sha256": "3c7f70d1156528330da0864e5fbc615b75272e67ba4aaaf72a77ea6e5112b49d",
+  "phase1_verdict_sha256": "f910ffc194a15f66df901227e540426fc65135af9cce10a65f1e58916ff43f98",
+  "red_vitest_sha256": "7617ccb76ceb70f92710e2dd88269cbad5ea4f7c9ccf181ca455738aff5fb9c3",
+  "red_playwright_sha256": "736ccbe86bd5e1251ccfb17a993e6f5b2631c0e30783d7d8f4a70733728010c0",
+  "tests": [
+    {
+      "path": "e2e/TICKET-43.spec.ts",
+      "sha256": "968555edaf6d061ca96ad565e46f7f6b4e7c97172f93d8e24fb036d933a1e74a"
+    },
+    {
+      "path": "src/TICKET-43.test.tsx",
+      "sha256": "8563a27995f74abdacce6fc968a5c2f57118e0ad41fc837f77bb48d5e97d0a35"
+    }
+  ],
+  "criteria": [
+    {
+      "id": "AC-1",
+      "description": "a \"Clear search\" button is displayed only while the search field contains text.",
+      "failures": [
+        {
+          "level": "mfe",
+          "title": "TICKET-43 clear the search [TICKET-43][AC-1] the Clear search button is displayed only while the search field has text",
+          "message": "AssertionError: expected null not to be null at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/server-console/src/TICKET-43.test.tsx:13:31 at file:///home/runner/work/agent-qa-kit/agent-qa-kit/examples/server-console/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11 at file:///home/runner/work/agent-qa-kit/agent-qa-kit/examples/server-console/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26 at file:///home/runner/work/agent-qa-kit/agent-qa-kit/examples/server-console/node"
+        },
+        {
+          "level": "shell",
+          "title": "TICKET-43.spec.ts @services TICKET-43 [TICKET-43][AC-1] the Clear search button is displayed only while the search field has text",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByRole('button', { name: 'Clear search' }) Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByRole('button', { name: 'Clear search' })"
+        }
+      ]
+    },
+    {
+      "id": "AC-2",
+      "description": "clicking \"Clear search\" empties the search field and lists all services again.",
+      "failures": [
+        {
+          "level": "mfe",
+          "title": "TICKET-43 clear the search [TICKET-43][AC-2] clicking Clear search empties the field and lists all services again",
+          "message": "AssertionError: expected null not to be null at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/server-console/src/TICKET-43.test.tsx:26:24 at file:///home/runner/work/agent-qa-kit/agent-qa-kit/examples/server-console/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11 at file:///home/runner/work/agent-qa-kit/agent-qa-kit/examples/server-console/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26 at file:///home/runner/work/agent-qa-kit/agent-qa-kit/examples/server-console/node"
+        },
+        {
+          "level": "shell",
+          "title": "TICKET-43.spec.ts @services TICKET-43 [TICKET-43][AC-2] clicking Clear search empties the field and lists all services again",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByRole('button', { name: 'Clear search' }) Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByRole('button', { name: 'Clear search' })"
+        }
+      ]
+    }
+  ]
+}
