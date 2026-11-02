@@ -5,12 +5,13 @@
 Choose one or two user journeys whose failure would be costly. Keep their
 Playwright tests independent of a Jira ticket, tag them `@smoke`, use
 accessible roles and visible text, and run them on every pull request. The
-example uses `examples/server-console/e2e/smoke.spec.ts` and `npm run test:smoke`.
+example uses `examples/shop/e2e/smoke.spec.ts` and `npm run test:smoke`.
 
 Run them on a phone screen too. The example's Playwright config adds a
-`mobile` project (Pixel 7) that runs only `@smoke` tests. The smoke test checks
-that the search box is in view and that the page does not scroll sideways, then
-compares a full-page screenshot with a committed baseline.
+`mobile` project (Pixel 7) that runs only `@smoke` tests. The smoke test compares
+a full-page screenshot with a committed baseline, checks that the first "Add to
+cart" button is in view and that the page does not scroll sideways, then fills a
+cart and checks out.
 
 Screenshots are compared only in CI (`ignoreSnapshots: !process.env.CI`),
 because fonts render differently on each machine. When no baseline exists, CI
@@ -70,15 +71,15 @@ Add these scripts to the real application's `package.json` (copy
 
 Every test name must contain `[TICKET-42][AC-1]` (adapt ticket and ID). The
 Playwright scenarios for the ticket belong in `e2e/TICKET-42.spec.ts`, inside
-`test.describe('@services TICKET-42', ...)` (the MFE name as a tag), so that
-`npm run test:e2e -- --grep @services` selects them in both phases.
+`test.describe('@shop TICKET-42', ...)` (the MFE name as a tag), so that
+`npm run test:e2e -- --grep @shop` selects them in both phases.
 `test:affected` may be narrowed to the changed MFE; `test:unit` and `test:e2e`
 must run everything, because the launcher uses them for the final full suite.
 The QA writer must work from the ticket before seeing the implementation.
 Then run:
 
 ```bash
-qa/run-qa.sh TICKET-42 1 specs/TICKET-42.md services
+qa/run-qa.sh TICKET-42 1 specs/TICKET-42.md shop
 ```
 
 For every criterion, the launcher requires an individual failing unit test
@@ -123,7 +124,7 @@ they are compared when the PR names the ticket. Delete `qa/TICKET-42` once the
 ticket is merged: its tests then follow the normal review. Then run:
 
 ```bash
-qa/repair-loop.sh TICKET-42 specs/TICKET-42.md services
+qa/repair-loop.sh TICKET-42 specs/TICKET-42.md shop
 ```
 
 The loop runs phase 2. When it fails, it sends the short output of
@@ -148,7 +149,7 @@ commands that run in the sandbox, and the test tools must keep writing their
 reports and caches there. The launcher accepts at most three
 verification runs per reviewed baseline: the first run and two after repairs.
 To verify once without repairs, run `qa/run-qa.sh TICKET-42 2
-specs/TICKET-42.md services`.
+specs/TICKET-42.md shop`.
 
 The verifier's pass is not final: the launcher then runs `npm run test:unit`
 and `npm run test:e2e` itself. The ticket passes only if every test passes, at
@@ -173,39 +174,39 @@ once:
 - in the ruleset of `main`, require the **QA verify** and **QA branch rules
   (scope + frozen tests)** checks.
 
-**Write the tests.** Commit the ticket as `specs/TICKET-43.md`, then open
+**Write the tests.** Commit the ticket as `specs/TICKET-44.md`, then open
 Actions → **QA write tests** → Run workflow, with the ticket key, the feature
-area (`services`) and the application folder. The job:
+area (`shop`) and the application folder. The job:
 
 1. checks the request before it spends anything: a valid ticket key, its spec,
-   the secret, and no `qa/TICKET-43` branch yet;
+   the secret, and no `qa/TICKET-44` branch yet;
 2. installs the application, Chromium, Claude Code and its sandbox
    (`qa/ci-install-agents.sh`). The agent's commands run in bubblewrap, without
    network access, and never see the API key;
-3. runs phase 1, as `qa/run-qa.sh TICKET-43 1 specs/TICKET-43.md services`
+3. runs phase 1, as `qa/run-qa.sh TICKET-44 1 specs/TICKET-44.md shop`
    does on a developer machine;
 4. saves the review package (criteria, first verdict, RED reports and review
-   request) to `qa-reviews/TICKET-43/` next to the tests, so that a later job
+   request) to `qa-reviews/TICKET-44/` next to the tests, so that a later job
    can check the approval;
-5. commits the tests and the package on `qa/TICKET-43`, creates
-   `feat/TICKET-43` from `main` when it does not exist, and opens the pull
-   request `qa/TICKET-43` → `feat/TICKET-43`.
+5. commits the tests and the package on `qa/TICKET-44`, creates
+   `feat/TICKET-44` from `main` when it does not exist, and opens the pull
+   request `qa/TICKET-44` → `feat/TICKET-44`.
 
 **Review.** The pull request lists each criterion with its failing tests and
 their error excerpts; the test files are in its diff. Approve it with a review
 comment that has one line per criterion:
 
 ```text
-AC-1: the Clear search button does not exist yet, so the test cannot find it
-AC-2: the field keeps its text, because nothing clears it yet
+AC-1: the Promo code field does not exist yet, so the test cannot fill it
+AC-2: the Promo code field does not exist yet, so no code can be applied
 ```
 
-Then merge it into `feat/TICKET-43`. To change a test, request changes, delete
-`qa/TICKET-43` and run the workflow again: a test edited by hand no longer
+Then merge it into `feat/TICKET-44`. To change a test, request changes, delete
+`qa/TICKET-44` and run the workflow again: a test edited by hand no longer
 matches its RED evidence.
 
-**Develop and verify.** Work on `feat/TICKET-43`, or on any branch whose name or
-pull request title contains `TICKET-43`, and open a pull request into `main`.
+**Develop and verify.** Work on `feat/TICKET-44`, or on any branch whose name or
+pull request title contains `TICKET-44`, and open a pull request into `main`.
 **QA verify** then:
 
 1. finds the QA pull request of each ticket the branch or title names. It needs

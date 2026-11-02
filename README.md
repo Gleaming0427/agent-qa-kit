@@ -43,7 +43,7 @@ Each step answers a specific risk:
 5. **Repairs are automatic, bounded, and cannot cheat.** When the verification fails, `qa/repair-loop.sh` sends a short failure summary, not the full reports, to a repair agent. That agent may change the application, but not the tests, their configuration, the dependencies, the installed packages in `node_modules/` or the git files. After each repair, the approved tests are checked against their hashes and the installed packages against a snapshot taken before the loop, and the loop stops after three verifications.
 6. **The whole app is checked, not only the ticket.** After a pass, the launcher reruns every unit and browser test itself, including fixed `@smoke` journeys on desktop and mobile. A regression elsewhere, or a flaky browser test, fails the ticket.
 
-The demo makes this concrete. Its ticket says search is case-insensitive: the browser test types `ALPHA` and expects to see `Alpha`. With a deliberate bug the test fails, without it the test passes, and when the bug comes back the same, unchanged test fails again.
+The demo makes this concrete. Its ticket says the cart subtotal is the sum of price × quantity: the browser test adds two notebooks and a pen set and expects `€15.00`. With a deliberate bug the test fails, without it the test passes, and when the bug comes back the same, unchanged test fails again.
 
 ## When to use it
 
@@ -59,7 +59,7 @@ Requires Node.js 22.18+ on the 22.x line or Node.js 24.x, npm, Bash, and `jq`. T
 npm ci
 npm run check
 
-cd examples/server-console
+cd examples/shop
 npm ci
 npx playwright install chromium
 npm run test:smoke    # fixed desktop and mobile journey
@@ -74,7 +74,7 @@ The demo is a standalone React and TypeScript app that toggles a bug. It shows t
 
 The root package checks the kit itself. To run `qa/run-qa.sh` on a real ticket, integrate it with an app that provides `test:affected`, `test:unit`, `test:e2e`, and `test:summary`, plus the expected Vitest and Playwright JSON reports. The ticket is a Markdown file; there is no built-in Jira connection. The launcher also needs the Claude Code CLI.
 
-After integration, run phase 1, review the generated tests and RED report, fill in the review decision, and implement the ticket. Then run `qa/repair-loop.sh TICKET-42 specs/TICKET-42.md services`: it verifies the ticket and, while it fails, lets the repair agent fix the application. To verify once without repairs, run phase 2 directly. If a remote `qa/<TICKET>` branch exists, the CI rules can keep its tests frozen in a PR whose title or branch names that ticket. See [HOW_TO_APPLY.md](HOW_TO_APPLY.md) for the exact commands and integration steps.
+After integration, run phase 1, review the generated tests and RED report, fill in the review decision, and implement the ticket. Then run `qa/repair-loop.sh TICKET-42 specs/TICKET-42.md shop`: it verifies the ticket and, while it fails, lets the repair agent fix the application. To verify once without repairs, run phase 2 directly. If a remote `qa/<TICKET>` branch exists, the CI rules can keep its tests frozen in a PR whose title or branch names that ticket. See [HOW_TO_APPLY.md](HOW_TO_APPLY.md) for the exact commands and integration steps.
 
 ## Run the agents in CI
 
@@ -83,7 +83,7 @@ Two GitHub workflows run the same steps without a developer machine:
 1. **QA write tests**, started by hand from the Actions tab with a ticket key. The QA writer agent turns `specs/<ticket>.md` into tests, the kit checks that each one fails for the right reason, and the workflow opens a pull request from `qa/<ticket>` into `feat/<ticket>`. It lists every criterion with its failing tests. **Approving that pull request is the human review**: the approval gives one line per criterion, such as `AC-1: the button does not exist yet`. Merge it, then develop on `feat/<ticket>`.
 2. **QA verify**, on every pull request into `main`. When the branch or the title names a ticket with QA tests, it checks that a collaborator approved the latest version of those tests and that they have not changed since. It then runs the QA verifier agent and the full suite. Make it a required check, and a failure blocks the merge. A pull request without such a ticket passes at once and calls no model.
 
-The agent's commands run in a sandbox without network access, and never see the API key. The full suite, which runs the pull request's code, has a step of its own without the key. To set it up, add an `ANTHROPIC_API_KEY` secret, allow Actions to create pull requests, and require the **QA verify** check: see [HOW_TO_APPLY.md](HOW_TO_APPLY.md#5-run-the-agents-in-ci). To try it on the demo, run **QA write tests** with `TICKET-43`, a "Clear search" button that does not exist yet.
+The agent's commands run in a sandbox without network access, and never see the API key. The full suite, which runs the pull request's code, has a step of its own without the key. To set it up, add an `ANTHROPIC_API_KEY` secret, allow Actions to create pull requests, and require the **QA verify** check: see [HOW_TO_APPLY.md](HOW_TO_APPLY.md#5-run-the-agents-in-ci). To try it on the demo, run **QA write tests** with `TICKET-44`, a promo code field that does not exist yet.
 
 ## Cost
 
