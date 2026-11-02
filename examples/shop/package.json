@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 4173 --strictPort",
+    "serve:e2e": "vite build --logLevel warn && vite preview --host 127.0.0.1 --port 4173 --strictPort",
     "test:unit": "vitest run",
     "test:affected": "vitest run",
     "test:summary": "node ../../qa/summary.ts",
