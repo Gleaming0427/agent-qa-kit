@@ -1,5 +1,5 @@
 diff --git a/src/App.tsx b/src/App.tsx
-index 35f6a73..64a9601 100644
+index 35f6a73..721bd5c 100644
 --- a/src/App.tsx
 +++ b/src/App.tsx
 @@ -13,6 +13,9 @@ export function App() {
@@ -16,7 +16,7 @@ index 35f6a73..64a9601 100644
                        <span>× {line.quantity}</span>
                        <button type="button" aria-label={`Increase ${product.name} quantity`} onClick={() => change(line.productId, 1)}>+</button>
                      </span>
-+                    <input type="number" min={0} className="qty-input" aria-label={`${product.name} quantity`} value={line.quantity}
++                    <input type="number" min={0} className="qty-input" aria-label={`Quantity of ${product.name}`} value={line.quantity}
 +                      onChange={(event) => { const value = Number.parseInt(event.target.value, 10); if (Number.isInteger(value) && value >= 0) setQuantity(line.productId, value); }} />
                    </li>
                  );
