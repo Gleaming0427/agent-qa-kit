@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-3",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "allows-a-sixth-unit",
+      "criterion": "AC-1",
+      "description": "Off by one: the buttons stay enabled at 5 units, so a 6th can be added."
+    },
+    {
+      "id": "no-limit-message",
+      "criterion": "AC-2",
+      "description": "The \"Maximum 5 per product\" message is never shown."
+    }
+  ]
+}

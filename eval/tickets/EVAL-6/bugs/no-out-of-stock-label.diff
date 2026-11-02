@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 7a6d135..7e7e253 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -27,7 +27,7 @@ export function App() {
+             {PRODUCTS.map((p) => (
+               <li key={p.id}>
+                 <strong>{p.name}</strong>
+-                <span className="price">{formatPrice(p.priceCents)}{OUT_OF_STOCK.includes(p.id) ? <span className="stock">Out of stock</span> : null}</span>
++                <span className="price">{formatPrice(p.priceCents)}</span>
+                 <button type="button" aria-label={`Add ${p.name} to cart`} disabled={OUT_OF_STOCK.includes(p.id)} onClick={() => add(p.id)}>Add to cart</button>
+               </li>
+             ))}

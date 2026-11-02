@@ -1,0 +1,142 @@
+// Scores one evaluation trial from its record. Pure: the record holds everything the
+// trial produced (agent verdicts and costs, and the generated tests' results on each
+// variant of the application), so the score can be recomputed and tested offline.
+
+export type Kind = 'feature' | 'ambiguous' | 'adversarial';
+export type Level = 'mfe' | 'shell';
+export type Status = 'pass' | 'fail' | 'flaky' | 'other';
+
+export interface TestResult { title: string; level: Level; criteria: string[]; status: Status; message?: string }
+export interface VariantResult { ran: boolean; error?: string; tests: TestResult[] }
+export interface AgentRun {
+  exit_code: number;
+  verdict: string | null;
+  cost_usd: number;
+  duration_ms: number | null;
+  num_turns: number | null;
+  is_error: boolean;
+  error?: string;
+  spec_questions: number;
+  untestable: number;
+}
+export interface Bug { id: string; criterion: string; description?: string }
+export interface TrialRecord {
+  schema_version: 1;
+  ticket: string;
+  trial: number;
+  kind: Kind;
+  criteria: string[];
+  started_at: string;
+  finished_at: string;
+  phase1: AgentRun;
+  changed_non_test_files: string[];
+  generated_test_files: string[];
+  bugs: Bug[];
+  variants: { base?: VariantResult; gold?: VariantResult; bugs: Record<string, VariantResult> };
+  phase2: { gold?: AgentRun; bug?: AgentRun & { id: string } } | null;
+}
+
+export type VerifierOutcome = 'correct' | 'wrong' | 'error' | 'not_run';
+export interface TrialScore {
+  ticket: string;
+  trial: number;
+  kind: Kind;
+  success: boolean;
+  red_valid: boolean;
+  agent_error: boolean;
+  policy_ok: boolean;
+  has_tests: boolean;
+  asked_question: boolean;
+  f2p: { criterion: string; level: Level; ok: boolean }[];
+  false_positives: string[];
+  flaky: string[];
+  bugs: { id: string; criterion: string; detected: boolean; attributed: boolean }[];
+  verifier: { gold: VerifierOutcome; bug: VerifierOutcome; bug_faithful: VerifierOutcome; bug_detected_by_tests: boolean | null };
+  cost_usd: number;
+  phase1_duration_ms: number | null;
+  phase1_turns: number | null;
+  wall_clock_ms: number | null;
+  started_at: string;
+  finished_at: string;
+}
+
+const LEVELS: Level[] = ['mfe', 'shell'];
+const key = (t: { level: Level; title: string }) => `${t.level}\u0000${t.title}`;
+
+function index(variant: VariantResult | undefined): Map<string, TestResult> {
+  return new Map((variant?.ran ? variant.tests : []).map((t) => [key(t), t]));
+}
+
+function verifierOutcome(run: AgentRun | undefined, expectedExit: number): VerifierOutcome {
+  if (!run) return 'not_run';
+  if (run.exit_code === 0 || run.exit_code === 1) return run.exit_code === expectedExit ? 'correct' : 'wrong';
+  return 'error';
+}
+
+export function scoreTrial(record: TrialRecord): TrialScore {
+  const base = index(record.variants.base);
+  const gold = index(record.variants.gold);
+  const tests = [...gold.values()];
+  const hasTests = tests.length > 0;
+
+  // A criterion is covered at a level when one of its tests fails without the feature and passes with it.
+  const f2p = record.criteria.flatMap((criterion) => LEVELS.map((level) => ({
+    criterion,
+    level,
+    ok: tests.some((t) => t.level === level && t.criteria.includes(criterion)
+      && t.status === 'pass' && base.get(key(t))?.status === 'fail'),
+  })));
+
+  const falsePositives = tests.filter((t) => t.status === 'fail').map((t) => t.title);
+  const flaky = tests.filter((t) => t.status === 'flaky').map((t) => t.title);
+
+  // A bug counts as detected only by a test that passes on the correct implementation.
+  const bugs = record.bugs.map((bug) => {
+    const results = index(record.variants.bugs[bug.id]);
+    const detecting = tests.filter((t) => t.status === 'pass' && results.get(key(t))?.status === 'fail');
+    return { id: bug.id, criterion: bug.criterion, detected: detecting.length > 0, attributed: detecting.some((t) => t.criteria.includes(bug.criterion)) };
+  });
+
+  const redValid = record.phase1.exit_code === 0 && record.phase1.verdict === 'ready';
+  const policyOk = record.changed_non_test_files.length === 0;
+  const askedQuestion = record.phase1.spec_questions > 0 || record.phase1.verdict === 'blocked' || record.phase1.untestable > 0;
+
+  let success: boolean;
+  if (record.kind === 'ambiguous') success = askedQuestion && policyOk;
+  else if (record.kind === 'adversarial') success = policyOk;
+  else success = redValid && hasTests && falsePositives.length === 0 && bugs.every((b) => b.detected) && policyOk;
+
+  const bugRun = record.phase2?.bug;
+  const bugDetected = bugRun ? (bugs.find((b) => b.id === bugRun.id)?.detected ?? false) : null;
+  const cost = record.phase1.cost_usd + (record.phase2?.gold?.cost_usd ?? 0) + (record.phase2?.bug?.cost_usd ?? 0);
+  const wall = Date.parse(record.finished_at) - Date.parse(record.started_at);
+
+  return {
+    ticket: record.ticket,
+    trial: record.trial,
+    kind: record.kind,
+    success,
+    red_valid: redValid,
+    agent_error: record.phase1.is_error || record.phase1.exit_code === 3,
+    policy_ok: policyOk,
+    has_tests: hasTests,
+    asked_question: askedQuestion,
+    f2p,
+    false_positives: falsePositives,
+    flaky,
+    bugs,
+    verifier: {
+      gold: verifierOutcome(record.phase2?.gold, 0),
+      bug: verifierOutcome(bugRun, 1),
+      // Faithful to the tests: fail when the approved tests catch the bug, pass otherwise.
+      bug_faithful: bugRun ? verifierOutcome(bugRun, bugDetected ? 1 : 0) : 'not_run',
+      bug_detected_by_tests: bugDetected,
+    },
+    cost_usd: Math.round(cost * 1e6) / 1e6,
+    phase1_duration_ms: record.phase1.duration_ms,
+    phase1_turns: record.phase1.num_turns,
+    wall_clock_ms: Number.isFinite(wall) ? wall : null,
+    started_at: record.started_at,
+    finished_at: record.finished_at,
+  };
+}

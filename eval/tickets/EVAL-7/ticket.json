@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-7",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "accepts-address-without-domain",
+      "criterion": "AC-1",
+      "description": "Any text containing \"@\" is accepted, \"name@\" included."
+    },
+    {
+      "id": "confirms-despite-error",
+      "criterion": "AC-1",
+      "description": "The error is shown, but the order is confirmed anyway."
+    }
+  ]
+}

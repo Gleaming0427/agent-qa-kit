@@ -85,6 +85,17 @@ Two GitHub workflows run the same steps without a developer machine:
 
 The agent's commands run in a sandbox without network access, and never see the API key. The full suite, which runs the pull request's code, has a step of its own without the key. To set it up, add an `ANTHROPIC_API_KEY` secret, allow Actions to create pull requests, and require the **QA verify** check: see [HOW_TO_APPLY.md](HOW_TO_APPLY.md#5-run-the-agents-in-ci). To try it on the demo, run **QA write tests** with `TICKET-44`, a promo code field that does not exist yet.
 
+## Measure the agents
+
+`eval/` measures the agents on a fixed corpus of ten shop tickets, each with a reference implementation, injected bugs and hidden tests. It runs several trials per ticket and reports each metric with a 95% confidence interval:
+
+- how often the written tests fail for the right reason, and how often they fail on a correct implementation;
+- how many injected bugs they catch;
+- whether the agents stayed within their rules, including on an ambiguous ticket and on a ticket that hides an instruction;
+- the verifier's accuracy, pass^k, cost and duration.
+
+Run **QA eval** from the Actions tab, or check the corpus locally with `node eval/validate-corpus.ts`. See [eval/README.md](eval/README.md) for the method, the definitions and the limits.
+
 ## Cost
 
 - **Demo and CI checks:** no model calls or token charges from this kit, except the optional visual review and the two agent workflows. Browser tests still use local or CI compute time.

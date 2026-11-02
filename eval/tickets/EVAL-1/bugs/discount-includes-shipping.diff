@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 3ca8518..ed24591 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -15,7 +15,7 @@ export function App() {
+   const sub = computeSubtotal(lines);
+   const ship = shipping(sub);
+   // Shipping is computed on the subtotal before the discount.
+-  const discount = applied === PROMO_CODE ? Math.round(sub * 0.1) : 0;
++  const discount = applied === PROMO_CODE ? Math.round((sub + ship) * 0.1) : 0;
+ 
+   const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
+   const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));

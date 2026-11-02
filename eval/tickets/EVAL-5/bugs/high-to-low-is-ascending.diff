@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 645c2db..da721e2 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -11,7 +11,7 @@ export function App() {
+   const sub = computeSubtotal(lines);
+   const ship = shipping(sub);
+   const products = sort === 'featured' ? PRODUCTS
+-    : [...PRODUCTS].sort((a, b) => (sort === 'price-asc' ? a.priceCents - b.priceCents : b.priceCents - a.priceCents));
++    : [...PRODUCTS].sort((a, b) => (sort === 'price-asc' ? a.priceCents - b.priceCents : a.priceCents - b.priceCents));
+ 
+   const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
+   const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));

@@ -1,0 +1,12 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index a6dc935..80b73fa 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -21,7 +21,6 @@ export function App() {
+     const value = email.trim();
+     const valid = !value || EMAIL.test(value);
+     setEmailError(!valid);
+-    if (!valid) return;
+     setReceipt(value || null);
+     setLines([]);
+     setConfirmed(true);

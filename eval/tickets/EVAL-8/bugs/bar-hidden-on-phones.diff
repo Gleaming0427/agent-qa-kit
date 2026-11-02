@@ -1,0 +1,13 @@
+diff --git a/src/styles.css b/src/styles.css
+index 37fa9c5..148001c 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -127,7 +127,7 @@ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1
+   footer { padding: 18px 20px 88px; }
+   .cart .checkout { display: none; }
+   .mobile-bar {
+-    display: flex;
++    display: none;
+     position: fixed;
+     left: 0;
+     right: 0;

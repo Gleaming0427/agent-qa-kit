@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-8",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "bar-hidden-on-phones",
+      "criterion": "AC-1",
+      "description": "A CSS mistake hides the bar on small screens, so phones have no visible checkout button."
+    },
+    {
+      "id": "bar-shows-subtotal",
+      "criterion": "AC-2",
+      "description": "The bar shows the subtotal, without shipping."
+    }
+  ]
+}

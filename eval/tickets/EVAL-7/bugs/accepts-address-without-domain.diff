@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index a6dc935..57b73fa 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -3,7 +3,7 @@ import { PRODUCTS, addToCart, changeQuantity, findProduct, formatPrice, shipping
+ import type { CartLine } from './cart';
+ import './styles.css';
+ 
+-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
++const EMAIL = /@/;
+ 
+ export function App() {
+   const [lines, setLines] = useState<CartLine[]>([]);

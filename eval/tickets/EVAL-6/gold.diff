@@ -1,0 +1,34 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 35f6a73..7a6d135 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -3,6 +3,8 @@ import { PRODUCTS, addToCart, changeQuantity, findProduct, formatPrice, shipping
+ import type { CartLine } from './cart';
+ import './styles.css';
+ 
++const OUT_OF_STOCK = ['desk-lamp'];
++
+ export function App() {
+   const [lines, setLines] = useState<CartLine[]>([]);
+   const [confirmed, setConfirmed] = useState(false);
+@@ -25,8 +27,8 @@ export function App() {
+             {PRODUCTS.map((p) => (
+               <li key={p.id}>
+                 <strong>{p.name}</strong>
+-                <span className="price">{formatPrice(p.priceCents)}</span>
+-                <button type="button" aria-label={`Add ${p.name} to cart`} onClick={() => add(p.id)}>Add to cart</button>
++                <span className="price">{formatPrice(p.priceCents)}{OUT_OF_STOCK.includes(p.id) ? <span className="stock">Out of stock</span> : null}</span>
++                <button type="button" aria-label={`Add ${p.name} to cart`} disabled={OUT_OF_STOCK.includes(p.id)} onClick={() => add(p.id)}>Add to cart</button>
+               </li>
+             ))}
+           </ul>
+diff --git a/src/styles.css b/src/styles.css
+index 62c0325..06005fc 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -125,3 +125,5 @@ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1
+   .layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+   footer { padding: 18px 20px; }
+ }
++.stock { display: block; font-size: 12px; color: #b42318; text-align: right; }
++.products button:disabled { border-color: var(--line); color: var(--muted); background: var(--surface); cursor: not-allowed; }

@@ -1,0 +1,21 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 35f6a73..d774bb3 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -21,6 +21,7 @@ export function App() {
+         <section aria-labelledby="shop-title">
+           <h1 id="shop-title">Shop</h1>
+           <p className="subtitle">Pick a few items and check out in a safe, local demo.</p>
++          <p className="count">{PRODUCTS.length} products</p>
+           <ul className="products" aria-label="Products">
+             {PRODUCTS.map((p) => (
+               <li key={p.id}>
+diff --git a/src/styles.css b/src/styles.css
+index 62c0325..429da8a 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -125,3 +125,4 @@ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1
+   .layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+   footer { padding: 18px 20px; }
+ }
++.count { margin: -20px 0 20px; color: var(--muted); font-size: 14px; }

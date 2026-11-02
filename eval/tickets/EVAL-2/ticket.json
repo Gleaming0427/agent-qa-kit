@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-2",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "removes-first-line",
+      "criterion": "AC-1",
+      "description": "Remove always deletes the first cart line."
+    },
+    {
+      "id": "totals-not-updated",
+      "criterion": "AC-2",
+      "description": "The line disappears but still counts in the subtotal and the total."
+    }
+  ]
+}

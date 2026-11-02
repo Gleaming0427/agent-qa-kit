@@ -1,0 +1,30 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 35f6a73..db6d225 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -9,6 +9,7 @@ export function App() {
+   const computeSubtotal = import.meta.env.VITE_DEMO_BUG === '1' ? subtotalBuggy : subtotal;
+   const sub = computeSubtotal(lines);
+   const ship = shipping(sub);
++  const units = lines.reduce((sum, line) => sum + line.quantity, 0);
+ 
+   const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
+   const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));
+@@ -16,7 +17,7 @@ export function App() {
+ 
+   return (
+     <main className="shell">
+-      <header><span className="brand">Demo Shop</span><span className="env">QA sandbox · no real payments</span></header>
++      <header><span className="brand">Demo Shop</span><span className="cart-count">Cart ({units})</span><span className="env">QA sandbox · no real payments</span></header>
+       <div className="layout">
+         <section aria-labelledby="shop-title">
+           <h1 id="shop-title">Shop</h1>
+diff --git a/src/styles.css b/src/styles.css
+index 62c0325..58c0825 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -125,3 +125,4 @@ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1
+   .layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+   footer { padding: 18px 20px; }
+ }
++.cart-count { font-weight: 600; font-size: 14px; }

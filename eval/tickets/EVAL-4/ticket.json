@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-4",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "counts-lines-not-units",
+      "criterion": "AC-1",
+      "description": "The count is the number of cart lines, not of units."
+    },
+    {
+      "id": "not-reset-after-checkout",
+      "criterion": "AC-2",
+      "description": "The count is kept in its own state and not reset after a checkout."
+    }
+  ]
+}

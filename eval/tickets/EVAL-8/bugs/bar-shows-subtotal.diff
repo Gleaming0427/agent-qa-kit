@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 48d1d53..8f41c73 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -63,7 +63,7 @@ export function App() {
+       </div>
+       {lines.length ? (
+         <div className="mobile-bar" role="region" aria-label="Checkout bar">
+-          <span>Total {formatPrice(sub + ship)}</span>
++          <span>Total {formatPrice(sub)}</span>
+           <button type="button" onClick={checkout}>Checkout</button>
+         </div>
+       ) : null}

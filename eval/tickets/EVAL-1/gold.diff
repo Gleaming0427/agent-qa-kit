@@ -1,0 +1,64 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 35f6a73..3ca8518 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -3,16 +3,27 @@ import { PRODUCTS, addToCart, changeQuantity, findProduct, formatPrice, shipping
+ import type { CartLine } from './cart';
+ import './styles.css';
+ 
++const PROMO_CODE = 'WELCOME10';
++
+ export function App() {
+   const [lines, setLines] = useState<CartLine[]>([]);
+   const [confirmed, setConfirmed] = useState(false);
++  const [code, setCode] = useState('');
++  const [applied, setApplied] = useState<string | null>(null);
++  const [invalid, setInvalid] = useState(false);
+   const computeSubtotal = import.meta.env.VITE_DEMO_BUG === '1' ? subtotalBuggy : subtotal;
+   const sub = computeSubtotal(lines);
+   const ship = shipping(sub);
++  // Shipping is computed on the subtotal before the discount.
++  const discount = applied === PROMO_CODE ? Math.round(sub * 0.1) : 0;
+ 
+   const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
+   const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));
+   const checkout = () => { setLines([]); setConfirmed(true); };
++  const apply = () => {
++    const value = code.trim();
++    if (value === PROMO_CODE) { setApplied(value); setInvalid(false); } else { setInvalid(true); }
++  };
+ 
+   return (
+     <main className="shell">
+@@ -51,11 +62,18 @@ export function App() {
+               })}
+             </ul>
+           ) : <p className="empty">Your cart is empty</p>}
++          <div className="promo">
++            <label htmlFor="promo">Promo code</label>
++            <input id="promo" value={code} onChange={(event) => setCode(event.target.value)} />
++            <button type="button" onClick={apply}>Apply</button>
++          </div>
++          {invalid ? <p role="alert" className="error">Invalid code</p> : null}
+           <table className="summary" aria-label="Order summary">
+             <tbody>
+               <tr><th scope="row">Subtotal</th><td>{formatPrice(sub)}</td></tr>
+               <tr><th scope="row">Shipping</th><td>{lines.length && ship === 0 ? 'Free' : formatPrice(ship)}</td></tr>
+-              <tr className="total"><th scope="row">Total</th><td>{formatPrice(sub + ship)}</td></tr>
++              {discount ? <tr><th scope="row">Discount</th><td>−{formatPrice(discount)}</td></tr> : null}
++              <tr className="total"><th scope="row">Total</th><td>{formatPrice(sub + ship - discount)}</td></tr>
+             </tbody>
+           </table>
+           <button type="button" className="checkout" disabled={!lines.length} onClick={checkout}>Checkout</button>
+diff --git a/src/styles.css b/src/styles.css
+index 62c0325..a3fe8ba 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -125,3 +125,7 @@ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1
+   .layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+   footer { padding: 18px 20px; }
+ }
++.promo { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; }
++.promo input { flex: 1; min-width: 0; font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; }
++.promo button { padding: 6px 12px; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); }
++.error { color: #b42318; margin: 0 0 12px; font-size: 14px; }
