@@ -19,6 +19,7 @@ import { homedir, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { APP, KIT, applyDiff, classifyChanges, copyApp, loadTicket, makeVariant, merge, runPlaywright, runVitest } from './lib/workspace.ts';
 import { scoreTrial } from './lib/score.ts';
+import { guardBlocks } from './lib/transcript.ts';
 import { buildManifest } from '../qa/criteria-manifest.ts';
 import type { AgentRun, TrialRecord, VariantResult } from './lib/score.ts';
 
@@ -109,12 +110,17 @@ function runPhase(phase: 1 | 2, label: string): AgentRun {
   const exit = run.status ?? 3;
   const criteria = Array.isArray(verdictJson?.criteria) ? verdictJson.criteria as { status?: string }[] : [];
   const isError = runJson?.is_error === true || (exit === 3 && !runJson);
+  // When a background task (a subagent, for instance) ends after the session's answer, the session
+  // answers again, and the CLI's result then reports the duration and turns of that last turn only.
+  // The cost is the session's total either way.
+  const lastTurnOnly = typeof runJson?.result_index === 'number' && runJson.result_index > 0;
   return {
     exit_code: exit,
     verdict: exit === 3 ? null : typeof verdictJson?.verdict === 'string' ? verdictJson.verdict : null,
     cost_usd: typeof runJson?.total_cost_usd === 'number' ? runJson.total_cost_usd : 0,
-    duration_ms: typeof runJson?.duration_ms === 'number' ? runJson.duration_ms : Date.now() - started,
-    num_turns: typeof runJson?.num_turns === 'number' ? runJson.num_turns : null,
+    duration_ms: lastTurnOnly ? null : typeof runJson?.duration_ms === 'number' ? runJson.duration_ms : Date.now() - started,
+    num_turns: !lastTurnOnly && typeof runJson?.num_turns === 'number' ? runJson.num_turns : null,
+    ...(lastTurnOnly ? { last_turn_only: true } : {}),
     is_error: isError,
     ...(exit === 3 ? { error: (run.stderr ?? '').trim().split('\n').slice(-3).join(' ').slice(0, 500) } : {}),
     spec_questions: Array.isArray(verdictJson?.spec_questions) ? verdictJson.spec_questions.length : 0,
@@ -193,8 +199,16 @@ if (command === 'write') {
   const transcript = typeof runJson?.session_id === 'string' ? findTranscript(runJson.session_id) : null;
   if (transcript) {
     copyFileSync(transcript, join(out, 'phase1-transcript.jsonl'));
-    // Each action the guard hook refused shows up once in the transcript.
-    state.phase1.guard_blocks = (readFileSync(transcript, 'utf8').match(/Blocked by QA guard/g) ?? []).length;
+    // Subagent transcripts are kept apart: <project>/<session id>/subagents/agent-<agent id>.jsonl.
+    const subagentDir = join(dirname(transcript), String(runJson?.session_id), 'subagents');
+    const subagents = existsSync(subagentDir) ? readdirSync(subagentDir).filter((f) => f.endsWith('.jsonl')) : [];
+    if (subagents.length) mkdirSync(join(out, 'phase1-subagents'), { recursive: true });
+    for (const file of subagents) copyFileSync(join(subagentDir, file), join(out, 'phase1-subagents', file));
+    const blocks = guardBlocks([transcript, ...subagents.map((f) => join(subagentDir, f))].map((f) => readFileSync(f, 'utf8')));
+    state.phase1.guard_blocks = blocks.total;
+    state.phase1.guard_block_reasons = blocks.reasons;
+    const spawned = Number((runJson?.subagent_stats as { spawned?: unknown } | undefined)?.spawned ?? 0);
+    state.phase1.subagents = { spawned: Number.isFinite(spawned) ? spawned : 0, transcripts: subagents.length };
   }
   saveState(state);
   console.log(`Phase 1: exit ${state.phase1.exit_code}, verdict ${state.phase1.verdict}, $${state.phase1.cost_usd}, ${state.generated_test_files.length} new test file(s), ${state.changed_non_test_files.length} other change(s)`);
