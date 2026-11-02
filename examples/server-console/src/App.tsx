@@ -35,8 +35,7 @@ export function App() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="e.g. alpha"
-        />
-        +{" "}
+        />{" "}
         {query ? (
           <button type="button" className="clear" onClick={() => setQuery("")}>
             Clear search
