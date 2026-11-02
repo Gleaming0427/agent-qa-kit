@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { buildManifest } from '../criteria-manifest.ts';
-import { approveReview, prepareReview, reserveVerifyAttempt, verifyReview } from '../scenario-review.ts';
+import {
+  approveFromReview, approveReview, exportReview, importReview, prepareReview, reserveVerifyAttempt, reviewMarkdown, verifyReview,
+} from '../scenario-review.ts';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'qa-scenario-review-'));
@@ -67,6 +69,33 @@ test('review requires a reason and rejects changed tests', () => {
     writeFileSync(f.testFile, `${readFileSync(f.testFile, 'utf8')}// changed\n`);
     assert.throws(() => verifyReview(args), /Reviewed test changed/);
   } finally { rmSync(f.root, { recursive: true, force: true }); }
+});
+
+test('a review package moves to another checkout and is approved from a pull request review', () => {
+  const f = fixture();
+  const ci = mkdtempSync(join(tmpdir(), 'qa-scenario-ci-'));
+  try {
+    const args = { root: f.root, ticket: 'TICKET-42', specPath: f.specPath };
+    prepareReview(args);
+    const red = JSON.parse(readFileSync(join(f.root, 'reports/TICKET-42-red-vitest.json'), 'utf8'));
+    assert.equal(red.testResults[0].name, 'src/Search.test.tsx');
+    exportReview({ ...args, mfe: 'services' });
+    // CI checks out the committed files at another path, without the reports folder.
+    for (const path of ['TICKET-42.md', 'e2e', 'src', 'qa-reviews']) cpSync(join(f.root, path), join(ci, path), { recursive: true });
+    const context = importReview({ root: ci, ticket: 'TICKET-42' });
+    assert.deepEqual(context, { ticket: 'TICKET-42', mfe: 'services', spec: 'TICKET-42.md' });
+    assert.match(reviewMarkdown({ root: ci, ticket: 'TICKET-42' }),
+      /### AC-1: search matches a service regardless of case[\s\S]*Unable to find Alpha[\s\S]*AC-1: why this failure/);
+    const ciArgs = { root: ci, ticket: 'TICKET-42', specPath: join(ci, context.spec), reviewer: '@alice' };
+    assert.throws(() => approveFromReview({ ...ciArgs, text: 'LGTM' }), /AC-1: explain why/);
+    approveFromReview({ ...ciArgs, text: 'Good tests.\n\n- **AC-1**: Alpha is missing when the search is in capitals.' });
+    const approval = verifyReview({ root: ci, ticket: 'TICKET-42', specPath: ciArgs.specPath });
+    assert.equal(approval.reviewer, '@alice');
+    assert.equal(approval.red_reasons['AC-1'], 'Alpha is missing when the search is in capitals.');
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
+    rmSync(ci, { recursive: true, force: true });
+  }
 });
 
 test('review refuses an unexplained RED test failure', () => {

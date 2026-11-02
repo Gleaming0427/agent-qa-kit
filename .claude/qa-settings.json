@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/qa-guard.sh"
+            "command": "\"${QA_KIT_DIR:-$CLAUDE_PROJECT_DIR}\"/.claude/hooks/qa-guard.sh"
           }
         ]
       }
@@ -46,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/verdict-check.ts"
+            "command": "node \"${QA_KIT_DIR:-$CLAUDE_PROJECT_DIR}\"/.claude/hooks/verdict-check.ts"
           }
         ]
       }

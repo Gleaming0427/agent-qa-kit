@@ -40,6 +40,8 @@ git update-ref refs/remotes/origin/main main
 branch qa/TICKET-42 main
 echo "test('[TICKET-42][AC-1] shell', () => {});" > e2e/TICKET-42.spec.ts
 echo "test('[TICKET-42][AC-1] unit', () => {});" >> src/App.test.tsx
+mkdir -p qa-reviews/TICKET-42
+echo '{"tests":["e2e/TICKET-42.spec.ts"]}' > qa-reviews/TICKET-42/TICKET-42-review-request.json
 commit 'TICKET-42 tests'
 git update-ref refs/remotes/origin/qa/TICKET-42 qa/TICKET-42
 
@@ -68,6 +70,13 @@ branch chore/nested main
 mkdir -p examples/demo/e2e
 echo "test('[TICKET-42][AC-1] nested', () => {});" > examples/demo/e2e/TICKET-42.spec.ts
 commit 'nested browser test'
+branch feat/TICKET-42-review-edited feat/TICKET-42
+echo '{"tests":[]}' > qa-reviews/TICKET-42/TICKET-42-review-request.json
+commit 'edit the approved review package'
+branch chore/review-unnamed main
+mkdir -p qa-reviews/TICKET-42
+echo '{}' > qa-reviews/TICKET-42/context.json
+commit 'unnamed PR adds a review package'
 branch qa/TICKET-60 main
 echo 'export const search = 0;' > src/app.ts
 commit 'a QA branch edits the application'
@@ -83,8 +92,10 @@ expect 0 'another ticket adds tests to the shared file'       feat/TICKET-50 pr 
 expect 0 'the QA branch itself'                               qa/TICKET-42 pr origin/main qa/TICKET-42 'TICKET-42 tests'
 expect 1 'another QA branch edits frozen browser tests'       qa/TICKET-50 pr origin/main qa/TICKET-50 'TICKET-50 tests'
 expect 1 'browser tests in a nested project, unnamed'         chore/nested pr origin/main chore/nested 'Add a demo'
+expect 1 'dev PR named by its branch edits the review package' feat/TICKET-42-review-edited pr origin/main feat/TICKET-42-review-edited ''
+expect 1 'unnamed PR that changes a review package'           chore/review-unnamed pr origin/main chore/review-unnamed 'Tidy up'
 echo 'QA branch scope and the direct frozen check'
-expect 0 'QA branch changes only tests'                       qa/TICKET-42 scope origin/main
+expect 0 'QA branch changes only tests and its review'       qa/TICKET-42 scope origin/main
 expect 1 'QA branch changes the application'                  qa/TICKET-60 scope origin/main
 expect 0 'frozen: tests identical to the QA branch'           feat/TICKET-42 frozen origin/main origin/qa/TICKET-42
 expect 1 'frozen: a QA test was edited'                       feat/TICKET-42-test-edited frozen origin/main origin/qa/TICKET-42

@@ -49,7 +49,7 @@ The demo makes this concrete. Its ticket says search is case-insensitive: the br
 
 - **On every pull request:** a small, fixed Playwright smoke suite for the journeys that cost money when they break (login, search, checkout), on desktop and mobile, with screenshots compared in CI. It calls no AI.
 - **Optionally, on the same screenshots:** an AI visual review. A pixel comparison says a page *changed*, not that it is *broken*, and a new page has no baseline yet. With an `ANTHROPIC_API_KEY` secret, `qa/visual-review.ts` asks a vision model to look for text that overflows, overlapping elements, empty sections and controls off screen. Its findings appear as warnings on the pull request and never block it: a person confirms them.
-- **On risky tickets:** the full workflow above, for changes where a broken user flow would matter. A low-risk change only needs the smoke suite and a normal review.
+- **On risky tickets:** the full workflow above, for changes where a broken user flow would matter, on a developer machine or in CI. A low-risk change only needs the smoke suite and a normal review.
 
 ## Try the demo
 
@@ -76,13 +76,24 @@ The root package checks the kit itself. To run `qa/run-qa.sh` on a real ticket, 
 
 After integration, run phase 1, review the generated tests and RED report, fill in the review decision, and implement the ticket. Then run `qa/repair-loop.sh TICKET-42 specs/TICKET-42.md services`: it verifies the ticket and, while it fails, lets the repair agent fix the application. To verify once without repairs, run phase 2 directly. If a remote `qa/<TICKET>` branch exists, the CI rules can keep its tests frozen in a PR whose title or branch names that ticket. See [HOW_TO_APPLY.md](HOW_TO_APPLY.md) for the exact commands and integration steps.
 
+## Run the agents in CI
+
+Two GitHub workflows run the same steps without a developer machine:
+
+1. **QA write tests**, started by hand from the Actions tab with a ticket key. The QA writer agent turns `specs/<ticket>.md` into tests, the kit checks that each one fails for the right reason, and the workflow opens a pull request from `qa/<ticket>` into `feat/<ticket>`. It lists every criterion with its failing tests. **Approving that pull request is the human review**: the approval gives one line per criterion, such as `AC-1: the button does not exist yet`. Merge it, then develop on `feat/<ticket>`.
+2. **QA verify**, on every pull request into `main`. When the branch or the title names a ticket with QA tests, it checks that a collaborator approved the latest version of those tests and that they have not changed since. It then runs the QA verifier agent and the full suite. Make it a required check, and a failure blocks the merge. A pull request without such a ticket passes at once and calls no model.
+
+The agent's commands run in a sandbox without network access, and never see the API key. The full suite, which runs the pull request's code, has a step of its own without the key. To set it up, add an `ANTHROPIC_API_KEY` secret, allow Actions to create pull requests, and require the **QA verify** check: see [HOW_TO_APPLY.md](HOW_TO_APPLY.md#5-run-the-agents-in-ci). To try it on the demo, run **QA write tests** with `TICKET-43`, a "Clear search" button that does not exist yet.
+
 ## Cost
 
-- **Demo and CI:** no model calls or token charges from this kit, except the optional visual review. Browser tests still use local or CI compute time.
+- **Demo and CI checks:** no model calls or token charges from this kit, except the optional visual review and the two agent workflows. Browser tests still use local or CI compute time.
 - **Visual review (optional):** one Claude Opus 5.5 call per CI run with the two smoke screenshots, about 2,000 input tokens. Its output is capped at 8,000 tokens, so a run costs at most about $0.17, and a few cents is the expected range (an estimate, not a measurement). Change the model with `QA_VISUAL_MODEL`.
 - **QA writer:** Sonnet, medium effort, up to 40 turns, with a default Claude CLI budget of **$1.00 per run**.
 - **QA verifier:** Haiku, low effort, up to 25 turns, with a default budget of **$0.20 per run**. Up to three verification runs are allowed per approved baseline.
 - **Repair agent:** Sonnet, medium effort, up to 40 turns, with a default budget of **$1.00 per repair**. The loop makes at most two repairs.
+
+In CI, a ticket costs one writer run, then one verifier run per push to the developer's pull request; a newer push cancels the run in progress.
 
 One writer run plus one verifier run has **$1.20 in configured budget ceilings**; with the repair loop at its limit (three verifications, two repairs), the ceilings reach **$3.60**. These are limits passed to the CLI, **not measured costs or a per-ticket price**. The development agent, any new writing cycle, and CI compute are separate. Claude's reported cost is saved under `reports/`. You can override the budgets, models and effort with `QA_BUDGET_USD`, `QA_MODEL`, `QA_EFFORT`, `QA_REPAIR_BUDGET_USD`, `QA_REPAIR_MODEL` and `QA_REPAIR_EFFORT`.
 
@@ -92,13 +103,16 @@ On failure, `qa/summary.ts` extracts short error excerpts and trace paths from t
 
 - **Smoke tests:** a few stable journeys. Update them only when a critical flow changes.
 - **Screenshots:** the baselines are made in CI. After an intended visual change, delete them and commit the new ones from the `screenshot-baselines` artifact.
-- **Ticket tests:** frozen while the ticket is developed. Delete the `qa/<TICKET>` branch once it is merged: they become ordinary tests.
+- **Ticket tests:** frozen while the ticket is developed. Delete the `qa/<TICKET>` branch once it is merged: they become ordinary tests. The review package in `qa-reviews/<TICKET>/` stays as a record of what was approved, and by whom.
 - **Dependencies:** keep Playwright, Vitest and Vite up to date and check `npm audit`.
 
 ## Current limits
 
 - Checks can prove that named tests ran and reported the expected result; they cannot prove the assertions capture the user's intent. Human review remains necessary.
 - The review receipt detects changes but does not authenticate the reviewer. Use required PR reviews and branch protection for a team workflow.
-- The demo is a small React app, not a real micro-frontend shell. The kit does not connect to Jira or run its agents in CI; only the optional visual review calls the API there.
+- The demo is a small React app, not a real micro-frontend shell. The kit does not connect to Jira.
+- The CI workflows have not run against the real API yet: their deterministic parts are tested, the agents' behavior in CI is not.
+- A pull request can change the workflows and scripts that judge it. In a team, protect `.github/`, `qa/` and `.claude/` with a `CODEOWNERS` file and the ruleset option "Require review from Code Owners".
+- On GitHub, code that runs in a job can reach that job's secrets. The kit limits the key to the agent's step and hides it from the agent's commands, and forks never receive it; still, use a dedicated key with a low spending limit.
 - Agent hooks and the sandbox are guardrails, not a substitute for a disposable environment without secrets.
 - The visual review sends screenshots to the Anthropic API: do not enable it on pages that show sensitive data. It can miss a problem or report one that is not there, which is why it only warns.

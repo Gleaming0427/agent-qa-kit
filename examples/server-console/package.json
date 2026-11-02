@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 4173 --strictPort",
     "test:unit": "vitest run",
+    "test:affected": "vitest run",
+    "test:summary": "node ../../qa/summary.ts",
     "test:e2e": "playwright test",
     "test:smoke": "playwright test e2e/smoke.spec.ts",
     "demo:unit": "node qa/demo-cycle.ts",

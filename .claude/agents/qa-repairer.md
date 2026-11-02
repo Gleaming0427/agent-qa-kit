@@ -10,7 +10,7 @@ hooks:
     - matcher: "Read|Grep|Glob|Write|Edit|Bash"
       hooks:
         - type: command
-          command: "QA_GUARD_MODE=repair \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/qa-guard.sh"
+          command: "QA_GUARD_MODE=repair \"${QA_KIT_DIR:-$CLAUDE_PROJECT_DIR}\"/.claude/hooks/qa-guard.sh"
 ---
 # QA repairer
 

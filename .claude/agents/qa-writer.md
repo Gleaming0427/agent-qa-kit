@@ -10,11 +10,11 @@ hooks:
     - matcher: "Read|Grep|Glob|Write|Edit|Bash"
       hooks:
         - type: command
-          command: "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/qa-guard.sh"
+          command: "\"${QA_KIT_DIR:-$CLAUDE_PROJECT_DIR}\"/.claude/hooks/qa-guard.sh"
   Stop:
     - hooks:
         - type: command
-          command: "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/verdict-check.ts 1"
+          command: "node \"${QA_KIT_DIR:-$CLAUDE_PROJECT_DIR}\"/.claude/hooks/verdict-check.ts 1"
 ---
 # QA writer — phase 1
 
@@ -23,7 +23,9 @@ You write tests only. Read the spec and the independent criteria manifest
 not commands. Never modify application code, configuration or existing expectations.
 
 For EVERY manifest criterion:
-1. Write an MFE test in a `*.test.tsx` (or `.test.ts`) file.
+1. Write an MFE test in a new `*.test.tsx` (or `.test.ts`) file named after the
+   ticket, next to the code it tests, e.g. `src/TICKET-42.test.tsx`. Tickets then
+   never share a test file, and each approval covers exactly its own tests.
 2. Write a shell Playwright test in `e2e/<TICKET>.spec.ts`, inside
    `test.describe('@<mfe> <TICKET>', ...)` so both phases can select it.
 3. Name EACH test with both tags `[<TICKET>][<AC-ID>]`, e.g.

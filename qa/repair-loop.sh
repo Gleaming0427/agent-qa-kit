@@ -2,6 +2,7 @@
 # Verifies a ticket and, while it fails, sends the short failure summary to a
 # repair agent that may change the application but not the approved tests.
 # Usage: qa/repair-loop.sh TICKET-42 specs/TICKET-42.md services
+# The application may live outside the kit: set QA_PROJECT_DIR to its folder.
 # Codes: 0 pass; 1 still failing after the last attempt; 2 blocked;
 #        3 infrastructure error, attempt limit or a repair that touched the tests.
 set -uo pipefail
@@ -12,11 +13,13 @@ TICKET="$1"; SPEC="$2"; MFE="$3"
 [[ "$MFE" =~ ^[a-z0-9-]+$ ]] || fail 'invalid MFE name'
 [[ -f "$SPEC" ]] || fail "spec not found: $SPEC"
 SPEC="$(cd "$(dirname "$SPEC")" && pwd)/$(basename "$SPEC")"
-cd "$(dirname "$0")/.." || fail 'Cannot locate project root'
+KIT="$(cd "$(dirname "$0")/.." && pwd)" || fail 'Cannot locate the kit'
+cd "${QA_PROJECT_DIR:-$KIT}" || fail "Cannot enter the project: ${QA_PROJECT_DIR:-$KIT}"
+export QA_KIT_DIR="$KIT"
 for tool in claude jq awk node; do command -v "$tool" >/dev/null 2>&1 || fail "$tool is required"; done
 MAX="${QA_MAX_VERIFY_ATTEMPTS:-3}"
 [[ "$MAX" =~ ^[1-9][0-9]*$ ]] || fail 'QA_MAX_VERIFY_ATTEMPTS must be a positive integer'
-AGENT='.claude/agents/qa-repairer.md'
+AGENT="$KIT/.claude/agents/qa-repairer.md"
 [[ -f "$AGENT" ]] || fail "agent not found: $AGENT"
 field() { awk -v key="$1:" '/^---$/ { n++; next } n == 1 && $1 == key { print $2; exit }' "$AGENT"; }
 MODEL="${QA_REPAIR_MODEL:-$(field model)}"; EFFORT="${QA_REPAIR_EFFORT:-$(field effort)}"; TURNS="$(field maxTurns)"
@@ -31,7 +34,7 @@ for (( attempt = 1; ; attempt++ )); do
   echo "repair-loop: verification $attempt/$MAX for $TICKET"
   # A full-suite report from an earlier attempt must not describe this one.
   rm -f "reports/$TICKET-full-suite.json"
-  bash qa/run-qa.sh "$TICKET" 2 "$SPEC" "$MFE"
+  bash "$KIT/qa/run-qa.sh" "$TICKET" 2 "$SPEC" "$MFE"
   code=$?
   case "$code" in
     0) echo "repair-loop: $TICKET passes after $attempt verification(s)"; exit 0 ;;
@@ -44,7 +47,7 @@ for (( attempt = 1; ; attempt++ )); do
   fi
 
   # Only the short summary goes to the agent; full reports and traces stay on disk.
-  FAILURES="$(node qa/summary.ts 2>&1 | head -c 6000)"
+  FAILURES="$(node "$KIT/qa/summary.ts" 2>&1 | head -c 6000)"
   if [[ -f "reports/$TICKET-full-suite.json" ]]; then
     FAILURES+=$'\n'"$(jq -r '.problems[:10][] | "- " + .' "reports/$TICKET-full-suite.json" 2>/dev/null)"
   fi
@@ -59,8 +62,9 @@ $FAILURES
 </failures>"
   OUTPUT="reports/$TICKET-repair$attempt.json"
   echo "repair-loop: repair $attempt, budget \$$BUDGET"
-  claude -p "$REQUEST" \
-    --settings .claude/repair-settings.json \
+  # The application's tests run by the agent get no credentials.
+  CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 claude -p "$REQUEST" \
+    --settings "$KIT/.claude/repair-settings.json" \
     --append-system-prompt-file "$SYSTEM_PROMPT" \
     --model "$MODEL" --effort "$EFFORT" \
     --permission-mode dontAsk \
@@ -73,7 +77,7 @@ $FAILURES
   fi
   echo "repair-loop: repair $attempt finished, cost \$$COST"
   # The approved tests and ticket must be exactly as reviewed.
-  node qa/scenario-review.ts verify "$TICKET" "$SPEC" >/dev/null \
+  node "$KIT/qa/scenario-review.ts" verify "$TICKET" "$SPEC" >/dev/null \
     || fail 'the repair changed the approved tests, ticket or initial reports; review the diff'
-  node qa/check-tests.ts >/dev/null || fail 'disabled or focused tests after the repair'
+  node "$KIT/qa/check-tests.ts" >/dev/null || fail 'disabled or focused tests after the repair'
 done

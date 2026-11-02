@@ -3,7 +3,7 @@
 // development begins. This receipt detects changes; it is not authentication.
 import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
-import { isAbsolute, relative, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanMessage, extractPlaywrightTests, validateEvidence } from '../.claude/hooks/strict-evidence.ts';
 import type { Level, Manifest, PlaywrightReport, Verdict, VitestReport } from '../.claude/hooks/strict-evidence.ts';
@@ -31,6 +31,7 @@ export interface Approval {
   approved_at: string;
 }
 interface ReviewArgs { root: string; ticket: string; specPath: string }
+export interface ReviewContext { ticket: string; mfe: string; spec: string }
 
 const digest = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 const readJson = <T>(path: string): T => JSON.parse(readFileSync(path, 'utf8')) as T;
@@ -130,6 +131,12 @@ export function prepareReview({ root, ticket, specPath }: ReviewArgs): ReviewReq
     if (!existsSync(report)) throw new Error(`reports/${source} missing: run the unit tests and the browser scenarios first.`);
     copyFileSync(report, copy);
   }
+  // Project-relative test paths keep the review valid on another machine, such as CI.
+  const vitest = readJson<VitestReport>(red.vitest);
+  for (const file of vitest.testResults ?? []) {
+    if (file.name && isAbsolute(file.name) && !relative(root, file.name).startsWith('..')) file.name = relative(root, file.name);
+  }
+  writeFileSync(red.vitest, `${JSON.stringify(vitest)}\n`);
   const request = buildRequest(root, ticket, resolve(specPath), red);
   writeFileSync(reportPath(root, ticket, 'review-request'), `${JSON.stringify(request, null, 2)}\n`);
   const template = { reviewer: '', red_reasons: Object.fromEntries(request.criteria.map(({ id }) => [id, ''])) };
@@ -191,14 +198,86 @@ export function reserveVerifyAttempt({ root, ticket, specPath, maxAttempts = 3 }
   return attempt;
 }
 
+// The review package is committed with the tests, so that CI can verify the approval.
+const PACKAGE_FILES = ['criteria', 'phase1', 'red-vitest', 'red-playwright', 'review-request'];
+const packageDir = (root: string, ticket: string) => resolve(root, 'qa-reviews', ticket);
+
+export function exportReview({ root, ticket, specPath, mfe }: ReviewArgs & { mfe: string }): string {
+  root = resolve(root); checkTicket(ticket);
+  if (!/^[a-z0-9-]+$/.test(mfe)) throw new Error(`Invalid MFE name: ${mfe}`);
+  const dir = packageDir(root, ticket);
+  mkdirSync(dir, { recursive: true });
+  for (const name of PACKAGE_FILES) copyFileSync(reportPath(root, ticket, name), join(dir, `${ticket}-${name}.json`));
+  const context: ReviewContext = { ticket, mfe, spec: relative(root, resolve(specPath)) };
+  writeFileSync(join(dir, 'context.json'), `${JSON.stringify(context, null, 2)}\n`);
+  return dir;
+}
+
+export function importReview({ root, ticket }: { root: string; ticket: string }): ReviewContext {
+  root = resolve(root); checkTicket(ticket);
+  const dir = packageDir(root, ticket);
+  mkdirSync(resolve(root, 'reports'), { recursive: true });
+  for (const name of PACKAGE_FILES) copyFileSync(join(dir, `${ticket}-${name}.json`), reportPath(root, ticket, name));
+  const context = readJson<ReviewContext>(join(dir, 'context.json'));
+  if (context.ticket !== ticket) throw new Error('Review package belongs to another ticket.');
+  return context;
+}
+
+/** Pull request text: what to check, the RED evidence, and how to approve. */
+export function reviewMarkdown({ root, ticket }: { root: string; ticket: string }): string {
+  const request = readJson<ReviewRequest>(reportPath(resolve(root), ticket, 'review-request'));
+  const plain = (text: string) => text.replace(/`/g, "'");
+  const sections = request.criteria.map(({ id, description, failures }) => [
+    `### ${id}: ${plain(description)}`,
+    ...failures.map((f) => `- **${f.level === 'mfe' ? 'Unit' : 'Browser'} test** \`${plain(f.title)}\`\n  > ${plain(f.message).slice(0, 300)}`),
+  ].join('\n'));
+  return [
+    `## QA tests for ${ticket}`,
+    'The QA writer turned each acceptance criterion into a unit test and a browser test. They fail on purpose: the feature does not exist yet.',
+    'Before approving, check for each criterion that the assertions test what the ticket asks for, and that the failure below comes from the missing feature, not from a broken test or environment.',
+    ...sections,
+    '### How to approve',
+    'Approve this pull request with a review comment that has one line per criterion:',
+    `\`\`\`text\n${request.criteria.map(({ id }) => `${id}: why this failure shows the feature is missing`).join('\n')}\n\`\`\``,
+    `The verification job reads these lines and refuses an approval without them. Merging into \`feat/${ticket}\` then makes these tests the reference for the developer.`,
+  ].join('\n\n') + '\n';
+}
+
+/** Records an approval given in a pull request review: one "AC-N: reason" line per criterion. */
+export function approveFromReview({ root, ticket, specPath, reviewer, text }: ReviewArgs & { reviewer: string; text: string }): Approval {
+  root = resolve(root); checkTicket(ticket);
+  const red_reasons: Record<string, string> = {};
+  for (const line of text.split(/\r?\n/)) {
+    // Accepts Markdown such as "- AC-1: reason", "**AC-1**: reason" or "`AC-1` — reason".
+    const match = line.match(/^\s*(?:[-*+]\s+)?[*_`]*(AC-[1-9]\d*)[*_`]*\s*[:—–-]\s*[*_`]*\s*(.+)$/);
+    if (match) red_reasons[match[1]] = match[2].trim();
+  }
+  writeFileSync(reportPath(root, ticket, 'review-decision'), `${JSON.stringify({ reviewer, red_reasons }, null, 2)}\n`);
+  return approveReview({ root, ticket, specPath });
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    const [command, ticket, specPath] = process.argv.slice(2);
-    if (!['prepare', 'approve', 'verify', 'reserve'].includes(command) || !ticket || !specPath) {
-      throw new Error('Usage: node qa/scenario-review.ts <prepare|approve|verify|reserve> TICKET specs/TICKET.md');
+    const [command, ticket, specPath, ...rest] = process.argv.slice(2);
+    const root = process.cwd();
+    const needsSpec = ['prepare', 'approve', 'verify', 'reserve', 'export', 'approve-review'].includes(command);
+    if (!['import', 'pr-body'].includes(command) && !needsSpec || !ticket || needsSpec && !specPath) {
+      throw new Error('Usage: node qa/scenario-review.ts <prepare|approve|verify|reserve> TICKET SPEC\n'
+        + '       node qa/scenario-review.ts export TICKET SPEC MFE | import TICKET | pr-body TICKET\n'
+        + '       node qa/scenario-review.ts approve-review TICKET SPEC REVIEWER REVIEW_TEXT_FILE');
     }
-    const args = { root: resolve(import.meta.dirname, '..'), ticket, specPath };
-    if (command === 'prepare') {
+    const args = { root, ticket, specPath };
+    if (command === 'export') {
+      console.log(`Review package: ${relative(root, exportReview({ ...args, mfe: rest[0] ?? '' }))}`);
+    } else if (command === 'import') {
+      console.log(JSON.stringify(importReview({ root, ticket })));
+    } else if (command === 'pr-body') {
+      process.stdout.write(reviewMarkdown({ root, ticket }));
+    } else if (command === 'approve-review') {
+      if (!rest[0] || !rest[1]) throw new Error('approve-review needs REVIEWER and REVIEW_TEXT_FILE');
+      const approval = approveFromReview({ ...args, reviewer: rest[0], text: readFileSync(rest[1], 'utf8') });
+      console.log(`Scenario review recorded for ${ticket} by ${approval.reviewer}.`);
+    } else if (command === 'prepare') {
       const request = prepareReview(args);
       console.log(`Review ${request.tests.length} test file(s) and the RED failures in reports/${ticket}-review-request.json.`);
       console.log(`Fill reports/${ticket}-review-decision.template.json, save as reports/${ticket}-review-decision.json, then run the approve command.`);
