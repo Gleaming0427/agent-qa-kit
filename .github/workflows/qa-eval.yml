@@ -72,6 +72,8 @@ jobs:
     env:
       TICKET: ${{ matrix.ticket }}
       TRIAL: ${{ matrix.trial }}
+      # One fresh runner per trial: the agents work in examples/shop itself, as in "QA write tests".
+      EVAL_IN_PLACE: '1'
     steps:
       - uses: actions/checkout@v5
         with:

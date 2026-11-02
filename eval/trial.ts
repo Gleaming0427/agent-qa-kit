@@ -10,11 +10,14 @@
 //   finish   writes trial.json, the input of eval/lib/aggregate.ts
 // Usage: node eval/trial.ts <prepare|write|score|verify|finish> <TICKET> <TRIAL>
 // Folders: EVAL_WORK (default: <tmp>/agent-qa-eval) holds <TICKET>-<TRIAL>/{ws,out,state.json}.
+// EVAL_IN_PLACE=1 (CI, one fresh runner per trial): the agents work in examples/shop of the
+// checkout itself, with the dependencies npm ci installed, exactly as in "QA write tests". The
+// copied workspace used otherwise had the shop's dev server drop connections inside the sandbox.
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { KIT, applyDiff, copyApp, loadTicket, makeVariant, merge, runPlaywright, runVitest } from './lib/workspace.ts';
+import { APP, KIT, applyDiff, copyApp, loadTicket, makeVariant, merge, runPlaywright, runVitest } from './lib/workspace.ts';
 import { scoreTrial } from './lib/score.ts';
 import { buildManifest } from '../qa/criteria-manifest.ts';
 import type { AgentRun, TrialRecord, VariantResult } from './lib/score.ts';
@@ -26,7 +29,10 @@ if (!['prepare', 'write', 'score', 'verify', 'finish'].includes(command) || !/^[
 }
 const trial = Number(trialArg);
 const root = join(process.env.EVAL_WORK || join(tmpdir(), 'agent-qa-eval'), `${ticketName}-${trial}`);
-const ws = join(root, 'ws');
+const IN_PLACE = process.env.EVAL_IN_PLACE === '1';
+const ws = IN_PLACE ? APP : join(root, 'ws');
+// In place, the untouched shop is saved here first: the variants are built from it.
+const pristine = IN_PLACE ? join(root, 'pristine') : APP;
 const out = join(root, 'out');
 const statePath = join(root, 'state.json');
 const specPath = join(root, 'spec.md');
@@ -53,9 +59,18 @@ const readJson = (path: string): Record<string, unknown> | null => {
 };
 
 function git(...args: string[]): string {
-  const run = spawnSync('git', ['-c', 'user.name=eval', '-c', 'user.email=eval@example.invalid', ...args], { cwd: ws, encoding: 'utf8' });
+  const run = spawnSync('git', ['-c', 'user.name=eval', '-c', 'user.email=eval@example.invalid', '-c', 'core.quotepath=false', ...args], { cwd: ws, encoding: 'utf8' });
   if (run.status !== 0) throw new Error(`git ${args.join(' ')}: ${run.stderr}`);
   return run.stdout;
+}
+
+/** Files changed in the workspace since its baseline, with paths relative to the workspace. */
+function changedFiles(): { code: string; path: string }[] {
+  // Porcelain paths are relative to the repository root; in place, that root is two folders up.
+  const prefix = git('rev-parse', '--show-prefix').trim();
+  return git('status', '--porcelain', '--untracked-files=all', '--', '.').split('\n').filter(Boolean)
+    .map((line) => ({ code: line.slice(0, 2), path: line.slice(3).replace(/^"|"$/g, '') }))
+    .map((f) => ({ ...f, path: f.path.startsWith(prefix) ? f.path.slice(prefix.length) : f.path }));
 }
 
 /** The last JSON object of a model's answer, when the kit could not validate it. */
@@ -122,17 +137,23 @@ const ticket = loadTicket(ticketName);
 if (command === 'prepare') {
   rmSync(root, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
-  copyApp(ws, { link: false });
-  // The shop finds the kit's summary script through a path relative to examples/shop; the
-  // workspace lives elsewhere, so it points to the script directly (part of the baseline commit).
-  const pkgPath = join(ws, 'package.json');
-  const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { scripts: Record<string, string> };
-  pkg.scripts['test:summary'] = `node ${join(KIT, 'qa/summary.ts')}`;
-  writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+  if (IN_PLACE) {
+    const dirty = changedFiles();
+    if (dirty.length) throw new Error(`examples/shop must be untouched before a trial in place: ${dirty.map((f) => f.path).join(', ')}`);
+    copyApp(pristine);
+  } else {
+    copyApp(ws, { link: false });
+    // The shop finds the kit's summary script through a path relative to examples/shop; the
+    // workspace lives elsewhere, so it points to the script directly (part of the baseline commit).
+    const pkgPath = join(ws, 'package.json');
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { scripts: Record<string, string> };
+    pkg.scripts['test:summary'] = `node ${join(KIT, 'qa/summary.ts')}`;
+    writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+    git('init', '-q');
+    git('add', '-A');
+    git('commit', '-qm', 'baseline');
+  }
   copyFileSync(ticket.spec, specPath);
-  git('init', '-q');
-  git('add', '-A');
-  git('commit', '-qm', 'baseline');
   const criteria = buildManifest(ticketName, readFileSync(specPath, 'utf8')).criteria.map((c) => c.id);
   saveState({ ticket: ticketName, trial, kind: ticket.kind, criteria, bugs: ticket.bugs, started_at: new Date().toISOString() });
   console.log(`Prepared ${ticketName} trial ${trial} in ${root}`);
@@ -157,8 +178,7 @@ if (command === 'write') {
     state.phase1 = runPhase(1, 'phase1');
   }
   // Only new test files are allowed: a changed tracked file or any other new file breaks the writer's rules.
-  const status = git('status', '--porcelain', '--untracked-files=all').split('\n').filter(Boolean);
-  const files = status.map((line) => ({ code: line.slice(0, 2), path: line.slice(3) }));
+  const files = changedFiles();
   state.generated_test_files = files.filter((f) => f.code === '??' && isTest(f.path)).map((f) => f.path);
   state.changed_non_test_files = files.filter((f) => !(f.code === '??' && isTest(f.path))).map((f) => f.path);
   for (const file of state.generated_test_files) {
@@ -185,7 +205,7 @@ if (command === 'score') {
   if (ticket.kind !== 'ambiguous' && existsSync(join(ticket.dir, 'gold.diff')) && files.length) {
     const run = (variant: string, repeatEach: number): VariantResult => {
       const dir = join(root, 'variants', variant);
-      makeVariant(ticket, variant, dir);
+      makeVariant(ticket, variant, dir, pristine);
       for (const file of files) {
         mkdirSync(dirname(join(dir, file)), { recursive: true });
         copyFileSync(join(ws, file), join(dir, file));

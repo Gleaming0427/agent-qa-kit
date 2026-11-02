@@ -3,7 +3,7 @@
 // kit's own report parsers, so the evaluation sees the same evidence as the kit.
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
-import { basename, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { extractPlaywrightTests, extractVitestTests } from '../../.claude/hooks/strict-evidence.ts';
 import type { PlaywrightReport, VitestReport } from '../../.claude/hooks/strict-evidence.ts';
 import type { Level, Status, TestResult, VariantResult } from './score.ts';
@@ -33,16 +33,15 @@ export function listTickets(): string[] {
  * installed node_modules; an agent's workspace gets its own copy instead (link: false),
  * because its sandbox only writes inside the project and the test tools write caches there.
  */
-export function copyApp(dest: string, { from = APP, link = true } = {}): void {
+export function copyApp(dest: string, { from = APP, link = true, modules = join(from, 'node_modules') } = {}): void {
   rmSync(dest, { recursive: true, force: true });
   mkdirSync(dest, { recursive: true });
   cpSync(from, dest, { recursive: true, filter: (src) => !SKIP.has(basename(src)) || src === from });
-  const modules = join(from, 'node_modules');
-  if (!existsSync(modules)) throw new Error(`${modules} is missing: run npm ci in ${from} first`);
+  if (!existsSync(modules)) throw new Error(`${modules} is missing: run npm ci in ${APP} first`);
   if (link) symlinkSync(modules, join(dest, 'node_modules'), 'dir');
   else cpSync(modules, join(dest, 'node_modules'), { recursive: true, verbatimSymlinks: true });
   // Local development only: use a Chromium that is already installed (CI installs its own).
-  if (process.env.EVAL_CHROMIUM) {
+  if (process.env.EVAL_CHROMIUM && !readFileSync(join(dest, 'playwright.config.ts'), 'utf8').includes('launchOptions')) {
     const config = join(dest, 'playwright.config.ts');
     const text = readFileSync(config, 'utf8');
     const anchor = "    trace: 'retain-on-failure',\n";
@@ -51,14 +50,21 @@ export function copyApp(dest: string, { from = APP, link = true } = {}): void {
   }
 }
 
+/**
+ * Applies a diff whose paths are relative to dir. Inside a subfolder of a repository, git apply
+ * reads paths from the repository root and silently skips the others, so git is kept from
+ * looking above dir: a repository at dir itself still counts.
+ */
 export function applyDiff(dir: string, diff: string): void {
-  const run = spawnSync('git', ['apply', '--whitespace=nowarn', diff], { cwd: dir, encoding: 'utf8' });
+  const run = spawnSync('git', ['apply', '--whitespace=nowarn', diff], {
+    cwd: dir, encoding: 'utf8', env: { ...process.env, GIT_CEILING_DIRECTORIES: dirname(resolve(dir)) },
+  });
   if (run.status !== 0) throw new Error(`git apply ${diff} failed in ${dir}: ${run.stderr.trim()}`);
 }
 
-/** variant: 'base', 'gold' or a bug id (applied on top of gold). */
-export function makeVariant(ticket: Ticket & { dir: string }, variant: string, dest: string): void {
-  copyApp(dest);
+/** variant: 'base', 'gold' or a bug id (applied on top of gold). `from` is the untouched application. */
+export function makeVariant(ticket: Ticket & { dir: string }, variant: string, dest: string, from = APP): void {
+  copyApp(dest, { from, modules: join(APP, 'node_modules') });
   if (variant === 'base') return;
   applyDiff(dest, join(ticket.dir, 'gold.diff'));
   if (variant !== 'gold') applyDiff(dest, join(ticket.dir, 'bugs', `${variant}.diff`));
