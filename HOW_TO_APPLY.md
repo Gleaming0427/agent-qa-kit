@@ -128,9 +128,24 @@ qa/repair-loop.sh TICKET-42 specs/TICKET-42.md services
 
 The loop runs phase 2. When it fails, it sends the short output of
 `qa/summary.ts` to the `qa-repairer` agent, which may change the application
-but not tests, snapshots, test configuration, dependencies or the kit. After
-each repair, the loop checks that the approved tests, ticket and initial
-reports are unchanged, then verifies again. The launcher accepts at most three
+but not tests, snapshots, test configuration, dependencies, installed packages
+(`node_modules/`), git files or the kit. After each repair, the loop checks
+that the approved tests, ticket and initial reports are unchanged, then
+verifies again.
+
+Before the first verification, the loop also records every file in
+`node_modules/` and the git configuration, hooks and info files
+(`qa/tooling-integrity.ts`). It compares them after every repair and every
+verification: a change stops the loop with code 3, even when it comes from
+code that the tests ran rather than from the agent itself. A test runner
+patched in `node_modules/` cannot make a broken application pass. Only the
+caches that test tools rewrite on every run (`node_modules/.vite`, `.vitest`,
+`.cache` and `.tmp`) are left out.
+
+The guard hook, not the settings file, keeps the agents out of `reports/` and
+`node_modules/`. Claude Code also applies the settings' deny rules to the
+commands that run in the sandbox, and the test tools must keep writing their
+reports and caches there. The launcher accepts at most three
 verification runs per reviewed baseline: the first run and two after repairs.
 To verify once without repairs, run `qa/run-qa.sh TICKET-42 2
 specs/TICKET-42.md services`.
@@ -142,7 +157,8 @@ run. The result is in `reports/TICKET-42-full-suite.json`. If all attempts
 fail, reassess the spec and tests with a human and establish a new RED baseline.
 
 Exit codes: `0` ready or pass, `1` fail, `2` blocked, `3` technical error,
-invalid verdict, attempt limit, or a repair that touched the approved tests.
+invalid verdict, attempt limit, or a repair that touched the approved tests,
+the installed packages or the git files.
 Review the repair agent's diff in the pull request like any other change.
 
 ## 5. Run the agents in CI

@@ -11,8 +11,10 @@ const kit = resolve(import.meta.dirname, '../..');
 // are stand-ins, so the loop's decisions can be tested without AI or a browser.
 function project(verifications: number[]) {
   const root = mkdtempSync(join(tmpdir(), 'qa-repair-loop-'));
-  for (const dir of ['qa', 'bin', 'specs', 'reports', '.claude/agents']) mkdirSync(join(root, dir), { recursive: true });
+  for (const dir of ['qa', 'bin', 'specs', 'reports', '.claude/agents', 'node_modules/vitest']) mkdirSync(join(root, dir), { recursive: true });
   copyFileSync(join(kit, 'qa/repair-loop.sh'), join(root, 'qa/repair-loop.sh'));
+  copyFileSync(join(kit, 'qa/tooling-integrity.ts'), join(root, 'qa/tooling-integrity.ts'));
+  writeFileSync(join(root, 'node_modules/vitest/index.js'), 'export const expect = realExpect;\n');
   copyFileSync(join(kit, '.claude/agents/qa-repairer.md'), join(root, '.claude/agents/qa-repairer.md'));
   copyFileSync(join(kit, '.claude/repair-settings.json'), join(root, '.claude/repair-settings.json'));
   writeFileSync(join(root, 'specs/TICKET-42.md'), '- AC-2: search is case insensitive\n');
@@ -21,6 +23,10 @@ function project(verifications: number[]) {
 cd "$(dirname "$0")/.."
 code="$(head -n 1 codes)"; sed -i.bak 1d codes
 echo "verify $*" >> calls
+# Test tools rewrite their caches on every run.
+mkdir -p node_modules/.vite/deps && echo "$RANDOM" > node_modules/.vite/deps/_metadata.json
+# Code planted by a repair runs with the tests.
+[[ -f src/patch-on-test ]] && echo 'export const expect = () => ({});' > node_modules/vitest/index.js
 exit "$code"
 `);
   writeFileSync(join(root, 'qa/summary.ts'), "console.log('  ✗ [TICKET-42][AC-2] search is case insensitive\\n    expected Alpha, received nothing');\n");
@@ -30,6 +36,8 @@ exit "$code"
 printf '%s' "$2" > "repair-request-$(ls repair-request-* 2>/dev/null | wc -l | tr -d ' ')"
 echo "repair" >> calls
 [[ "\${FAKE_TAMPER:-0}" == 1 ]] && touch tests-changed
+[[ "\${FAKE_TAMPER_DEPS:-0}" == 1 ]] && echo 'export const expect = () => ({});' > node_modules/vitest/index.js
+[[ "\${FAKE_PLANT:-0}" == 1 ]] && mkdir -p src && touch src/patch-on-test
 jq -n '{result: "{\\"needs_human\\": false}", total_cost_usd: 0.4, is_error: false}'
 `);
   chmodSync(join(root, 'bin/claude'), 0o755);
@@ -77,6 +85,19 @@ test('a repair that touches the approved tests stops the loop', () => inProject(
   assert.equal(r.code, 3);
   assert.deepEqual(r.calls.map((c) => c.split(' ')[0]), ['verify', 'repair']);
   assert.match(r.output, /the repair changed the approved tests/);
+}));
+test('a repair that patches the installed test runner stops the loop', () => inProject([1, 0], (root) => {
+  const r = run(root, { FAKE_TAMPER_DEPS: '1' });
+  assert.equal(r.code, 3);
+  assert.deepEqual(r.calls.map((c) => c.split(' ')[0]), ['verify', 'repair']);
+  assert.match(r.output, /changed: node_modules\/vitest\/index\.js/);
+  assert.match(r.output, /node_modules or the git files changed during the repair/);
+}));
+test('code planted by a repair that patches packages while the tests run is caught', () => inProject([1, 0], (root) => {
+  const r = run(root, { FAKE_PLANT: '1' });
+  assert.equal(r.code, 3);
+  assert.deepEqual(r.calls.map((c) => c.split(' ')[0]), ['verify', 'repair', 'verify']);
+  assert.match(r.output, /node_modules or the git files changed during the verification/);
 }));
 test('with one allowed verification, nothing is repaired', () => inProject([1], (root) => {
   const r = run(root, { QA_MAX_VERIFY_ATTEMPTS: '1' });
