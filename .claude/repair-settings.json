@@ -22,7 +22,6 @@
       "Edit(qa/**)",
       "Edit(.claude/**)",
       "Edit(.github/**)",
-      "Edit(reports/**)",
       "Edit(specs/**)",
       "Edit(**/package.json)",
       "Edit(**/package-lock.json)",

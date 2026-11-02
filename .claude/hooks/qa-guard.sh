@@ -73,6 +73,10 @@ case "$TOOL" in
   Write|Edit)
     rel="$(relative_path "$(jq -r '.tool_input.file_path // empty' <<<"$INPUT")")" || exit 2
     check_not_secret "$rel"
+    # No agent changes the installed packages or the git metadata: the tests run on them.
+    case "/$rel/" in
+      */node_modules/*|*/.git/*) deny "Agents may not change installed packages or git files ($rel)" ;;
+    esac
     if [[ "${QA_GUARD_MODE:-qa}" == repair ]]; then
       # The repair agent fixes the application; tests, their setup and the kit stay as approved.
       case "$rel" in

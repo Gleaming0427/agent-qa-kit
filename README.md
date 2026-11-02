@@ -40,7 +40,7 @@ Each step answers a specific risk:
 2. **Every new test must fail first, for the right reason.** A test that already passes before the feature exists proves nothing. For browser tests, only a failed `expect()` counts: a crash, a timeout or a server that never started is refused, and an app that cannot start makes the run "blocked".
 3. **A person approves the tests once.** An AI can misread an ambiguous ticket. Checking its interpretation before development is cheap; finding out afterwards is not. The approval stores hashes of the ticket, the tests and the first reports: changing any of them cancels it.
 4. **The verifier cannot edit anything, and its word is not trusted.** A script checks every criterion against the JSON test reports. A missing, skipped or failing test means no "pass".
-5. **Repairs are automatic, bounded, and cannot cheat.** When the verification fails, `qa/repair-loop.sh` sends a short failure summary, not the full reports, to a repair agent. That agent may change the application but not the tests, their configuration or the dependencies. After each repair, the approved tests are checked against their hashes, and the loop stops after three verifications.
+5. **Repairs are automatic, bounded, and cannot cheat.** When the verification fails, `qa/repair-loop.sh` sends a short failure summary, not the full reports, to a repair agent. That agent may change the application, but not the tests, their configuration, the dependencies, the installed packages in `node_modules/` or the git files. After each repair, the approved tests are checked against their hashes and the installed packages against a snapshot taken before the loop, and the loop stops after three verifications.
 6. **The whole app is checked, not only the ticket.** After a pass, the launcher reruns every unit and browser test itself, including fixed `@smoke` journeys on desktop and mobile. A regression elsewhere, or a flaky browser test, fails the ticket.
 
 The demo makes this concrete. Its ticket says search is case-insensitive: the browser test types `ALPHA` and expects to see `Alpha`. With a deliberate bug the test fails, without it the test passes, and when the bug comes back the same, unchanged test fails again.
@@ -106,13 +106,41 @@ On failure, `qa/summary.ts` extracts short error excerpts and trace paths from t
 - **Ticket tests:** frozen while the ticket is developed. Delete the `qa/<TICKET>` branch once it is merged: they become ordinary tests. The review package in `qa-reviews/<TICKET>/` stays as a record of what was approved, and by whom.
 - **Dependencies:** keep Playwright, Vitest and Vite up to date and check `npm audit`.
 
+## Security
+
+The kit defends against one threat above all: **an AI agent that cheats to obtain a pass**, by editing the approved tests, faking the results or patching the test tools, or that is **manipulated by text it reads** in the ticket, the code or the test output. It does not defend against a person who has write access to the repository.
+
+| Layer | What it does |
+|---|---|
+| Guard hook and permissions | Each agent writes only what its role needs: tests for the writer, nothing for the verifier, the application for the repair agent, which may not touch the tests, their configuration, the kit, `node_modules/` or `.git/`. Commands come from a short allowlist, without chaining, redirection or network tools. Secret files, paths outside the project and symbolic links are refused. |
+| Operating-system sandbox | The commands an agent runs have no network access (bubblewrap on Linux, Seatbelt on macOS). If the sandbox cannot start, Claude Code stops instead of running without it. |
+| No credentials for agent commands | `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB` removes the API key from the commands an agent starts. On Linux, they cannot read other processes' environments either. |
+| Deterministic checks | A script compares the agent's verdict with the test reports. Hashes protect the ticket, the approved tests and the first reports, and the tests stay frozen on every pull request. During repairs, `node_modules/` and the git files are compared with a snapshot after every step. The launcher runs the full suite itself. |
+| CI | The API key exists only in the agent's step. The full suite, which runs the pull request's code, has a step of its own without it. The agent workflows keep no GitHub token on disk and have minimal permissions, and their inputs reach the scripts through environment variables, so they cannot inject commands. Pull requests from forks receive no secrets. Only a collaborator's approval of the latest version of the tests counts. |
+| Dependencies | Exact versions, committed lockfiles, and releases at least two weeks old when they were chosen. In November 2026, `npm audit` reported no known vulnerability in either package. |
+
+Each rule has regression tests, which `npm run check` runs in CI.
+
+**Known gaps**, to fix before a team relies on the kit:
+
+- The CI approval check trusts GitHub's author association: owner, member or collaborator. A collaborator with read-only access would therefore count, whereas GitHub's required reviews only count people with write access.
+- The GitHub Actions are referenced by tag (`@v5`), not by commit SHA. A hijacked tag would run with the job's permissions and secrets.
+
+**Limits that no tool removes:**
+
+- Code under test can lie about its own results, or detect that it is being tested. A person must still review the diff.
+- A pull request opened from a branch of this repository can change the workflows that judge it, and the code it runs in a job can read that job's secrets. Protect `.github/`, `qa/` and `.claude/` with a `CODEOWNERS` file and the ruleset option "Require review from Code Owners", and use a dedicated API key with a low spending limit.
+- The local approval receipt detects changes but does not prove who approved. In CI, the approval is a GitHub review.
+- Hooks and the sandbox are guardrails, not a disposable environment: the commands in the sandbox can still read most of the disk. When you can, run the agents in a container or in CI, without personal credentials.
+- Traces and screenshots uploaded as CI artifacts can contain session data: use test accounts, never real credentials, in browser tests.
+- The visual review sends screenshots to the Anthropic API: keep it off for pages that show sensitive data.
+
+**Recommended repository settings:** require the checks on `main` (without them, nothing blocks a merge), and turn on secret scanning with push protection and Dependabot alerts.
+
 ## Current limits
 
 - Checks can prove that named tests ran and reported the expected result; they cannot prove the assertions capture the user's intent. Human review remains necessary.
-- The review receipt detects changes but does not authenticate the reviewer. Use required PR reviews and branch protection for a team workflow.
 - The demo is a small React app, not a real micro-frontend shell. The kit does not connect to Jira.
 - The CI workflows have not run against the real API yet: their deterministic parts are tested, the agents' behavior in CI is not.
-- A pull request can change the workflows and scripts that judge it. In a team, protect `.github/`, `qa/` and `.claude/` with a `CODEOWNERS` file and the ruleset option "Require review from Code Owners".
-- On GitHub, code that runs in a job can reach that job's secrets. The kit limits the key to the agent's step and hides it from the agent's commands, and forks never receive it; still, use a dedicated key with a low spending limit.
-- Agent hooks and the sandbox are guardrails, not a substitute for a disposable environment without secrets.
-- The visual review sends screenshots to the Anthropic API: do not enable it on pages that show sensitive data. It can miss a problem or report one that is not there, which is why it only warns.
+- The visual review can miss a problem or report one that is not there, which is why it only warns.
+- For the security limits, see [Security](#security).
