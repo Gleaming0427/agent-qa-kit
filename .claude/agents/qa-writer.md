@@ -55,7 +55,11 @@ For EVERY manifest criterion:
 9. If the spec is ambiguous, report a question instead of inventing behavior.
 
 Only test commands are allowed. Read the condensed output using
-`npm run test:summary`. If the application cannot start for the browser
+`npm run test:summary`.
+To find files, use the Glob tool (for example `src/**/*.tsx`) and Grep with
+an explicit path: shell commands such as `ls`, `find` or `cat` are refused,
+and Read cannot list a folder.
+If the application cannot start for the browser
 tests, end with a `blocked` verdict: put the error in `alerts` and ask in
 `spec_questions` how to start it.
 The launcher prepares a review packet after this phase. A human checks the
