@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 643c705..9ce8672 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -7,7 +7,7 @@ export function App() {
+   const [lines, setLines] = useState<CartLine[]>([]);
+   const [confirmed, setConfirmed] = useState(false);
+   const [query, setQuery] = useState('');
+-  const visible = PRODUCTS.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase()));
++  const visible = PRODUCTS.filter((p) => p.name.includes(query.trim()));
+   const computeSubtotal = import.meta.env.VITE_DEMO_BUG === '1' ? subtotalBuggy : subtotal;
+   const sub = computeSubtotal(lines);
+   const ship = shipping(sub);

@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 2c0fd4e..e317612 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -3,7 +3,7 @@ import { PRODUCTS, addToCart, changeQuantity, findProduct, formatPrice, shipping
+ import type { CartLine } from './cart';
+ import './styles.css';
+ 
+-const BULK_FROM = 3;
++const BULK_FROM = 4;
+ const lineCents = (line: CartLine) => findProduct(line.productId).priceCents * line.quantity;
+ // 10% off each line of BULK_FROM units or more, rounded to the cent.
+ const bulkDiscount = (lines: CartLine[]) => lines.reduce((sum, line) => sum + (line.quantity >= BULK_FROM ? Math.round(lineCents(line) * 0.1) : 0), 0);

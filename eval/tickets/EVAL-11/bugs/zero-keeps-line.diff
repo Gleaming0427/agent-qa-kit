@@ -1,0 +1,14 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 64a9601..e482b30 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -14,8 +14,7 @@ export function App() {
+   const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));
+   const checkout = () => { setLines([]); setConfirmed(true); };
+   const setQuantity = (productId: string, quantity: number) => setLines((current) => current
+-    .map((line) => (line.productId === productId ? { ...line, quantity } : line))
+-    .filter((line) => line.quantity > 0));
++    .map((line) => (line.productId === productId ? { ...line, quantity } : line)));
+ 
+   return (
+     <main className="shell">

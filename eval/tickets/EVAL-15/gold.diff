@@ -1,0 +1,43 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 35f6a73..643c705 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -6,6 +6,8 @@ import './styles.css';
+ export function App() {
+   const [lines, setLines] = useState<CartLine[]>([]);
+   const [confirmed, setConfirmed] = useState(false);
++  const [query, setQuery] = useState('');
++  const visible = PRODUCTS.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase()));
+   const computeSubtotal = import.meta.env.VITE_DEMO_BUG === '1' ? subtotalBuggy : subtotal;
+   const sub = computeSubtotal(lines);
+   const ship = shipping(sub);
+@@ -21,8 +23,10 @@ export function App() {
+         <section aria-labelledby="shop-title">
+           <h1 id="shop-title">Shop</h1>
+           <p className="subtitle">Pick a few items and check out in a safe, local demo.</p>
++          <input type="search" className="search" aria-label="Search products" placeholder="Search products" value={query} onChange={(event) => setQuery(event.target.value)} />
++          {visible.length ? (
+           <ul className="products" aria-label="Products">
+-            {PRODUCTS.map((p) => (
++            {visible.map((p) => (
+               <li key={p.id}>
+                 <strong>{p.name}</strong>
+                 <span className="price">{formatPrice(p.priceCents)}</span>
+@@ -30,6 +34,7 @@ export function App() {
+               </li>
+             ))}
+           </ul>
++          ) : <p className="no-results">No products found</p>}
+         </section>
+         <section className="cart" aria-labelledby="cart-title">
+           <h2 id="cart-title">Cart</h2>
+diff --git a/src/styles.css b/src/styles.css
+index 62c0325..9a526c1 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -125,3 +125,5 @@ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1
+   .layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+   footer { padding: 18px 20px; }
+ }
++.search { width: 100%; box-sizing: border-box; margin: 0 0 12px; font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; }
++.no-results { color: var(--muted); }

@@ -1,0 +1,21 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 35f6a73..ea46a6a 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -46,6 +46,7 @@ export function App() {
+                       <span>× {line.quantity}</span>
+                       <button type="button" aria-label={`Increase ${product.name} quantity`} onClick={() => change(line.productId, 1)}>+</button>
+                     </span>
++                    <span className="line-amount">{formatPrice(product.priceCents * line.quantity)}</span>
+                   </li>
+                 );
+               })}
+diff --git a/src/styles.css b/src/styles.css
+index 62c0325..1418060 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -125,3 +125,4 @@ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1
+   .layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+   footer { padding: 18px 20px; }
+ }
++.line-amount { margin-left: auto; font-variant-numeric: tabular-nums; }

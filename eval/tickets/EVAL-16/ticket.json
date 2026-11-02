@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-16",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "shows-unit-price",
+      "criterion": "AC-1",
+      "description": "Each line shows the unit price, whatever its quantity."
+    },
+    {
+      "id": "amount-without-cents",
+      "criterion": "AC-2",
+      "description": "Line amounts drop trailing zeros, such as \"€29.9\"."
+    }
+  ]
+}

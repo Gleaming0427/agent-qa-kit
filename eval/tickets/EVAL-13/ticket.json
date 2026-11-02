@@ -1,0 +1,17 @@
+{
+  "ticket": "EVAL-13",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "discount-from-four-units",
+      "criterion": "AC-1",
+      "description": "The discount and the badge start at 4 units instead of 3."
+    },
+    {
+      "id": "discount-on-whole-cart",
+      "criterion": "AC-2",
+      "description": "Once one line has 3 units, 10% is taken off the whole subtotal."
+    }
+  ]
+}

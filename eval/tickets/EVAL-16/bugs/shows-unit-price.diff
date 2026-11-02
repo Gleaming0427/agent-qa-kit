@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index ea46a6a..ff590bd 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -46,7 +46,7 @@ export function App() {
+                       <span>× {line.quantity}</span>
+                       <button type="button" aria-label={`Increase ${product.name} quantity`} onClick={() => change(line.productId, 1)}>+</button>
+                     </span>
+-                    <span className="line-amount">{formatPrice(product.priceCents * line.quantity)}</span>
++                    <span className="line-amount">{formatPrice(product.priceCents)}</span>
+                   </li>
+                 );
+               })}

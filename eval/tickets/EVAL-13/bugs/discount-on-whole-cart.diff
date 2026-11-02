@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 2c0fd4e..71e9b05 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -6,7 +6,7 @@ import './styles.css';
+ const BULK_FROM = 3;
+ const lineCents = (line: CartLine) => findProduct(line.productId).priceCents * line.quantity;
+ // 10% off each line of BULK_FROM units or more, rounded to the cent.
+-const bulkDiscount = (lines: CartLine[]) => lines.reduce((sum, line) => sum + (line.quantity >= BULK_FROM ? Math.round(lineCents(line) * 0.1) : 0), 0);
++const bulkDiscount = (lines: CartLine[]) => (lines.some((line) => line.quantity >= BULK_FROM) ? Math.round(lines.reduce((sum, line) => sum + lineCents(line), 0) * 0.1) : 0);
+ 
+ export function App() {
+   const [lines, setLines] = useState<CartLine[]>([]);
