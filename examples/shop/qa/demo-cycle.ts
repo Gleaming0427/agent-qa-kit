@@ -17,6 +17,11 @@ interface StageResult {
   evidenceMatches: boolean; failedTests: string[]; report: string | null;
 }
 
+// The demo ticket, the criterion the deliberate bug breaks, and how many tests the ticket has.
+const TICKET = 'TICKET-42';
+const FAILING_CRITERION = 'AC-2';
+const TICKET_TESTS = 3;
+
 const e2e = process.argv.includes('--e2e');
 const root = resolve(import.meta.dirname, '..');
 const steps = [
@@ -53,8 +58,8 @@ for (const step of steps) {
   const savedReport = resolve(root, 'reports', `${step.name}-${e2e ? 'playwright' : 'vitest'}.json`);
   rmSync(report, { force: true });
   rmSync(savedReport, { force: true });
-  // Only TICKET-42's tests: other tickets may add tests to the same app.
-  const args = e2e ? ['run', 'test:e2e', '--', 'e2e/TICKET-42.spec.ts'] : ['run', 'test:unit', '--', '--testNamePattern', '\\[TICKET-42\\]'];
+  // Only the demo ticket's tests: other tickets may add tests to the same app.
+  const args = e2e ? ['run', 'test:e2e', '--', `e2e/${TICKET}.spec.ts`] : ['run', 'test:unit', '--', '--testNamePattern', `\\[${TICKET}\\]`];
   const run = spawnSync('npm', args, {
     cwd: root, encoding: 'utf8', stdio: 'inherit',
     env: { ...process.env, VITE_DEMO_BUG: step.bug },
@@ -62,15 +67,15 @@ for (const step of steps) {
   const passed = run.status === 0;
   if (existsSync(report)) copyFileSync(report, savedReport);
   let tests: Observation[] = [];
-  try { tests = observations(JSON.parse(readFileSync(report, 'utf8'))).filter((item) => item.title.includes('[TICKET-42]')); } catch {}
+  try { tests = observations(JSON.parse(readFileSync(report, 'utf8'))).filter((item) => item.title.includes(`[${TICKET}]`)); } catch {}
   const failures = tests.filter((item) => item.status === (e2e ? 'unexpected' : 'failed'));
-  const expectedRed = failures.length === 1 && failures[0].title.includes('[TICKET-42][AC-2]') && Boolean(failures[0].message);
+  const expectedRed = failures.length === 1 && failures[0].title.includes(`[${TICKET}][${FAILING_CRITERION}]`) && Boolean(failures[0].message);
   const expectedGreen = failures.length === 0 && tests.every((item) => item.status === (e2e ? 'expected' : 'passed'));
-  const evidenceMatches = tests.length === 3 && (step.expectPass ? expectedGreen : expectedRed);
+  const evidenceMatches = tests.length === TICKET_TESTS && (step.expectPass ? expectedGreen : expectedRed);
   results.push({ stage: step.name, bugEnabled: step.bug === '1', passed, expectedPass: step.expectPass,
     evidenceMatches, failedTests: failures.map(({ title }) => title), report: existsSync(savedReport) ? savedReport : null });
   if (run.error || run.status === null || passed !== step.expectPass || !existsSync(report) || !evidenceMatches) {
-    console.error(`Unexpected result at ${step.name}: expected ${step.expectPass ? 'pass' : 'fail'} with matching AC-2 evidence, got ${passed ? 'pass' : 'fail'} (${tests.length} tests, ${failures.length} failures).`);
+    console.error(`Unexpected result at ${step.name}: expected ${step.expectPass ? 'pass' : 'fail'} with matching ${FAILING_CRITERION} evidence, got ${passed ? 'pass' : 'fail'} (${tests.length} tests, ${failures.length} failures).`);
     process.exitCode = 1;
     break;
   }

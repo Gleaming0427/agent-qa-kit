@@ -10,14 +10,14 @@ on:
         required: true
         type: string
       mfe:
-        description: Feature area; it tags the browser tests (@services)
+        description: Feature area; it tags the browser tests (@shop)
         required: true
-        default: services
+        default: shop
         type: string
       app:
         description: Application folder, relative to the repository
         required: true
-        default: examples/server-console
+        default: examples/shop
         type: string
 
 permissions:
