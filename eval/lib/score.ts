@@ -32,6 +32,8 @@ export interface TrialRecord {
   finished_at: string;
   phase1: AgentRun;
   changed_non_test_files: string[];
+  /** Empty files the sandbox created at the project root; recorded, not counted as changes. */
+  sandbox_placeholders?: string[];
   generated_test_files: string[];
   bugs: Bug[];
   variants: { base?: VariantResult; gold?: VariantResult; bugs: Record<string, VariantResult> };

@@ -17,7 +17,7 @@ import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { APP, KIT, applyDiff, copyApp, loadTicket, makeVariant, merge, runPlaywright, runVitest } from './lib/workspace.ts';
+import { APP, KIT, applyDiff, classifyChanges, copyApp, loadTicket, makeVariant, merge, runPlaywright, runVitest } from './lib/workspace.ts';
 import { scoreTrial } from './lib/score.ts';
 import { buildManifest } from '../qa/criteria-manifest.ts';
 import type { AgentRun, TrialRecord, VariantResult } from './lib/score.ts';
@@ -48,6 +48,7 @@ interface State {
   phase1?: AgentRun;
   generated_test_files?: string[];
   changed_non_test_files?: string[];
+  sandbox_placeholders?: string[];
   variants?: TrialRecord['variants'];
   phase2?: TrialRecord['phase2'];
 }
@@ -131,7 +132,6 @@ function findTranscript(sessionId: string): string | null {
   return null;
 }
 
-const isTest = (file: string) => /\.(test|spec)\.[cm]?[jt]sx?$/.test(file);
 const ticket = loadTicket(ticketName);
 
 if (command === 'prepare') {
@@ -178,9 +178,13 @@ if (command === 'write') {
     state.phase1 = runPhase(1, 'phase1');
   }
   // Only new test files are allowed: a changed tracked file or any other new file breaks the writer's rules.
-  const files = changedFiles();
-  state.generated_test_files = files.filter((f) => f.code === '??' && isTest(f.path)).map((f) => f.path);
-  state.changed_non_test_files = files.filter((f) => !(f.code === '??' && isTest(f.path))).map((f) => f.path);
+  const changes = classifyChanges(changedFiles().map((f) => {
+    const full = join(ws, f.path);
+    return { ...f, size: existsSync(full) && statSync(full).isFile() ? statSync(full).size : -1 };
+  }));
+  state.generated_test_files = changes.tests;
+  state.changed_non_test_files = changes.others;
+  state.sandbox_placeholders = changes.placeholders;
   for (const file of state.generated_test_files) {
     mkdirSync(dirname(join(out, 'generated', file)), { recursive: true });
     copyFileSync(join(ws, file), join(out, 'generated', file));
@@ -261,6 +265,7 @@ if (command === 'finish') {
     finished_at: new Date().toISOString(),
     phase1: state.phase1 ?? failedPhase1,
     changed_non_test_files: state.changed_non_test_files ?? [],
+    sandbox_placeholders: state.sandbox_placeholders ?? [],
     generated_test_files: state.generated_test_files ?? [],
     bugs: state.bugs,
     variants: state.variants ?? { bugs: {} },
