@@ -73,10 +73,22 @@ case "$TOOL" in
   Write|Edit)
     rel="$(relative_path "$(jq -r '.tool_input.file_path // empty' <<<"$INPUT")")" || exit 2
     check_not_secret "$rel"
-    case "$rel" in
-      e2e/*.spec.ts|*.test.ts|*.test.tsx) ;;
-      *) deny "Agent may only write test files ($rel)" ;;
-    esac
+    if [[ "${QA_GUARD_MODE:-qa}" == repair ]]; then
+      # The repair agent fixes the application; tests, their setup and the kit stay as approved.
+      case "$rel" in
+        *.spec.*|*.test.*|*-snapshots/*|*__snapshots__/*|e2e/*|*/e2e/*|qa/*|.claude/*|.github/*|reports/*|specs/*)
+          deny "Repair agent may not change tests or QA files ($rel)" ;;
+      esac
+      case "${rel##*/}" in
+        package.json|package-lock.json|npm-shrinkwrap.json|yarn.lock|pnpm-lock.yaml|playwright.config.*|vite.config.*|vitest.config.*|vitest.workspace.*)
+          deny "Repair agent may not change the test setup or dependencies ($rel)" ;;
+      esac
+    else
+      case "$rel" in
+        e2e/*.spec.ts|*.test.ts|*.test.tsx) ;;
+        *) deny "Agent may only write test files ($rel)" ;;
+      esac
+    fi
     content="$(jq -r '.tool_input.content // .tool_input.new_string // empty' <<<"$INPUT")"
     check_disabled_test "$content"
     ;;
@@ -89,6 +101,7 @@ case "$TOOL" in
     [[ "$cmd" != *' --update'* && "$cmd" != *' -u' ]] || deny 'Snapshot updates forbidden'
     case "$cmd" in
       'npm run test:affected'|'npm run test:summary'|'npm test'|'npx playwright test') ;;
+      'npm run build') [[ "${QA_GUARD_MODE:-qa}" == repair ]] || deny "Command not allowed: $cmd" ;;
       'npm run test:e2e -- --grep '@*)
         grep -Eq '^npm run test:e2e -- --grep @[a-z0-9-]+$' <<<"$cmd" || deny 'Unsafe E2E grep option'
         ;;

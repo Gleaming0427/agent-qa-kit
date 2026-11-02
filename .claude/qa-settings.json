@@ -3,10 +3,6 @@
     "allow": [
       "Read(**)",
       "Grep(**)",
-      "Glob(**)",
-      "Write(**/*.test.ts)",
-      "Write(**/*.test.tsx)",
-      "Write(e2e/*.spec.ts)",
       "Edit(**/*.test.ts)",
       "Edit(**/*.test.tsx)",
       "Edit(e2e/*.spec.ts)",

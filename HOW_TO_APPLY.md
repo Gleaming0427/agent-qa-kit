@@ -105,13 +105,17 @@ when the PR names the ticket. Delete `qa/TICKET-42` once the ticket is merged:
 its tests then follow the normal review. Then run:
 
 ```bash
-qa/run-qa.sh TICKET-42 2 specs/TICKET-42.md services
+qa/repair-loop.sh TICKET-42 specs/TICKET-42.md services
 ```
 
-The launcher accepts at most three verification runs per reviewed baseline:
-the first run and two after repairs. When a run fails, send the short output
-from `qa/summary.ts` to the repair agent, inspect a full trace only when
-needed, and rerun the affected test.
+The loop runs phase 2. When it fails, it sends the short output of
+`qa/summary.ts` to the `qa-repairer` agent, which may change the application
+but not tests, snapshots, test configuration, dependencies or the kit. After
+each repair, the loop checks that the approved tests, ticket and initial
+reports are unchanged, then verifies again. The launcher accepts at most three
+verification runs per reviewed baseline: the first run and two after repairs.
+To verify once without repairs, run `qa/run-qa.sh TICKET-42 2
+specs/TICKET-42.md services`.
 
 The verifier's pass is not final: the launcher then runs `npm run test:unit`
 and `npm run test:e2e` itself. The ticket passes only if every test passes, at
@@ -119,8 +123,9 @@ least one `@smoke` journey passes, and the ticket's criteria pass again in that
 run. The result is in `reports/TICKET-42-full-suite.json`. If all attempts
 fail, reassess the spec and tests with a human and establish a new RED baseline.
 
-Exit codes: `0` ready or pass, `1` fail, `2` blocked, `3` technical error or
-invalid verdict.
+Exit codes: `0` ready or pass, `1` fail, `2` blocked, `3` technical error,
+invalid verdict, attempt limit, or a repair that touched the approved tests.
+Review the repair agent's diff in the pull request like any other change.
 
 The example CI demonstrates the smoke journey on desktop and mobile with a
 screenshot comparison, the expected RED → Green → Regression cycle, and a final
