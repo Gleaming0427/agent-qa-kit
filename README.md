@@ -48,6 +48,7 @@ The demo makes this concrete. Its ticket says search is case-insensitive: the br
 ## When to use it
 
 - **On every pull request:** a small, fixed Playwright smoke suite for the journeys that cost money when they break (login, search, checkout), on desktop and mobile, with screenshots compared in CI. It calls no AI.
+- **Optionally, on the same screenshots:** an AI visual review. A pixel comparison says a page *changed*, not that it is *broken*, and a new page has no baseline yet. With an `ANTHROPIC_API_KEY` secret, `qa/visual-review.ts` asks a vision model to look for text that overflows, overlapping elements, empty sections and controls off screen. Its findings appear as warnings on the pull request and never block it: a person confirms them.
 - **On risky tickets:** the full workflow above, for changes where a broken user flow would matter. A low-risk change only needs the smoke suite and a normal review.
 
 ## Try the demo
@@ -77,7 +78,8 @@ After integration, run phase 1, review the generated tests and RED report, fill 
 
 ## Cost
 
-- **Demo and CI:** no model calls or token charges from this kit. Browser tests still use local or CI compute time.
+- **Demo and CI:** no model calls or token charges from this kit, except the optional visual review. Browser tests still use local or CI compute time.
+- **Visual review (optional):** one Claude Opus 5.5 call per CI run with the two smoke screenshots, about 2,000 input tokens. Its output is capped at 8,000 tokens, so a run costs at most about $0.17, and a few cents is the expected range (an estimate, not a measurement). Change the model with `QA_VISUAL_MODEL`.
 - **QA writer:** Sonnet, medium effort, up to 40 turns, with a default Claude CLI budget of **$1.00 per run**.
 - **QA verifier:** Haiku, low effort, up to 25 turns, with a default budget of **$0.20 per run**. Up to three verification runs are allowed per approved baseline.
 - **Repair agent:** Sonnet, medium effort, up to 40 turns, with a default budget of **$1.00 per repair**. The loop makes at most two repairs.
@@ -97,5 +99,6 @@ On failure, `qa/summary.ts` extracts short error excerpts and trace paths from t
 
 - Checks can prove that named tests ran and reported the expected result; they cannot prove the assertions capture the user's intent. Human review remains necessary.
 - The review receipt detects changes but does not authenticate the reviewer. Use required PR reviews and branch protection for a team workflow.
-- The demo is a small React app, not a real micro-frontend shell. The kit does not connect to Jira or launch Claude in CI.
+- The demo is a small React app, not a real micro-frontend shell. The kit does not connect to Jira or run its agents in CI; only the optional visual review calls the API there.
 - Agent hooks and the sandbox are guardrails, not a substitute for a disposable environment without secrets.
+- The visual review sends screenshots to the Anthropic API: do not enable it on pages that show sensitive data. It can miss a problem or report one that is not there, which is why it only warns.

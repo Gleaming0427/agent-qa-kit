@@ -70,6 +70,14 @@ jobs:
       - run: npm run demo:e2e
       - name: Final full suite on the current code
         run: npm run verify:final
+      - name: Install the kit for the visual review
+        working-directory: .
+        run: npm ci --no-audit --no-fund
+      - name: AI visual review of the smoke screenshots (warnings only)
+        continue-on-error: true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node ../../qa/visual-review.ts reports/screens reports/visual-review.json
       - name: Upload demo reports (even on failure)
         if: always()
         uses: actions/upload-artifact@v6

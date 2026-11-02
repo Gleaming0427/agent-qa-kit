@@ -21,6 +21,24 @@ fails, the `qa-demo-reports` artifact holds the expected, actual and diff images
 The CI runner is pinned to `ubuntu-24.04` for this reason: regenerate the
 baselines when you move it to a newer image.
 
+A pixel comparison says that a page changed, not that it is broken. For that,
+the smoke test also saves each page to `reports/screens/` and CI runs an
+advisory AI visual review:
+
+```bash
+node qa/visual-review.ts reports/screens reports/visual-review.json
+```
+
+It sends the screenshots to a vision model (Claude Opus 5.5 by default,
+`QA_VISUAL_MODEL` to change it) with four checks: text that overflows,
+overlapping elements, empty sections, and controls off screen. Each finding
+becomes a warning on the pull request, and the job summary lists them in a
+table. The step never fails the build: without an `ANTHROPIC_API_KEY` secret it
+is skipped, and an API error or a refused request becomes a warning. Confirm
+each finding on the screenshots, which the `qa-demo-reports` artifact holds,
+before acting on it. Screenshots leave your infrastructure: keep the review off
+for pages with sensitive data.
+
 Keep these tests small, isolated, and stable. Add a new journey only when it
 protects a distinct user outcome.
 

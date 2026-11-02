@@ -1,11 +1,13 @@
 import { expect, test } from '@playwright/test';
 
-test('@smoke a user can find a service and see an empty result', async ({ page }) => {
+test('@smoke a user can find a service and see an empty result', async ({ page }, testInfo) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Services' })).toBeVisible();
   await expect(page.getByRole('list', { name: 'Available services' }).getByRole('listitem')).toHaveCount(3);
   // Compared in CI with the committed baseline, one image per project.
   await expect(page).toHaveScreenshot('services.png', { fullPage: true });
+  // Kept for the advisory AI visual review (qa/visual-review.ts).
+  await page.screenshot({ path: `reports/screens/services-${testInfo.project.name}.png`, fullPage: true, scale: 'css' });
 
   // Usable on every screen size: the search box is in view and nothing scrolls sideways.
   const search = page.getByRole('searchbox', { name: 'Search services' });
