@@ -60,6 +60,8 @@ export interface Report {
     unavailable_by_tool: Record<string, number>;
     /** Trials where a tool call named the corpus: their scores may not measure the agent. */
     corpus_exposed_trials: string[];
+    /** The first two such calls of each of those trials. */
+    corpus_examples: { trial: string; tool: string; input: string }[];
     /** Trials served by each model, phases 1 and 2, as the CLI reports them. */
     models: Record<string, number>;
   };
@@ -186,6 +188,8 @@ export function aggregate(scores: TrialScore[]): Report {
       unavailable_by_tool: unavailable,
       corpus_exposed_trials: scores.filter((s) => (s.corpus_exposures ?? 0) > 0).map((s) => `${s.ticket}-${s.trial}`)
         .sort((a, b) => a.localeCompare(b, 'en', { numeric: true })),
+      corpus_examples: scores.flatMap((s) => s.corpus_calls.slice(0, 2).map((call) => ({ trial: `${s.ticket}-${s.trial}`, ...call })))
+        .sort((a, b) => a.trial.localeCompare(b.trial, 'en', { numeric: true })),
       models,
     },
     tickets: ticketRows,
@@ -222,7 +226,8 @@ const counts = (byName: Record<string, number>) => Object.entries(byName).sort((
 function checkLines(k: Report['checks'], trials: number): string[] {
   const warnings = [
     ...(k.corpus_exposed_trials.length
-      ? [`**Warning, corpus exposure:** in ${k.corpus_exposed_trials.length} trial(s) (${k.corpus_exposed_trials.join(', ')}), a tool call named the corpus. Their scores may not measure the agent: read those transcripts.`]
+      ? [[`**Warning, corpus exposure:** in ${k.corpus_exposed_trials.length} trial(s) (${k.corpus_exposed_trials.join(', ')}), a tool call named the corpus. Their scores may not measure the agent: read those transcripts.`, '',
+        ...k.corpus_examples.map((c) => `- ${c.trial}: ${c.tool} \`${c.input.replace(/[`\n\r|]/g, ' ')}\``)].join('\n')]
       : []),
     ...(k.unavailable_tool_calls
       ? [`**Warning, missing tools:** ${k.unavailable_tool_calls} tool call(s) answered "No such tool available" (${counts(k.unavailable_by_tool)}). The agents ran without these tools.`]

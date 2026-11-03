@@ -161,10 +161,12 @@ test('the report warns first about a sight of the corpus and about missing tools
     unavailable_tool_calls: 2,
     unavailable_by_tool: { Glob: 2 },
     corpus_exposed_trials: ['EVAL-1-3'],
+    corpus_examples: [{ trial: 'EVAL-1-3', tool: 'Bash', input: '{"command":"git diff"}' }],
     models: { 'model-a': 2, 'model-b': 1 },
   });
   const md = toMarkdown(report);
   assert.match(md, /\*\*Warning, corpus exposure:\*\* in 1 trial\(s\) \(EVAL-1-3\)/);
+  assert.match(md, /^- EVAL-1-3: Bash `\{"command":"git diff"\}`$/m);
   assert.match(md, /\*\*Warning, missing tools:\*\* 2 tool call\(s\) answered "No such tool available" \(Glob 2\)/);
   assert.match(md, /transcripts read for 3 of 4 trials; corpus exposure: 1 trial\(s\); missing tools: Glob 2\. Models: model-a \(2 trials\), model-b \(1 trials\)\. Phase 1 tool calls: Read 15\./);
   assert.ok(md.indexOf('Warning, corpus exposure') < md.indexOf('| Metric |'));

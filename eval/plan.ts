@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Validates the inputs of the "QA eval" workflow and prints the trial matrix for GITHUB_OUTPUT.
 // Inputs come from the environment: TICKETS ("all" or keys separated by spaces or commas),
-// TRIALS (1-10) and MAX_PARALLEL (1-20).
+// TRIALS (1-10) and MAX_PARALLEL (1-20). RECHECK lists earlier QA eval run ids, separated by spaces
+// or commas, to aggregate again with the current code instead of running trials.
 import { listTickets, loadTicket } from './lib/workspace.ts';
 
 function integer(name: string, min: number, max: number): number {
@@ -23,6 +24,14 @@ const trials = integer('TRIALS', 1, 10);
 const maxParallel = integer('MAX_PARALLEL', 1, 20);
 const include = tickets.flatMap((ticket) => Array.from({ length: trials }, (_, i) => ({ ticket, trial: i + 1 })));
 if (!include.length || include.length > 256) { console.error(`The matrix must hold 1 to 256 trials, got ${include.length}`); process.exit(1); }
+const recheck = [...new Set((process.env.RECHECK ?? '').split(/[\s,]+/).filter(Boolean))];
+for (const run of recheck) {
+  if (!/^\d{1,20}$/.test(run)) { console.error(`Invalid run id: ${run}`); process.exit(1); }
+}
+if (recheck.length > 32) { console.error(`At most 32 runs to recheck, got ${recheck.length}`); process.exit(1); }
 console.log(`include=${JSON.stringify(include)}`);
 console.log(`max_parallel=${maxParallel}`);
-console.error(`${include.length} trial(s): ${tickets.length} ticket(s) x ${trials}, ${maxParallel} at a time`);
+console.log(`recheck=${JSON.stringify(recheck)}`);
+console.error(recheck.length
+  ? `Recheck of ${recheck.length} earlier run(s): ${recheck.join(', ')}`
+  : `${include.length} trial(s): ${tickets.length} ticket(s) x ${trials}, ${maxParallel} at a time`);
