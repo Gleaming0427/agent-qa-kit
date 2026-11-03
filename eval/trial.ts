@@ -116,6 +116,8 @@ function runPhase(phase: 1 | 2, label: string): AgentRun {
   // answers again, and the CLI's result then reports the duration and turns of that last turn only.
   // The cost is the session's total either way.
   const lastTurnOnly = typeof runJson?.result_index === 'number' && runJson.result_index > 0;
+  // Phase 1's transcripts are kept by the write step, with the guard count; the verifier's here.
+  const kept = phase === 2 && typeof runJson?.session_id === 'string' ? keepTranscripts(runJson.session_id, label) : null;
   return {
     exit_code: exit,
     verdict: exit === 3 ? null : typeof verdictJson?.verdict === 'string' ? verdictJson.verdict : null,
@@ -128,6 +130,7 @@ function runPhase(phase: 1 | 2, label: string): AgentRun {
     spec_questions: Array.isArray(verdictJson?.spec_questions) ? verdictJson.spec_questions.length : 0,
     untestable: criteria.filter((c) => c?.status === 'untestable').length,
     models: runJson?.modelUsage && typeof runJson.modelUsage === 'object' ? Object.keys(runJson.modelUsage).sort() : [],
+    ...(kept ? { tools: toolHealth(kept.texts) } : {}),
   };
 }
 
@@ -139,6 +142,21 @@ function findTranscript(sessionId: string): string | null {
     if (existsSync(file)) return file;
   }
   return null;
+}
+
+/**
+ * Copies a session's transcript into out/ as <label>-transcript.jsonl, and its subagents' into
+ * <label>-subagents/ (they sit in <project>/<session id>/subagents/), and returns their text.
+ */
+function keepTranscripts(sessionId: string, label: string): { texts: string[]; subagents: number } | null {
+  const transcript = findTranscript(sessionId);
+  if (!transcript) return null;
+  copyFileSync(transcript, join(out, `${label}-transcript.jsonl`));
+  const subagentDir = join(dirname(transcript), sessionId, 'subagents');
+  const subagents = existsSync(subagentDir) ? readdirSync(subagentDir).filter((f) => f.endsWith('.jsonl')) : [];
+  if (subagents.length) mkdirSync(join(out, `${label}-subagents`), { recursive: true });
+  for (const file of subagents) copyFileSync(join(subagentDir, file), join(out, `${label}-subagents`, file));
+  return { texts: [transcript, ...subagents.map((f) => join(subagentDir, f))].map((f) => readFileSync(f, 'utf8')), subagents: subagents.length };
 }
 
 const ticket = loadTicket(ticketName);
@@ -186,7 +204,10 @@ if (command === 'write') {
       }
     };
     copy(dryRun);
-    state.phase1 = { exit_code: 0, verdict: 'ready', cost_usd: 0, duration_ms: 0, num_turns: 0, is_error: false, error: 'dry run: no agent', spec_questions: 0, untestable: 0 };
+    // The ambiguous ticket has no hidden tests: the dry run gives its right answer, blocked, so that a
+    // dry run of a working harness succeeds on every ticket.
+    const verdict = ticket.kind === 'ambiguous' ? 'blocked' : 'ready';
+    state.phase1 = { exit_code: verdict === 'blocked' ? 2 : 0, verdict, cost_usd: 0, duration_ms: 0, num_turns: 0, is_error: false, error: 'dry run: no agent', spec_questions: 0, untestable: 0 };
   } else {
     state.phase1 = runPhase(1, 'phase1');
   }
@@ -203,21 +224,14 @@ if (command === 'write') {
     copyFileSync(join(ws, file), join(out, 'generated', file));
   }
   const runJson = readJson(join(ws, `reports/${ticketName}-phase1-run.json`));
-  const transcript = typeof runJson?.session_id === 'string' ? findTranscript(runJson.session_id) : null;
-  if (transcript) {
-    copyFileSync(transcript, join(out, 'phase1-transcript.jsonl'));
-    // Subagent transcripts are kept apart: <project>/<session id>/subagents/agent-<agent id>.jsonl.
-    const subagentDir = join(dirname(transcript), String(runJson?.session_id), 'subagents');
-    const subagents = existsSync(subagentDir) ? readdirSync(subagentDir).filter((f) => f.endsWith('.jsonl')) : [];
-    if (subagents.length) mkdirSync(join(out, 'phase1-subagents'), { recursive: true });
-    for (const file of subagents) copyFileSync(join(subagentDir, file), join(out, 'phase1-subagents', file));
-    const texts = [transcript, ...subagents.map((f) => join(subagentDir, f))].map((f) => readFileSync(f, 'utf8'));
-    const blocks = guardBlocks(texts);
+  const kept = typeof runJson?.session_id === 'string' ? keepTranscripts(runJson.session_id, 'phase1') : null;
+  if (kept) {
+    const blocks = guardBlocks(kept.texts);
     state.phase1.guard_blocks = blocks.total;
     state.phase1.guard_block_reasons = blocks.reasons;
-    state.phase1.tools = toolHealth(texts);
+    state.phase1.tools = toolHealth(kept.texts);
     const spawned = Number((runJson?.subagent_stats as { spawned?: unknown } | undefined)?.spawned ?? 0);
-    state.phase1.subagents = { spawned: Number.isFinite(spawned) ? spawned : 0, transcripts: subagents.length };
+    state.phase1.subagents = { spawned: Number.isFinite(spawned) ? spawned : 0, transcripts: kept.subagents };
   }
   saveState(state);
   console.log(`Phase 1: exit ${state.phase1.exit_code}, verdict ${state.phase1.verdict}, $${state.phase1.cost_usd}, ${state.generated_test_files.length} new test file(s), ${state.changed_non_test_files.length} other change(s)`);

@@ -202,3 +202,30 @@ test('without any transcript, the report says the checks did not run', () => {
   const md = toMarkdown(aggregate([scoreTrial(record())]));
   assert.match(md, /transcripts read for 0 of 1 trials; corpus exposure and missing tools not checked\./);
 });
+
+test('the verifier runs count in the checks, from the record or from their transcripts', () => {
+  const clean = { calls: { Bash: 2 }, unavailable: {}, corpus: [] };
+  const seen = { calls: { Bash: 1 }, unavailable: { Glob: 1 }, corpus: [{ tool: 'Bash', input: '{"command":"git diff"}' }] };
+  const r = record({ phase1: run({ tools: clean }) });
+  r.phase2 = { gold: run({ exit_code: 0, verdict: 'pass', tools: seen }), bug: { ...run({ exit_code: 1, verdict: 'fail' }), id: 'b1' } };
+  const s = scoreTrial(r);
+  assert.equal(s.corpus_exposures, 1);
+  assert.deepEqual(s.unavailable_tools, { Glob: 1 });
+  assert.deepEqual(s.tool_calls, { Bash: 2 });
+  // Without a phase 1 transcript, the trial is not checked, whatever phase 2 shows.
+  assert.equal(scoreTrial({ ...r, phase1: run() }).corpus_exposures, null);
+
+  const dir = mkdtempSync(join(tmpdir(), 'eval-trial-'));
+  try {
+    writeFileSync(join(dir, 'trial.json'), JSON.stringify(record()));
+    const call = (id: string, output: string) => [
+      JSON.stringify({ type: 'assistant', message: { content: [{ type: 'tool_use', id, name: 'Bash', input: { command: 'git status' } }] } }),
+      JSON.stringify({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: id, content: output }] } }),
+    ].join('\n');
+    writeFileSync(join(dir, 'phase1-transcript.jsonl'), call('t1', 'nothing to commit'));
+    writeFileSync(join(dir, 'phase2-bug-transcript.jsonl'), call('t2', ' D ../../eval/tickets/EVAL-1/hidden.spec.ts'));
+    assert.equal(scoreTrial(readTrial(join(dir, 'trial.json'))).corpus_exposures, 1);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

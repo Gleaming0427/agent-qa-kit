@@ -24,7 +24,7 @@ export interface AgentRun {
   guard_block_reasons?: Record<string, number>;
   /** Subagents the session started, and how many of their transcripts were found. */
   subagents?: { spawned: number; transcripts: number };
-  /** Tool calls read from the same transcripts: missing tools and any sight of the corpus (phase 1 only). */
+  /** Tool calls read from the run's transcripts: missing tools and any sight of the corpus. */
   tools?: ToolHealth;
   /** The models that served the run, as the CLI reports them in modelUsage. */
   models?: string[];
@@ -53,6 +53,12 @@ export interface TrialRecord {
   phase2: { gold?: AgentRun; bug?: AgentRun & { id: string } } | null;
 }
 
+const sumCounts = (counts: Record<string, number>[]) => {
+  const total: Record<string, number> = {};
+  for (const byName of counts) for (const [name, n] of Object.entries(byName)) total[name] = (total[name] ?? 0) + n;
+  return total;
+};
+
 export type VerifierOutcome = 'correct' | 'wrong' | 'error' | 'not_run';
 export interface TrialScore {
   ticket: string;
@@ -72,9 +78,9 @@ export interface TrialScore {
   subagents_without_transcript: number | null;
   /** Phase 1 tool calls by tool; null without a transcript. */
   tool_calls: Record<string, number> | null;
-  /** Phase 1 tool calls answered "No such tool available", by tool; null without a transcript. */
+  /** Tool calls answered "No such tool available", by tool, in phases 1 and 2; null without a phase 1 transcript. */
   unavailable_tools: Record<string, number> | null;
-  /** Phase 1 tool calls whose input or result names the corpus; null without a transcript. */
+  /** Tool calls whose input or result names the corpus, in phases 1 and 2; null without a phase 1 transcript. */
   corpus_exposures: number | null;
   /** Models that served phases 1 and 2, as the CLI reports them. */
   models: string[];
@@ -141,6 +147,7 @@ export function scoreTrial(record: TrialRecord): TrialScore {
   else success = redValid && hasTests && falsePositives.length === 0 && bugs.every((b) => b.detected) && policyOk;
 
   const bugRun = record.phase2?.bug;
+  const checked = [record.phase1, record.phase2?.gold, record.phase2?.bug].flatMap((run) => (run?.tools ? [run.tools] : []));
   const bugDetected = bugRun ? (bugs.find((b) => b.id === bugRun.id)?.detected ?? false) : null;
   const cost = record.phase1.cost_usd + (record.phase2?.gold?.cost_usd ?? 0) + (record.phase2?.bug?.cost_usd ?? 0);
   const wall = Date.parse(record.finished_at) - Date.parse(record.started_at);
@@ -160,8 +167,8 @@ export function scoreTrial(record: TrialRecord): TrialScore {
     guard_block_reasons: record.phase1.guard_block_reasons ?? null,
     subagents_without_transcript: record.phase1.subagents ? Math.max(0, record.phase1.subagents.spawned - record.phase1.subagents.transcripts) : null,
     tool_calls: record.phase1.tools?.calls ?? null,
-    unavailable_tools: record.phase1.tools?.unavailable ?? null,
-    corpus_exposures: record.phase1.tools ? record.phase1.tools.corpus.length : null,
+    unavailable_tools: record.phase1.tools ? sumCounts(checked.map((run) => run.unavailable)) : null,
+    corpus_exposures: record.phase1.tools ? checked.reduce((n, run) => n + run.corpus.length, 0) : null,
     models: [...new Set([record.phase1, record.phase2?.gold, record.phase2?.bug].flatMap((run) => run?.models ?? []))].sort(),
     f2p,
     false_positives: falsePositives,
