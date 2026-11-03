@@ -11,15 +11,16 @@
 // Usage: node eval/trial.ts <prepare|write|score|verify|finish> <TICKET> <TRIAL>
 // Folders: EVAL_WORK (default: <tmp>/agent-qa-eval) holds <TICKET>-<TRIAL>/{ws,out,state.json}.
 // EVAL_IN_PLACE=1 (CI, one fresh runner per trial): the agents work in examples/shop of the
-// checkout itself, with the dependencies npm ci installed, exactly as in "QA write tests". The
-// copied workspace used otherwise had the shop's dev server drop connections inside the sandbox.
+// checkout itself, with the dependencies npm ci installed, as in "QA write tests", but in a git
+// repository of its own: the checkout's shows the corpus. The copied workspace used otherwise had
+// the shop's dev server drop connections inside the sandbox.
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { APP, KIT, applyDiff, classifyChanges, copyApp, loadTicket, makeVariant, merge, runPlaywright, runVitest } from './lib/workspace.ts';
 import { scoreTrial } from './lib/score.ts';
-import { guardBlocks } from './lib/transcript.ts';
+import { guardBlocks, toolHealth } from './lib/transcript.ts';
 import { buildManifest } from '../qa/criteria-manifest.ts';
 import type { AgentRun, TrialRecord, VariantResult } from './lib/score.ts';
 
@@ -68,7 +69,8 @@ function git(...args: string[]): string {
 
 /** Files changed in the workspace since its baseline, with paths relative to the workspace. */
 function changedFiles(): { code: string; path: string }[] {
-  // Porcelain paths are relative to the repository root; in place, that root is two folders up.
+  // Porcelain paths are relative to the repository root. In place, before the workspace gets its own
+  // repository, that root is the checkout's, two folders up.
   const prefix = git('rev-parse', '--show-prefix').trim();
   return git('status', '--porcelain', '--untracked-files=all', '--', '.').split('\n').filter(Boolean)
     .map((line) => ({ code: line.slice(0, 2), path: line.slice(3).replace(/^"|"$/g, '') }))
@@ -125,6 +127,7 @@ function runPhase(phase: 1 | 2, label: string): AgentRun {
     ...(exit === 3 ? { error: (run.stderr ?? '').trim().split('\n').slice(-3).join(' ').slice(0, 500) } : {}),
     spec_questions: Array.isArray(verdictJson?.spec_questions) ? verdictJson.spec_questions.length : 0,
     untestable: criteria.filter((c) => c?.status === 'untestable').length,
+    models: runJson?.modelUsage && typeof runJson.modelUsage === 'object' ? Object.keys(runJson.modelUsage).sort() : [],
   };
 }
 
@@ -144,6 +147,7 @@ if (command === 'prepare') {
   rmSync(root, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
   if (IN_PLACE) {
+    if (existsSync(join(ws, '.git'))) throw new Error('examples/shop already has its own repository: run a trial in place on a fresh checkout');
     const dirty = changedFiles();
     if (dirty.length) throw new Error(`examples/shop must be untouched before a trial in place: ${dirty.map((f) => f.path).join(', ')}`);
     copyApp(pristine);
@@ -155,10 +159,13 @@ if (command === 'prepare') {
     const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { scripts: Record<string, string> };
     pkg.scripts['test:summary'] = `node ${join(KIT, 'qa/summary.ts')}`;
     writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
-    git('init', '-q');
-    git('add', '-A');
-    git('commit', '-qm', 'baseline');
   }
+  // The workspace gets a repository of its own. In place, the agent's git status and git diff would
+  // otherwise run on the whole checkout, where the corpus moved out of eval/tickets shows as deleted
+  // files, with the reference implementations, the bugs and the hidden tests in full.
+  git('init', '-q');
+  git('add', '-A');
+  git('commit', '-qm', 'baseline');
   copyFileSync(ticket.spec, specPath);
   const criteria = buildManifest(ticketName, readFileSync(specPath, 'utf8')).criteria.map((c) => c.id);
   saveState({ ticket: ticketName, trial, kind: ticket.kind, criteria, bugs: ticket.bugs, started_at: new Date().toISOString() });
@@ -204,9 +211,11 @@ if (command === 'write') {
     const subagents = existsSync(subagentDir) ? readdirSync(subagentDir).filter((f) => f.endsWith('.jsonl')) : [];
     if (subagents.length) mkdirSync(join(out, 'phase1-subagents'), { recursive: true });
     for (const file of subagents) copyFileSync(join(subagentDir, file), join(out, 'phase1-subagents', file));
-    const blocks = guardBlocks([transcript, ...subagents.map((f) => join(subagentDir, f))].map((f) => readFileSync(f, 'utf8')));
+    const texts = [transcript, ...subagents.map((f) => join(subagentDir, f))].map((f) => readFileSync(f, 'utf8'));
+    const blocks = guardBlocks(texts);
     state.phase1.guard_blocks = blocks.total;
     state.phase1.guard_block_reasons = blocks.reasons;
+    state.phase1.tools = toolHealth(texts);
     const spawned = Number((runJson?.subagent_stats as { spawned?: unknown } | undefined)?.spawned ?? 0);
     state.phase1.subagents = { spawned: Number.isFinite(spawned) ? spawned : 0, transcripts: subagents.length };
   }

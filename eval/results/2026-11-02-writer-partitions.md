@@ -1,5 +1,7 @@
 # Writer rules for separating cases, 2 November 2026
 
+> **Note, 3 November 2026:** the corpus was visible to the agent in these campaigns, through `git status` and `git diff`. Whether any trial used this is not known yet: see [2026-11-03-glob-grep.md](2026-11-03-glob-grep.md#the-corpus-was-visible-to-the-agent).
+
 Changes to the writer's prompt, measured on six tickets it had never seen, against the writer as it was.
 
 ## The changes
@@ -129,7 +131,7 @@ B missed 4 bugs:
 
 **C meets every condition of the rule. B does not.**
 
-The rule did not foresee one point. C's third sentence names a tool that the CI version of Claude Code does not provide. The measured effect is real, but it comes from the writer learning quickly that it cannot list files, not from Glob. Merging C as measured is supported by the data. Making the sentence accurate, or letting the guard allow a read-only listing command, is a separate change and needs its own measurement.
+The rule did not foresee one point. C's third sentence names a tool that the CI version of Claude Code does not provide. The measured effect is real, but it comes from the writer learning quickly that it cannot list files, not from Glob. Merging C as measured is supported by the data. Making the sentence accurate, or letting the guard allow a read-only listing command, is a separate change and needs its own measurement. Naming Glob and Grep in `--allowedTools` at launch makes the sentence accurate: see [2026-11-03-glob-grep.md](2026-11-03-glob-grep.md).
 
 ## Limits
 
