@@ -288,10 +288,14 @@ export function readTrial(file: string): TrialRecord {
   const record = JSON.parse(readFileSync(file, 'utf8')) as TrialRecord;
   const dir = dirname(file);
   const main = join(dir, 'phase1-transcript.jsonl');
-  if (!record.phase1.tools && existsSync(main)) {
-    const sub = join(dir, 'phase1-subagents');
-    const files = [main, ...(existsSync(sub) ? readdirSync(sub).filter((f) => f.endsWith('.jsonl')).map((f) => join(sub, f)) : [])];
-    record.phase1.tools = toolHealth(files.map((f) => readFileSync(f, 'utf8')));
+  const transcripts = (label: string) => {
+    const sub = join(dir, `${label}-subagents`);
+    const files = [join(dir, `${label}-transcript.jsonl`), ...(existsSync(sub) ? readdirSync(sub).filter((f) => f.endsWith('.jsonl')).map((f) => join(sub, f)) : [])];
+    return toolHealth(files.map((f) => readFileSync(f, 'utf8')));
+  };
+  if (!record.phase1.tools && existsSync(main)) record.phase1.tools = transcripts('phase1');
+  for (const [label, run] of [['phase2-gold', record.phase2?.gold], ['phase2-bug', record.phase2?.bug]] as const) {
+    if (run && !run.tools && existsSync(join(dir, `${label}-transcript.jsonl`))) run.tools = transcripts(label);
   }
   const models = (label: string) => {
     const path = join(dir, `${label}-run.json`);
