@@ -30,6 +30,11 @@ on:
         required: true
         default: false
         type: boolean
+      recheck:
+        description: Instead of running trials, aggregate earlier QA eval runs again with the current code (run ids, separated by spaces)
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -45,6 +50,7 @@ jobs:
     outputs:
       include: ${{ steps.plan.outputs.include }}
       max_parallel: ${{ steps.plan.outputs.max_parallel }}
+      recheck: ${{ steps.plan.outputs.recheck }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -57,11 +63,13 @@ jobs:
           TICKETS: ${{ inputs.tickets }}
           TRIALS: ${{ inputs.trials }}
           MAX_PARALLEL: ${{ inputs.max_parallel }}
+          RECHECK: ${{ inputs.recheck }}
         run: node eval/plan.ts >> "$GITHUB_OUTPUT"
 
   trial:
     name: ${{ matrix.ticket }} trial ${{ matrix.trial }}
     needs: plan
+    if: ${{ inputs.recheck == '' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 75
     strategy:
@@ -132,7 +140,7 @@ jobs:
   report:
     name: Aggregate the metrics
     needs: trial
-    if: always()
+    if: ${{ always() && inputs.recheck == '' }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
@@ -157,4 +165,49 @@ jobs:
           path: |
             ${{ runner.temp }}/eval-report.json
             ${{ runner.temp }}/eval-report.md
+          if-no-files-found: warn
+
+  recheck:
+    # An earlier campaign, aggregated again with the current code: its trial records, transcripts and
+    # CLI results are read from that run's artifacts, so new checks also cover old campaigns. Nothing
+    # from the artifacts is run; the token can only read Actions data.
+    name: Recheck run ${{ matrix.run }}
+    needs: plan
+    if: ${{ inputs.recheck != '' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        run: ${{ fromJSON(needs.plan.outputs.recheck) }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: eval-EVAL-*
+          path: ${{ runner.temp }}/trials
+          run-id: ${{ matrix.run }}
+          github-token: ${{ github.token }}
+      - name: Aggregate with the current code
+        env:
+          RUN: ${{ matrix.run }}
+        run: |
+          node eval/lib/aggregate.ts "$RUNNER_TEMP/trials" "$RUNNER_TEMP/recheck-$RUN.json" "$RUNNER_TEMP/recheck-$RUN.md"
+          { echo "## Run $RUN"; echo; cat "$RUNNER_TEMP/recheck-$RUN.md"; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: recheck-${{ matrix.run }}
+          path: |
+            ${{ runner.temp }}/recheck-${{ matrix.run }}.json
+            ${{ runner.temp }}/recheck-${{ matrix.run }}.md
           if-no-files-found: warn

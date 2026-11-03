@@ -23,6 +23,7 @@ Same configuration as before: phases 1 and 2, 6 trials at a time, Claude Code 2.
 |---|---|---|
 | Transcripts read | 18 of 18 trials | 30 of 30 trials |
 | Corpus exposure (a tool call's input or result names the corpus) | none | none |
+| Corpus in the session's own context (checked since, by the [recheck](2026-11-03-corpus-recheck.md)) | none | none |
 | Missing tools (a call answered "No such tool available") | none | none |
 | Glob calls, Grep calls | 18, 3 | 30, 11 |
 | Other phase 1 tool calls | Read 84, Bash 59, Write 36, Edit 4 | Read 126, Bash 82, Write 54, Edit 1 |
@@ -120,7 +121,7 @@ The rule of the writer report, with C as the reference.
   - On the new tickets, the clean campaign does as well or better: 18/18 successes against 17/18.
   - On EVAL-1 to EVAL-10 it does slightly worse: 27/30 against 29/30, and 2 trials with a false positive against 0. These gaps are within the intervals.
   - If D's trials saw the corpus, it did not raise their scores in a way these samples can show.
-- **For the earlier campaigns** (the pilots, A, B and C), it says nothing. They had no Glob, and their writer read files differently. Whether any of them ran `git status` or `git diff` still needs their artifacts: see [How to check a past campaign](2026-11-03-glob-grep.md#the-corpus-was-visible-to-the-agent).
+- **For the earlier campaigns** (the pilots, A, B and C), it says nothing on its own. The recheck of all campaigns answers it: every session had the corpus file names in its context, none read their content, and nothing says that the names raised the scores. See [2026-11-03-corpus-recheck.md](2026-11-03-corpus-recheck.md).
 - **The reference arms A and C** were measured under the same exposure. The decision above compares D, clean, with them as recorded.
 
 ## Limits

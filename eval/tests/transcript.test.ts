@@ -52,6 +52,7 @@ test('tool health counts calls once, and finds missing tools and any sight of th
       { tool: 'Bash', input: '{"command":"git status"}' },
       { tool: 'Read', input: '{"file_path":"/home/runner/work/_temp/eval-tickets/EVAL-1/hidden.spec.ts"}' },
     ],
+    context: [],
   });
 });
 
@@ -60,5 +61,22 @@ test('a session that never sees the corpus has no exposure', () => {
     { type: 'assistant', message: { content: [{ type: 'tool_use', id: 't1', name: 'Bash', input: { command: 'git status' } }] } },
     { type: 'user', message: { content: [result('t1', 'On branch master\nnothing to commit, working tree clean')] } },
   );
-  assert.deepEqual(toolHealth([clean]), { calls: { Bash: 1 }, unavailable: {}, corpus: [] });
+  assert.deepEqual(toolHealth([clean]), { calls: { Bash: 1 }, unavailable: {}, corpus: [], context: [] });
+});
+
+test('the git status that Claude Code adds to a session counts when it names the corpus', () => {
+  const status = 'Current branch: main\nStatus: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff';
+  const exposed = lines(
+    { type: 'attachment', uuid: 'a1', attachment: { content: status } },
+    // A later API request resends it: the same context, not counted again.
+    { type: 'api-request-blob', uuid: 'r1', body: status },
+    // The agent's own words are not context.
+    { type: 'assistant', uuid: 'm1', message: { content: [{ type: 'text', text: 'Not reading eval/tickets/.' }] } },
+  );
+  const health = toolHealth([exposed]);
+  assert.equal(health.context?.length, 1);
+  assert.equal(health.context?.[0].type, 'attachment');
+  assert.match(health.context?.[0].sample ?? '', /eval\/tickets\/EVAL-1\/bugs\/any-code-accepted\.diff/);
+  const clean = lines({ type: 'attachment', uuid: 'a1', attachment: { content: 'Current branch: master\nStatus: (clean)' } });
+  assert.deepEqual(toolHealth([clean]).context, []);
 });

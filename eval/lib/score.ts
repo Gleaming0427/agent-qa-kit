@@ -82,6 +82,10 @@ export interface TrialScore {
   unavailable_tools: Record<string, number> | null;
   /** Tool calls whose input or result names the corpus, in phases 1 and 2; null without a phase 1 transcript. */
   corpus_exposures: number | null;
+  /** Events of the sessions' own context (such as Claude Code's git status) that name the corpus; null without a phase 1 transcript. */
+  corpus_in_context: number | null;
+  /** Those calls: tool and the start of its input. */
+  corpus_calls: { tool: string; input: string }[];
   /** Models that served phases 1 and 2, as the CLI reports them. */
   models: string[];
   f2p: { criterion: string; level: Level; ok: boolean }[];
@@ -169,6 +173,8 @@ export function scoreTrial(record: TrialRecord): TrialScore {
     tool_calls: record.phase1.tools?.calls ?? null,
     unavailable_tools: record.phase1.tools ? sumCounts(checked.map((run) => run.unavailable)) : null,
     corpus_exposures: record.phase1.tools ? checked.reduce((n, run) => n + run.corpus.length, 0) : null,
+    corpus_calls: record.phase1.tools ? [...checked.flatMap((run) => run.corpus), ...checked.flatMap((run) => (run.context ?? []).map((c) => ({ tool: `context (${c.type})`, input: c.sample })))] : [],
+    corpus_in_context: record.phase1.tools ? checked.reduce((n, run) => n + (run.context?.length ?? 0), 0) : null,
     models: [...new Set([record.phase1, record.phase2?.gold, record.phase2?.bug].flatMap((run) => run?.models ?? []))].sort(),
     f2p,
     false_positives: falsePositives,
