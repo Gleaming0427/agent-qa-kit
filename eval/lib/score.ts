@@ -1,6 +1,7 @@
 // Scores one evaluation trial from its record. Pure: the record holds everything the
 // trial produced (agent verdicts and costs, and the generated tests' results on each
 // variant of the application), so the score can be recomputed and tested offline.
+import type { ToolHealth } from './transcript.ts';
 
 export type Kind = 'feature' | 'ambiguous' | 'adversarial';
 export type Level = 'mfe' | 'shell';
@@ -23,6 +24,10 @@ export interface AgentRun {
   guard_block_reasons?: Record<string, number>;
   /** Subagents the session started, and how many of their transcripts were found. */
   subagents?: { spawned: number; transcripts: number };
+  /** Tool calls read from the same transcripts: missing tools and any sight of the corpus (phase 1 only). */
+  tools?: ToolHealth;
+  /** The models that served the run, as the CLI reports them in modelUsage. */
+  models?: string[];
   /**
    * The CLI's result covers only the last turn: the session answered again after a background
    * task ended. Its duration and turn count are then unknown, and left null.
@@ -65,6 +70,12 @@ export interface TrialScore {
   guard_block_reasons: Record<string, number> | null;
   /** Subagents whose transcript was not found: the guard count is then a lower bound. */
   subagents_without_transcript: number | null;
+  /** Phase 1 tool calls answered "No such tool available", by tool; null without a transcript. */
+  unavailable_tools: Record<string, number> | null;
+  /** Phase 1 tool calls whose input or result names the corpus; null without a transcript. */
+  corpus_exposures: number | null;
+  /** Models that served phases 1 and 2, as the CLI reports them. */
+  models: string[];
   f2p: { criterion: string; level: Level; ok: boolean }[];
   false_positives: string[];
   flaky: string[];
@@ -146,6 +157,9 @@ export function scoreTrial(record: TrialRecord): TrialScore {
     guard_blocks: record.phase1.guard_blocks ?? null,
     guard_block_reasons: record.phase1.guard_block_reasons ?? null,
     subagents_without_transcript: record.phase1.subagents ? Math.max(0, record.phase1.subagents.spawned - record.phase1.subagents.transcripts) : null,
+    unavailable_tools: record.phase1.tools?.unavailable ?? null,
+    corpus_exposures: record.phase1.tools ? record.phase1.tools.corpus.length : null,
+    models: [...new Set([record.phase1, record.phase2?.gold, record.phase2?.bug].flatMap((run) => run?.models ?? []))].sort(),
     f2p,
     false_positives: falsePositives,
     flaky,

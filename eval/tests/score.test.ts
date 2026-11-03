@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { aggregate, toMarkdown } from '../lib/aggregate.ts';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { aggregate, readTrial, toMarkdown } from '../lib/aggregate.ts';
 import { scoreTrial } from '../lib/score.ts';
 import type { AgentRun, Status, TestResult, TrialRecord } from '../lib/score.ts';
 
@@ -138,4 +141,63 @@ test('the campaign report gives pass@1, pass@k, pass^k and per-ticket rows', () 
   assert.match(toMarkdown(report), /pass\^3 50\.0%/);
   assert.match(toMarkdown(report), /3 refused tool call\(s\) in 3 phase 1 session\(s\), 2 of them with at least one \(3 "Command not allowed"\)\. In 1 trial\(s\), a subagent's transcript was not found/);
   assert.match(toMarkdown(report), /Phase 1 duration\*\* \(5 runs\)/);
+});
+
+test('the report warns first about a sight of the corpus and about missing tools', () => {
+  const tools = (over: Partial<NonNullable<AgentRun['tools']>> = {}) => ({ calls: { Read: 5 }, unavailable: {}, corpus: [], ...over });
+  const scores = [
+    scoreTrial(record({ trial: 1, phase1: run({ tools: tools(), models: ['model-a'] }) })),
+    scoreTrial(record({ trial: 2, phase1: run({ tools: tools({ unavailable: { Glob: 2 } }), models: ['model-a'] }) })),
+    scoreTrial(record({ trial: 3, phase1: run({ tools: tools({ corpus: [{ tool: 'Bash', input: '{"command":"git diff"}' }] }), models: ['model-b'] }) })),
+    // No transcript: none of the checks covers this trial.
+    scoreTrial(record({ ticket: 'EVAL-2', trial: 1 })),
+  ];
+  assert.equal(scores[2].corpus_exposures, 1);
+  assert.equal(scores[3].corpus_exposures, null);
+  const report = aggregate(scores);
+  assert.deepEqual(report.checks, {
+    trials_with_transcript: 3,
+    unavailable_tool_calls: 2,
+    unavailable_by_tool: { Glob: 2 },
+    corpus_exposed_trials: ['EVAL-1-3'],
+    models: { 'model-a': 2, 'model-b': 1 },
+  });
+  const md = toMarkdown(report);
+  assert.match(md, /\*\*Warning, corpus exposure:\*\* in 1 trial\(s\) \(EVAL-1-3\)/);
+  assert.match(md, /\*\*Warning, missing tools:\*\* 2 tool call\(s\) answered "No such tool available" \(Glob 2\)/);
+  assert.match(md, /transcripts read for 3 of 4 trials; corpus exposure: 1 trial\(s\); missing tools: Glob 2\. Models: model-a \(2 trials\), model-b \(1 trials\)\./);
+  assert.ok(md.indexOf('Warning, corpus exposure') < md.indexOf('| Metric |'));
+});
+
+test('a clean campaign reports its checks without warnings', () => {
+  const md = toMarkdown(aggregate([scoreTrial(record({ phase1: run({ tools: { calls: { Read: 3 }, unavailable: {}, corpus: [] } }) }))]));
+  assert.doesNotMatch(md, /Warning/);
+  assert.match(md, /transcripts read for 1 of 1 trials; corpus exposure: none; missing tools: none\. Models: not reported\./);
+});
+
+test('a trial recorded before the checks gets them from the transcripts and CLI results beside it', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'eval-trial-'));
+  try {
+    const old = record();
+    writeFileSync(join(dir, 'trial.json'), JSON.stringify(old));
+    const call = (id: string, command: string, output: string) => [
+      JSON.stringify({ type: 'assistant', message: { content: [{ type: 'tool_use', id, name: 'Bash', input: { command } }] } }),
+      JSON.stringify({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: id, content: output }] } }),
+    ].join('\n');
+    writeFileSync(join(dir, 'phase1-transcript.jsonl'), call('t1', 'git status', 'On branch main'));
+    mkdirSync(join(dir, 'phase1-subagents'));
+    writeFileSync(join(dir, 'phase1-subagents', 'agent-1.jsonl'), call('t2', 'git diff', 'diff --git a/eval/tickets/EVAL-1/gold.diff'));
+    writeFileSync(join(dir, 'phase1-run.json'), JSON.stringify({ modelUsage: { 'model-a': {} } }));
+    writeFileSync(join(dir, 'phase2-gold-run.json'), JSON.stringify({ modelUsage: { 'model-b': {} } }));
+    const s = scoreTrial(readTrial(join(dir, 'trial.json')));
+    assert.equal(s.corpus_exposures, 1);
+    assert.deepEqual(s.models, ['model-a', 'model-b']);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('without any transcript, the report says the checks did not run', () => {
+  const md = toMarkdown(aggregate([scoreTrial(record())]));
+  assert.match(md, /transcripts read for 0 of 1 trials; corpus exposure and missing tools not checked\./);
 });

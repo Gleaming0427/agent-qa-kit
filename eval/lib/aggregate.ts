@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 // Aggregates the scores of an evaluation campaign into a JSON report and a Markdown summary.
 // Usage: node eval/lib/aggregate.ts <folder with trial.json files> <report.json> <report.md>
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { scoreTrial } from './score.ts';
 import type { TrialRecord, TrialScore, VerifierOutcome } from './score.ts';
 import { clusteredStandardError, passAtK, passHatK, percentile, wilson } from './stats.ts';
+import { toolHealth } from './transcript.ts';
 import type { Proportion } from './stats.ts';
 
 export interface Metric extends Proportion { clustered_se: number | null; unit: string }
@@ -48,6 +49,17 @@ export interface Report {
     reasons: Record<string, number>;
     /** Trials with a subagent whose transcript was not found: their count is a lower bound. */
     trials_missing_subagent_transcripts: number;
+  };
+  /** What only the transcripts show. Each check covers the trials whose phase 1 transcript was read. */
+  checks: {
+    trials_with_transcript: number;
+    /** Tool calls answered "No such tool available": the agents ran without these tools. */
+    unavailable_tool_calls: number;
+    unavailable_by_tool: Record<string, number>;
+    /** Trials where a tool call named the corpus: their scores may not measure the agent. */
+    corpus_exposed_trials: string[];
+    /** Trials served by each model, phases 1 and 2, as the CLI reports them. */
+    models: Record<string, number>;
   };
   tickets: TicketRow[];
 }
@@ -109,6 +121,10 @@ export function aggregate(scores: TrialScore[]): Report {
   const blocks = scores.flatMap((s) => (s.guard_blocks === null ? [] : [s.guard_blocks]));
   const reasons: Record<string, number> = {};
   for (const s of scores) for (const [reason, count] of Object.entries(s.guard_block_reasons ?? {})) reasons[reason] = (reasons[reason] ?? 0) + count;
+  const unavailable: Record<string, number> = {};
+  for (const s of scores) for (const [tool, count] of Object.entries(s.unavailable_tools ?? {})) unavailable[tool] = (unavailable[tool] ?? 0) + count;
+  const models: Record<string, number> = {};
+  for (const s of scores) for (const model of s.models) models[model] = (models[model] ?? 0) + 1;
 
   return {
     schema_version: 1,
@@ -159,6 +175,14 @@ export function aggregate(scores: TrialScore[]): Report {
       reasons: reasons,
       trials_missing_subagent_transcripts: scores.filter((s) => (s.subagents_without_transcript ?? 0) > 0).length,
     },
+    checks: {
+      trials_with_transcript: scores.filter((s) => s.corpus_exposures !== null).length,
+      unavailable_tool_calls: Object.values(unavailable).reduce((a, b) => a + b, 0),
+      unavailable_by_tool: unavailable,
+      corpus_exposed_trials: scores.filter((s) => (s.corpus_exposures ?? 0) > 0).map((s) => `${s.ticket}-${s.trial}`)
+        .sort((a, b) => a.localeCompare(b, 'en', { numeric: true })),
+      models,
+    },
     tickets: ticketRows,
   };
 }
@@ -187,6 +211,26 @@ function guardLine(g: Report['guard_blocks']): string {
     + ' A refusal is the guard doing its job; the count shows how often the agent tried something outside its rules.';
 }
 
+const counts = (byName: Record<string, number>) => Object.entries(byName).sort((a, b) => b[1] - a[1]).map(([name, n]) => `${name} ${n}`).join(', ');
+
+/** Warnings first, then one line on what the transcripts were checked for. */
+function checkLines(k: Report['checks'], trials: number): string[] {
+  const warnings = [
+    ...(k.corpus_exposed_trials.length
+      ? [`**Warning, corpus exposure:** in ${k.corpus_exposed_trials.length} trial(s) (${k.corpus_exposed_trials.join(', ')}), a tool call named the corpus. Their scores may not measure the agent: read those transcripts.`]
+      : []),
+    ...(k.unavailable_tool_calls
+      ? [`**Warning, missing tools:** ${k.unavailable_tool_calls} tool call(s) answered "No such tool available" (${counts(k.unavailable_by_tool)}). The agents ran without these tools.`]
+      : []),
+  ];
+  const models = Object.keys(k.models).length ? Object.entries(k.models).map(([m, n]) => `${m} (${n} trials)`).join(', ') : 'not reported';
+  const found = k.trials_with_transcript
+    ? `corpus exposure: ${k.corpus_exposed_trials.length ? `${k.corpus_exposed_trials.length} trial(s)` : 'none'}; missing tools: ${k.unavailable_tool_calls ? counts(k.unavailable_by_tool) : 'none'}`
+    : 'corpus exposure and missing tools not checked';
+  const summary = `**Checks:** transcripts read for ${k.trials_with_transcript} of ${trials} trials; ${found}. Models: ${models}.`;
+  return [...warnings.flatMap((w) => [w, '']), summary, ''];
+}
+
 export function toMarkdown(report: Report): string {
   const c = report.campaign;
   const lines = [
@@ -194,6 +238,7 @@ export function toMarkdown(report: Report): string {
     '',
     `${c.trials} trials on ${c.tickets} tickets (${c.trials_per_ticket} per ticket). Intervals are 95% Wilson intervals; "SE (clustered)" is the standard error clustered by ticket.`,
     '',
+    ...checkLines(report.checks, c.trials),
     '| Metric | Rate | 95% interval | n | SE (clustered) |',
     '|---|---|---|---|---|',
     ...Object.entries(report.metrics).map(([name, m]) =>
@@ -229,13 +274,40 @@ function findTrials(dir: string): string[] {
   return found;
 }
 
+/**
+ * Reads a trial.json. A trial recorded before the transcript checks existed gets them from the
+ * files its artifact keeps beside it: the phase 1 transcripts and the CLI's JSON results.
+ */
+export function readTrial(file: string): TrialRecord {
+  const record = JSON.parse(readFileSync(file, 'utf8')) as TrialRecord;
+  const dir = dirname(file);
+  const main = join(dir, 'phase1-transcript.jsonl');
+  if (!record.phase1.tools && existsSync(main)) {
+    const sub = join(dir, 'phase1-subagents');
+    const files = [main, ...(existsSync(sub) ? readdirSync(sub).filter((f) => f.endsWith('.jsonl')).map((f) => join(sub, f)) : [])];
+    record.phase1.tools = toolHealth(files.map((f) => readFileSync(f, 'utf8')));
+  }
+  const models = (label: string) => {
+    const path = join(dir, `${label}-run.json`);
+    if (!existsSync(path)) return [];
+    try {
+      const usage = (JSON.parse(readFileSync(path, 'utf8')) as { modelUsage?: unknown }).modelUsage;
+      return usage && typeof usage === 'object' ? Object.keys(usage).sort() : [];
+    } catch { return []; }
+  };
+  if (!record.phase1.models) record.phase1.models = models('phase1');
+  if (record.phase2?.gold && !record.phase2.gold.models) record.phase2.gold.models = models('phase2-gold');
+  if (record.phase2?.bug && !record.phase2.bug.models) record.phase2.bug.models = models('phase2-bug');
+  return record;
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [dir, jsonOut, mdOut] = process.argv.slice(2);
   if (!dir || !jsonOut || !mdOut) {
     console.error('usage: node eval/lib/aggregate.ts <folder with trial.json files> <report.json> <report.md>');
     process.exit(2);
   }
-  const scores = findTrials(dir).map((file) => scoreTrial(JSON.parse(readFileSync(file, 'utf8')) as TrialRecord));
+  const scores = findTrials(dir).map((file) => scoreTrial(readTrial(file)));
   if (!scores.length) {
     console.error(`No trial.json found under ${dir}`);
     process.exit(1);
