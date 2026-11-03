@@ -231,3 +231,14 @@ test('the verifier runs count in the checks, from the record or from their trans
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('a record checked before the context check is checked again from its transcript', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'eval-trial-'));
+  try {
+    writeFileSync(join(dir, 'trial.json'), JSON.stringify(record({ phase1: run({ tools: { calls: {}, unavailable: {}, corpus: [] } }) })));
+    writeFileSync(join(dir, 'phase1-transcript.jsonl'), JSON.stringify({ type: 'attachment', uuid: 'a1', attachment: { content: 'Status: D ../../eval/tickets/EVAL-1/gold.diff' } }));
+    assert.equal(scoreTrial(readTrial(join(dir, 'trial.json'))).corpus_in_context, 1);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

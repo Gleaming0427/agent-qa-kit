@@ -56,6 +56,11 @@ export interface ToolHealth {
   unavailable: Record<string, number>;
   /** Calls whose input or result names the corpus, with the start of their input. */
   corpus: { tool: string; input: string }[];
+  /**
+   * Context the session was given that names the corpus, outside any tool call: Claude Code adds the
+   * repository's git status to a new session, for instance. One entry per event, three at most.
+   */
+  context?: { type: string; sample: string }[];
 }
 
 type Part = { type?: string; id?: unknown; name?: unknown; input?: unknown; tool_use_id?: unknown; content?: unknown };
@@ -68,14 +73,24 @@ type Part = { type?: string; id?: unknown; name?: unknown; input?: unknown; tool
 export function toolHealth(transcripts: string[]): ToolHealth {
   const uses = new Map<string, { tool: string; input: string }>();
   const results = new Map<string, string>();
+  const context = new Map<string, { type: string; sample: string }>();
   for (const transcript of transcripts) {
     for (const line of transcript.split('\n')) {
-      if (!line.includes('"tool_use"') && !line.includes('"tool_result"')) continue;
-      let event: { type?: string; message?: { content?: unknown } };
+      const toolLine = line.includes('"tool_use"') || line.includes('"tool_result"');
+      if (!toolLine && !CORPUS.test(line)) continue;
+      let event: { type?: string; uuid?: unknown; message?: { content?: unknown } };
       try {
         event = JSON.parse(line);
       } catch {
         continue;
+      }
+      // The session's own context: attachments (such as the git status), system events, and the
+      // request itself. API request copies and the agent's own messages are not context.
+      const own = event.type === 'attachment' || event.type === 'system' || (event.type === 'user' && typeof event.message?.content === 'string');
+      if (own && !toolLine && CORPUS.test(line)) {
+        const at = line.search(CORPUS);
+        const key = typeof event.uuid === 'string' ? event.uuid : line;
+        if (!context.has(key)) context.set(key, { type: String(event.type), sample: line.slice(Math.max(0, at - 60), at + 140).replace(/\\n/g, ' ') });
       }
       if (!Array.isArray(event.message?.content)) continue;
       for (const part of event.message.content as Part[]) {
@@ -87,7 +102,7 @@ export function toolHealth(transcripts: string[]): ToolHealth {
       }
     }
   }
-  const health: ToolHealth = { calls: {}, unavailable: {}, corpus: [] };
+  const health: ToolHealth = { calls: {}, unavailable: {}, corpus: [], context: [...context.values()].slice(0, 3) };
   for (const [id, use] of uses) {
     health.calls[use.tool] = (health.calls[use.tool] ?? 0) + 1;
     const result = results.get(id) ?? '';

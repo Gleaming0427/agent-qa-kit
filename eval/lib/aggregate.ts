@@ -58,7 +58,7 @@ export interface Report {
     /** Tool calls answered "No such tool available": the agents ran without these tools. */
     unavailable_tool_calls: number;
     unavailable_by_tool: Record<string, number>;
-    /** Trials where a tool call named the corpus: their scores may not measure the agent. */
+    /** Trials where a tool call or the session's own context named the corpus: their scores may not measure the agent. */
     corpus_exposed_trials: string[];
     /** The first two such calls of each of those trials. */
     corpus_examples: { trial: string; tool: string; input: string }[];
@@ -186,7 +186,7 @@ export function aggregate(scores: TrialScore[]): Report {
       tool_calls: calls,
       unavailable_tool_calls: Object.values(unavailable).reduce((a, b) => a + b, 0),
       unavailable_by_tool: unavailable,
-      corpus_exposed_trials: scores.filter((s) => (s.corpus_exposures ?? 0) > 0).map((s) => `${s.ticket}-${s.trial}`)
+      corpus_exposed_trials: scores.filter((s) => (s.corpus_exposures ?? 0) + (s.corpus_in_context ?? 0) > 0).map((s) => `${s.ticket}-${s.trial}`)
         .sort((a, b) => a.localeCompare(b, 'en', { numeric: true })),
       corpus_examples: scores.flatMap((s) => s.corpus_calls.slice(0, 2).map((call) => ({ trial: `${s.ticket}-${s.trial}`, ...call })))
         .sort((a, b) => a.trial.localeCompare(b.trial, 'en', { numeric: true })),
@@ -226,7 +226,7 @@ const counts = (byName: Record<string, number>) => Object.entries(byName).sort((
 function checkLines(k: Report['checks'], trials: number): string[] {
   const warnings = [
     ...(k.corpus_exposed_trials.length
-      ? [[`**Warning, corpus exposure:** in ${k.corpus_exposed_trials.length} trial(s) (${k.corpus_exposed_trials.join(', ')}), a tool call named the corpus. Their scores may not measure the agent: read those transcripts.`, '',
+      ? [[`**Warning, corpus exposure:** in ${k.corpus_exposed_trials.length} trial(s) (${k.corpus_exposed_trials.join(', ')}), a tool call or the session's own context named the corpus. Their scores may not measure the agent: read those transcripts.`, '',
         ...k.corpus_examples.map((c) => `- ${c.trial}: ${c.tool} \`${c.input.replace(/[`\n\r|]/g, ' ')}\``)].join('\n')]
       : []),
     ...(k.unavailable_tool_calls
@@ -286,8 +286,8 @@ function findTrials(dir: string): string[] {
 }
 
 /**
- * Reads a trial.json. A trial recorded before the transcript checks existed gets them from the
- * files its artifact keeps beside it: the phase 1 transcripts and the CLI's JSON results.
+ * Reads a trial.json. A trial recorded before the transcript checks existed, or before one of them,
+ * gets them from the files its artifact keeps beside it: the transcripts and the CLI's JSON results.
  */
 export function readTrial(file: string): TrialRecord {
   const record = JSON.parse(readFileSync(file, 'utf8')) as TrialRecord;
@@ -298,9 +298,11 @@ export function readTrial(file: string): TrialRecord {
     const files = [join(dir, `${label}-transcript.jsonl`), ...(existsSync(sub) ? readdirSync(sub).filter((f) => f.endsWith('.jsonl')).map((f) => join(sub, f)) : [])];
     return toolHealth(files.map((f) => readFileSync(f, 'utf8')));
   };
-  if (!record.phase1.tools && existsSync(main)) record.phase1.tools = transcripts('phase1');
+  // A record from before a check was added (tools missing, or without context) is checked again.
+  const stale = (tools: unknown) => !tools || (tools as { context?: unknown }).context === undefined;
+  if (stale(record.phase1.tools) && existsSync(main)) record.phase1.tools = transcripts('phase1');
   for (const [label, run] of [['phase2-gold', record.phase2?.gold], ['phase2-bug', record.phase2?.bug]] as const) {
-    if (run && !run.tools && existsSync(join(dir, `${label}-transcript.jsonl`))) run.tools = transcripts(label);
+    if (run && stale(run.tools) && existsSync(join(dir, `${label}-transcript.jsonl`))) run.tools = transcripts(label);
   }
   const models = (label: string) => {
     const path = join(dir, `${label}-run.json`);
