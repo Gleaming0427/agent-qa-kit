@@ -1,0 +1,1996 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-03T09:59:44.578Z",
+  "campaign": {
+    "trials": 18,
+    "tickets": 6,
+    "trials_per_ticket": 3,
+    "first_start": "2026-11-02T22:39:58.090Z",
+    "last_finish": "2026-11-02T22:50:00.510Z",
+    "span_ms": 602420,
+    "effective_parallelism": 4.53
+  },
+  "metrics": {
+    "success": {
+      "successes": 17,
+      "n": 18,
+      "rate": 0.9444444444444444,
+      "low": 0.7424269921812741,
+      "high": 0.990124809021697,
+      "clustered_se": 0.0507,
+      "unit": "trials"
+    },
+    "red_valid": {
+      "successes": 18,
+      "n": 18,
+      "rate": 1,
+      "low": 0.8241207763533425,
+      "high": 1,
+      "clustered_se": 0,
+      "unit": "trials"
+    },
+    "no_false_positive": {
+      "successes": 17,
+      "n": 18,
+      "rate": 0.9444444444444444,
+      "low": 0.7424269921812741,
+      "high": 0.990124809021697,
+      "clustered_se": 0.0507,
+      "unit": "trials"
+    },
+    "no_flaky_test": {
+      "successes": 18,
+      "n": 18,
+      "rate": 1,
+      "low": 0.8241207763533425,
+      "high": 1,
+      "clustered_se": 0,
+      "unit": "trials"
+    },
+    "fail_to_pass": {
+      "successes": 71,
+      "n": 72,
+      "rate": 0.9861111111111112,
+      "low": 0.9254339785252386,
+      "high": 0.9975440481170943,
+      "clustered_se": 0.0127,
+      "unit": "criterion x level units"
+    },
+    "bug_detection": {
+      "successes": 36,
+      "n": 36,
+      "rate": 1,
+      "low": 0.9035813714055363,
+      "high": 1,
+      "clustered_se": 0,
+      "unit": "injected bugs"
+    },
+    "bug_attribution": {
+      "successes": 36,
+      "n": 36,
+      "rate": 1,
+      "low": 0.9035813714055363,
+      "high": 1,
+      "clustered_se": 0,
+      "unit": "detected bugs"
+    },
+    "policy_ok": {
+      "successes": 18,
+      "n": 18,
+      "rate": 1,
+      "low": 0.8241207763533425,
+      "high": 1,
+      "clustered_se": 0,
+      "unit": "trials"
+    },
+    "no_invention_on_ambiguity": {
+      "successes": 0,
+      "n": 0,
+      "rate": null,
+      "low": null,
+      "high": null,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "verifier_gold_correct": {
+      "successes": 17,
+      "n": 18,
+      "rate": 0.9444444444444444,
+      "low": 0.7424269921812741,
+      "high": 0.990124809021697,
+      "clustered_se": 0.0507,
+      "unit": "verifier runs on the correct implementation"
+    },
+    "verifier_bug_correct": {
+      "successes": 18,
+      "n": 18,
+      "rate": 1,
+      "low": 0.8241207763533425,
+      "high": 1,
+      "clustered_se": 0,
+      "unit": "verifier runs on a buggy implementation"
+    },
+    "verifier_bug_faithful": {
+      "successes": 18,
+      "n": 18,
+      "rate": 1,
+      "low": 0.8241207763533425,
+      "high": 1,
+      "clustered_se": 0,
+      "unit": "verifier runs on a buggy implementation"
+    },
+    "agent_error": {
+      "successes": 0,
+      "n": 18,
+      "rate": 0,
+      "low": 0,
+      "high": 0.17587922364665765,
+      "clustered_se": 0,
+      "unit": "trials"
+    }
+  },
+  "reliability": {
+    "k": 3,
+    "pass_at_1": 0.9444,
+    "pass_at_k": 1,
+    "pass_hat_k": 0.8333
+  },
+  "cost_usd": {
+    "total": 2.5762,
+    "mean_per_trial": 0.1431,
+    "p50": 0.1419,
+    "p95": 0.1941
+  },
+  "phase1_duration_s": {
+    "n": 18,
+    "p50": 52.5,
+    "p95": 84.8,
+    "max": 89.1
+  },
+  "phase1_turns": {
+    "n": 18,
+    "p50": 16,
+    "p95": 18
+  },
+  "guard_blocks": {
+    "total": 42,
+    "trials": 18,
+    "trials_with_blocks": 18,
+    "mean_per_trial": 2.33,
+    "reasons": {
+      "Shell chaining/redirection/escaping forbidden": 20,
+      "Command not allowed": 22
+    },
+    "trials_missing_subagent_transcripts": 0
+  },
+  "checks": {
+    "trials_with_transcript": 18,
+    "tool_calls": {
+      "Read": 110,
+      "Glob": 20,
+      "Bash": 81,
+      "Write": 36,
+      "ToolSearch": 5,
+      "Edit": 6,
+      "Grep": 4
+    },
+    "unavailable_tool_calls": 24,
+    "unavailable_by_tool": {
+      "Glob": 20,
+      "Grep": 4
+    },
+    "corpus_exposed_trials": [
+      "EVAL-11-1",
+      "EVAL-11-2",
+      "EVAL-11-3",
+      "EVAL-12-1",
+      "EVAL-12-2",
+      "EVAL-12-3",
+      "EVAL-13-1",
+      "EVAL-13-2",
+      "EVAL-13-3",
+      "EVAL-14-1",
+      "EVAL-14-2",
+      "EVAL-14-3",
+      "EVAL-15-1",
+      "EVAL-15-2",
+      "EVAL-15-3",
+      "EVAL-16-1",
+      "EVAL-16-2",
+      "EVAL-16-3"
+    ],
+    "corpus_examples": [
+      {
+        "trial": "EVAL-11-1",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-11-2",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-11-3",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-12-1",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-12-2",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-12-3",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-13-1",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-13-2",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-13-3",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-14-1",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-14-2",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-14-3",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-15-1",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-15-2",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-15-3",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-16-1",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-16-2",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      },
+      {
+        "trial": "EVAL-16-3",
+        "tool": "context (attachment)",
+        "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+      }
+    ],
+    "models": {
+      "claude-haiku-5-5": 18,
+      "claude-sonnet-5-5": 18
+    }
+  },
+  "tickets": [
+    {
+      "ticket": "EVAL-11",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 3,
+      "f2p": "12/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.1427
+    },
+    {
+      "ticket": "EVAL-12",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 3,
+      "f2p": "12/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.1823
+    },
+    {
+      "ticket": "EVAL-13",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 2,
+      "pass_hat_k": 0,
+      "red_valid": 3,
+      "f2p": "11/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 1,
+      "mean_cost_usd": 0.1512
+    },
+    {
+      "ticket": "EVAL-14",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 3,
+      "f2p": "12/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.1367
+    },
+    {
+      "ticket": "EVAL-15",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 3,
+      "f2p": "12/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.1082
+    },
+    {
+      "ticket": "EVAL-16",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 3,
+      "f2p": "12/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.1376
+    }
+  ],
+  "trials": [
+    {
+      "ticket": "EVAL-11",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Bash": 4,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "updates-first-line",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "zero-keeps-line",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.118703,
+      "phase1_duration_ms": 52219,
+      "phase1_turns": 13,
+      "wall_clock_ms": 139511,
+      "started_at": "2026-11-02T22:40:06.849Z",
+      "finished_at": "2026-11-02T22:42:26.360Z"
+    },
+    {
+      "ticket": "EVAL-11",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Bash": 4,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "updates-first-line",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "zero-keeps-line",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.118653,
+      "phase1_duration_ms": 49686,
+      "phase1_turns": 13,
+      "wall_clock_ms": 136589,
+      "started_at": "2026-11-02T22:40:20.335Z",
+      "finished_at": "2026-11-02T22:42:36.924Z"
+    },
+    {
+      "ticket": "EVAL-11",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 7,
+        "Glob": 1,
+        "Bash": 4,
+        "ToolSearch": 1,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "updates-first-line",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "zero-keeps-line",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.190646,
+      "phase1_duration_ms": 45931,
+      "phase1_turns": 16,
+      "wall_clock_ms": 124106,
+      "started_at": "2026-11-02T22:39:58.090Z",
+      "finished_at": "2026-11-02T22:42:02.196Z"
+    },
+    {
+      "ticket": "EVAL-12",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 9,
+        "Glob": 1,
+        "Bash": 4,
+        "ToolSearch": 1,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "ignores-quantities",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "unlocked-message-missing",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.2135,
+      "phase1_duration_ms": 61950,
+      "phase1_turns": 18,
+      "wall_clock_ms": 131916,
+      "started_at": "2026-11-02T22:39:58.424Z",
+      "finished_at": "2026-11-02T22:42:10.340Z"
+    },
+    {
+      "ticket": "EVAL-12",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Bash": 5,
+        "ToolSearch": 1,
+        "Write": 2,
+        "Edit": 1
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "ignores-quantities",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "unlocked-message-missing",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.185475,
+      "phase1_duration_ms": 76247,
+      "phase1_turns": 16,
+      "wall_clock_ms": 181693,
+      "started_at": "2026-11-02T22:39:58.299Z",
+      "finished_at": "2026-11-02T22:42:59.992Z"
+    },
+    {
+      "ticket": "EVAL-12",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 3,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 2
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 6,
+        "Glob": 1,
+        "Bash": 5,
+        "Write": 2,
+        "Edit": 1
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "ignores-quantities",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "unlocked-message-missing",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.148066,
+      "phase1_duration_ms": 84064,
+      "phase1_turns": 16,
+      "wall_clock_ms": 206876,
+      "started_at": "2026-11-02T22:40:01.437Z",
+      "finished_at": "2026-11-02T22:43:28.313Z"
+    },
+    {
+      "ticket": "EVAL-13",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 6,
+        "Glob": 1,
+        "Bash": 4,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "discount-from-four-units",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "discount-on-whole-cart",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.136308,
+      "phase1_duration_ms": 73581,
+      "phase1_turns": 14,
+      "wall_clock_ms": 189760,
+      "started_at": "2026-11-02T22:42:41.796Z",
+      "finished_at": "2026-11-02T22:45:51.556Z"
+    },
+    {
+      "ticket": "EVAL-13",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 8,
+        "Glob": 1,
+        "Bash": 4,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "discount-from-four-units",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "discount-on-whole-cart",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.152449,
+      "phase1_duration_ms": 75707,
+      "phase1_turns": 16,
+      "wall_clock_ms": 167378,
+      "started_at": "2026-11-02T22:42:49.062Z",
+      "finished_at": "2026-11-02T22:45:36.440Z"
+    },
+    {
+      "ticket": "EVAL-13",
+      "trial": 3,
+      "kind": "feature",
+      "success": false,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 3,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 2
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 7,
+        "Glob": 1,
+        "Bash": 5,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": false
+        }
+      ],
+      "false_positives": [
+        "EVAL-13.spec.ts @shop EVAL-13 [EVAL-13][AC-2] subtotal, shipping and total use the discounted lines; small lines keep full price",
+        "EVAL-13.spec.ts @shop EVAL-13 [EVAL-13][AC-2] shipping is charged when the discount brings the subtotal below the free-shipping threshold",
+        "EVAL-13.spec.ts @shop EVAL-13 [EVAL-13][AC-2] shipping stays free when the discounted subtotal is still at least €50"
+      ],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "discount-from-four-units",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "discount-on-whole-cart",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "wrong",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.164825,
+      "phase1_duration_ms": 89100,
+      "phase1_turns": 16,
+      "wall_clock_ms": 221906,
+      "started_at": "2026-11-02T22:42:58.102Z",
+      "finished_at": "2026-11-02T22:46:40.008Z"
+    },
+    {
+      "ticket": "EVAL-14",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 6,
+        "Glob": 1,
+        "Bash": 4,
+        "Grep": 1,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1,
+        "Grep": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "shown-when-empty",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "removes-only-first-line",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.126158,
+      "phase1_duration_ms": 43727,
+      "phase1_turns": 15,
+      "wall_clock_ms": 119637,
+      "started_at": "2026-11-02T22:43:15.490Z",
+      "finished_at": "2026-11-02T22:45:15.127Z"
+    },
+    {
+      "ticket": "EVAL-14",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 4,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 2,
+        "Command not allowed": 2
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Bash": 6,
+        "Grep": 1,
+        "Write": 2,
+        "Edit": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1,
+        "Grep": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "shown-when-empty",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "removes-only-first-line",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.141563,
+      "phase1_duration_ms": 54516,
+      "phase1_turns": 18,
+      "wall_clock_ms": 130505,
+      "started_at": "2026-11-02T22:43:47.700Z",
+      "finished_at": "2026-11-02T22:45:58.205Z"
+    },
+    {
+      "ticket": "EVAL-14",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Bash": 6,
+        "Write": 2,
+        "Edit": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "shown-when-empty",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "removes-only-first-line",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.142333,
+      "phase1_duration_ms": 69807,
+      "phase1_turns": 17,
+      "wall_clock_ms": 150770,
+      "started_at": "2026-11-02T22:44:15.497Z",
+      "finished_at": "2026-11-02T22:46:46.267Z"
+    },
+    {
+      "ticket": "EVAL-15",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Bash": 4,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "case-sensitive",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "no-empty-message",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.110391,
+      "phase1_duration_ms": 46954,
+      "phase1_turns": 13,
+      "wall_clock_ms": 132227,
+      "started_at": "2026-11-02T22:46:01.651Z",
+      "finished_at": "2026-11-02T22:48:13.878Z"
+    },
+    {
+      "ticket": "EVAL-15",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 7,
+        "Glob": 1,
+        "Bash": 4,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "case-sensitive",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "no-empty-message",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.10808,
+      "phase1_duration_ms": 49613,
+      "phase1_turns": 15,
+      "wall_clock_ms": 138188,
+      "started_at": "2026-11-02T22:46:32.906Z",
+      "finished_at": "2026-11-02T22:48:51.094Z"
+    },
+    {
+      "ticket": "EVAL-15",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 6,
+        "Glob": 1,
+        "Bash": 4,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "case-sensitive",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "no-empty-message",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.106274,
+      "phase1_duration_ms": 42311,
+      "phase1_turns": 14,
+      "wall_clock_ms": 120333,
+      "started_at": "2026-11-02T22:46:54.604Z",
+      "finished_at": "2026-11-02T22:48:54.937Z"
+    },
+    {
+      "ticket": "EVAL-16",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 6,
+        "Glob": 1,
+        "Bash": 4,
+        "ToolSearch": 1,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 1
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "shows-unit-price",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "amount-without-cents",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.144894,
+      "phase1_duration_ms": 52693,
+      "phase1_turns": 15,
+      "wall_clock_ms": 151296,
+      "started_at": "2026-11-02T22:46:55.254Z",
+      "finished_at": "2026-11-02T22:49:26.550Z"
+    },
+    {
+      "ticket": "EVAL-16",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1,
+        "Command not allowed": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 7,
+        "Glob": 2,
+        "Bash": 4,
+        "Grep": 2,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 2,
+        "Grep": 2
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "shows-unit-price",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "amount-without-cents",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.116269,
+      "phase1_duration_ms": 52000,
+      "phase1_turns": 18,
+      "wall_clock_ms": 151226,
+      "started_at": "2026-11-02T22:47:29.284Z",
+      "finished_at": "2026-11-02T22:50:00.510Z"
+    },
+    {
+      "ticket": "EVAL-16",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 4,
+      "guard_block_reasons": {
+        "Command not allowed": 2,
+        "Shell chaining/redirection/escaping forbidden": 2
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 2,
+        "Bash": 6,
+        "ToolSearch": 1,
+        "Write": 2
+      },
+      "unavailable_tools": {
+        "Glob": 2
+      },
+      "corpus_exposures": 0,
+      "corpus_calls": [
+        {
+          "tool": "context (attachment)",
+          "input": "ou will usually use this for PRs): main  Status: D ../../eval/tickets/EVAL-1/bugs/any-code-accepted.diff  D ../../eval/tickets/EVAL-1/bugs/discount-includes-shipping.diff  D ../../eval/tickets/EV"
+        }
+      ],
+      "corpus_in_context": 1,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "shows-unit-price",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "amount-without-cents",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.151579,
+      "phase1_duration_ms": 49383,
+      "phase1_turns": 17,
+      "wall_clock_ms": 136737,
+      "started_at": "2026-11-02T22:47:22.830Z",
+      "finished_at": "2026-11-02T22:49:39.567Z"
+    }
+  ]
+}

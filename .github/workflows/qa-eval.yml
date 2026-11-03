@@ -326,6 +326,10 @@ jobs:
         run: |
           node eval/lib/aggregate.ts "$RUNNER_TEMP/eval" "$RUNNER_TEMP/eval-report.json" "$RUNNER_TEMP/eval-report.md"
           cat "$RUNNER_TEMP/eval-report.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Record the campaign for the history (eval/history)
+        env:
+          EVAL_INPUTS: ${{ toJSON(inputs) }}
+        run: node eval/history.ts from-report "$RUNNER_TEMP/eval-report.json" "$RUNNER_TEMP/eval-history.json"
       - name: Upload the report
         if: always()
         uses: actions/upload-artifact@v6
@@ -334,6 +338,7 @@ jobs:
           path: |
             ${{ runner.temp }}/eval-report.json
             ${{ runner.temp }}/eval-report.md
+            ${{ runner.temp }}/eval-history.json
           if-no-files-found: warn
       - name: Upload the assembled trials
         if: always()

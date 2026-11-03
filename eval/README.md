@@ -93,7 +93,7 @@ Locally, all steps run on one machine, in the same folders: `EVAL_WORK/<TICKET>-
 
 What keeps the measurement independent of what the agent can see, and how each part is checked:
 
-- **The agent bundle** (`node eval/bundle.ts build`, in the plan job) is an allowlist (`eval/lib/isolation.ts`): `.claude`, `qa` without the kit's own tests, `examples/shop`, the trial steps, and the spec of each ticket. It holds no `.git`, `eval/tickets`, `eval/results` or `eval/README.md`.
+- **The agent bundle** (`node eval/bundle.ts build`, in the plan job) is an allowlist (`eval/lib/isolation.ts`): `.claude`, `qa` without the kit's own tests, `examples/shop`, the trial steps, and the spec of each ticket. It holds no `.git`, `eval/tickets`, `eval/results`, `eval/README.md` or `eval/history`.
   - The plan job scans the bundle for the corpus and fails on any trace. It looks for:
     - a copy of any private file (everything in a ticket's folder but its spec);
     - any distinctive private line found anywhere in the bundle: the added lines of the reference implementations and bugs, the hidden tests, the ticket metadata, except lines that also appear in the shop or a spec;
@@ -160,6 +160,12 @@ node eval/validate-corpus.ts
 npm test
 ```
 
+The history (see below) is checked and rebuilt with no model call either:
+
+```bash
+node eval/history.ts check
+```
+
 In GitHub Actions, **QA eval** (Actions tab → Run workflow):
 
 | Input | Meaning |
@@ -171,11 +177,31 @@ In GitHub Actions, **QA eval** (Actions tab → Run workflow):
 | `dry_run` | No model call: the agent's runner writes nothing, and the scoring runner puts the hidden tests in place of the agent's and gives the ambiguous ticket its right answer, `blocked`, to check the harness end to end. A working harness succeeds on every ticket. |
 | `recheck` | Instead of running trials, earlier QA eval run ids, separated by spaces. Each run's trial artifacts are aggregated again with the current code, so new checks also cover old campaigns. Nothing from the artifacts is run. |
 
-Each runner uploads its part of a trial (`agent-out-*`, `score-out-*`, `verifier-in-*`, `verifier-out-*`). The **report** job assembles them into `eval-trials`, one folder per trial with `trial.json`, the logs, the generated tests and the transcripts, writes the summary to the run page, and uploads `eval-report.json` and `eval-report.md`. Campaigns run before the split uploaded one `eval-<TICKET>-<TRIAL>` folder per trial; `recheck` reads both layouts.
+Each runner uploads its part of a trial (`agent-out-*`, `score-out-*`, `verifier-in-*`, `verifier-out-*`). The **report** job assembles them into `eval-trials`, one folder per trial with `trial.json`, the logs, the generated tests and the transcripts, writes the summary to the run page, and uploads `eval-report.json`, `eval-report.md` and `eval-history.json`, the campaign's file for the history. Campaigns run before the split uploaded one `eval-<TICKET>-<TRIAL>` folder per trial; `recheck` reads both layouts.
 
 The split costs runner time: each trial installs the shop and its browser on three runners instead of one. It costs no tokens.
 
 **Cost ceilings** are the kit's per-run budgets: $1.00 per writer run and $0.20 per verifier run. A campaign of 10 tickets × 3 trials with `verify` therefore has a ceiling of 30 × $1.00 + 60 × $0.20 = $42. Ceilings are limits, not estimates. Read transcripts from a few trials before trusting a score: they show whether a failure comes from the agent or from the task.
+
+## History
+
+`eval/history` keeps every campaign as a versioned JSON file, built from a report with no model call. See [history/README.md](history/README.md) for the format.
+
+- **What each campaign records:**
+  - its observations: one per trial, with each bug's detection, false positives, policy, cost, duration, tokens, execution status, served models and sight of the corpus;
+  - the agent's version: prompts, hooks, settings, kit scripts, models and Claude Code;
+  - the task's environment: each ticket's corpus, the shop, and the harness that ran the variants;
+  - the scoring: its code, and whether the scores are the campaign's own or recomputed later;
+  - the corrections applied, and the source file with its sha256.
+- **The 13 campaigns of `results/`** come from the recheck run 41615412529, which scored them all again with the same code. Their sources are in `history/sources`.
+  - The zip of each source matches the digest GitHub records for its artifact.
+  - The pilot's report needed the correction its document describes; see [results/2026-11-03-history-import.md](results/2026-11-03-history-import.md).
+- **`node eval/history.ts compat <a> <b>`** says on which tickets two campaigns can be compared:
+  - blocking: a different scorer, a control or dry-run campaign, or another application under test;
+  - excluded tickets: a ticket in one campaign only, or whose corpus changed;
+  - warnings: a different harness, Claude Code version, number of trials or served model; a sight of the corpus; trials lost to errors; corrections.
+  - It also lists what changed in the agent.
+- **New campaigns:** the report job writes `eval-history.json`. Commit it to `history/campaigns/` to keep it.
 
 ## Limits
 
