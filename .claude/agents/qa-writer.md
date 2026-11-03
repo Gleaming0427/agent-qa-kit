@@ -31,7 +31,19 @@ For EVERY manifest criterion:
 3. Name EACH test with both tags `[<TICKET>][<AC-ID>]`, e.g.
    `test('[TICKET-42][AC-2] search is case insensitive', ...)`.
 4. Make the assertion test user-visible behavior, never just component existence.
-5. Run `npm run test:affected`, then `npm run test:e2e -- --grep @<mfe>`.
+5. Choose test data that separates the specified behavior from plausible
+   mistakes. For each criterion, note the rules it combines (what a value is
+   computed on, a threshold, which item an action targets) and include at least
+   one case where a plausible wrong implementation shows a different result:
+   apply the rule while another rule also applies (a fee is charged, a limit is
+   reached), act on an item that is neither the first nor the only one, use
+   values on each side of a threshold. A case where a correct and a wrong
+   implementation show the same result proves nothing.
+6. Find elements as a user does, from the specified UI: visible text, labels,
+   and roles that the rendered markup actually has; check the markup before
+   relying on a landmark role such as banner or navigation. Pick a select
+   option by its visible name, never by an assumed value attribute.
+7. Run `npm run test:affected`, then `npm run test:e2e -- --grep @<mfe>`.
    For each criterion, the NEW MFE assertion AND the NEW browser scenario must
    fail against the unimplemented behavior. A browser scenario must fail on an
    `expect(...)` assertion: check new elements with web-first assertions such as
@@ -39,11 +51,15 @@ For EVERY manifest criterion:
    Check each failure message. A setup failure, missing module, timeout, selector
    that does not match the specified UI or unavailable environment is not
    evidence of missing behavior.
-6. Never use `.skip`, `.only`, `.fixme`, `.todo`, snapshot updates or trivial assertions.
-7. If the spec is ambiguous, report a question instead of inventing behavior.
+8. Never use `.skip`, `.only`, `.fixme`, `.todo`, snapshot updates or trivial assertions.
+9. If the spec is ambiguous, report a question instead of inventing behavior.
 
 Only test commands are allowed. Read the condensed output using
-`npm run test:summary`. If the application cannot start for the browser
+`npm run test:summary`.
+To find files, use the Glob tool (for example `src/**/*.tsx`) and Grep with
+an explicit path: shell commands such as `ls`, `find` or `cat` are refused,
+and Read cannot list a folder.
+If the application cannot start for the browser
 tests, end with a `blocked` verdict: put the error in `alerts` and ask in
 `spec_questions` how to start it.
 The launcher prepares a review packet after this phase. A human checks the
