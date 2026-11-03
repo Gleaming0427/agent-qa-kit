@@ -1,6 +1,6 @@
 # Writer rules for separating cases, 2 November 2026
 
-> **Note, 3 November 2026:** the corpus was visible to the agent in these campaigns, through `git status` and `git diff`. Whether any trial used this is not known yet: see [2026-11-03-glob-grep.md](2026-11-03-glob-grep.md#the-corpus-was-visible-to-the-agent).
+> **Note, 3 November 2026:** in these campaigns, every session started with the names of the corpus files in its context (Claude Code's git status), bug names included, but not their content. No trial read the corpus, and nothing in the data says that the names raised the scores. See [2026-11-03-corpus-recheck.md](2026-11-03-corpus-recheck.md).
 
 Changes to the writer's prompt, measured on six tickets it had never seen, against the writer as it was.
 
@@ -137,5 +137,5 @@ The rule did not foresee one point. C's third sentence names a tool that the CI 
 
 - 6 new tickets × 3 trials per arm: per-bug counts are 0 to 3, and C's 36 of 36 does not mean it never misses.
 - The new tickets were written by the author of the changes, who knew which kind of bug they target. Five of the twelve bugs are ordinary ones, to check the rest is not harmed.
-- A ran a few hours before C. The model behind the `sonnet` alias may not be strictly the same between runs.
+- A ran a few hours before C. The model behind the `sonnet` alias may not be strictly the same between runs. (Since checked: the CLI reports `claude-sonnet-5-5` in every campaign, see [2026-11-03-corpus-recheck.md](2026-11-03-corpus-recheck.md#models).)
 - The approval before phase 2 is scripted.
