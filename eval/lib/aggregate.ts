@@ -4,7 +4,7 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { scoreTrial } from './score.ts';
+import { scoreTrial, tokensFromModelUsage } from './score.ts';
 import type { TrialRecord, TrialScore, VerifierOutcome } from './score.ts';
 import { clusteredStandardError, passAtK, passHatK, percentile, wilson } from './stats.ts';
 import { toolHealth } from './transcript.ts';
@@ -38,6 +38,8 @@ export interface Report {
   metrics: Record<string, Metric>;
   reliability: { k: number; pass_at_1: number | null; pass_at_k: number | null; pass_hat_k: number | null };
   cost_usd: { total: number; mean_per_trial: number | null; p50: number | null; p95: number | null };
+  /** Tokens of phases 1 and 2, over the trials whose CLI results report them (n). */
+  tokens: { n: number; input: number; output: number; cache_read: number; cache_creation: number; mean_total_per_trial: number | null };
   /** n: runs with a known duration (or turn count); a CLI result that covers only its last turn has neither. */
   phase1_duration_s: { n: number; p50: number | null; p95: number | null; max: number | null };
   phase1_turns: { n: number; p50: number | null; p95: number | null };
@@ -64,6 +66,12 @@ export interface Report {
     corpus_examples: { trial: string; tool: string; input: string }[];
     /** Trials served by each model, phases 1 and 2, as the CLI reports them. */
     models: Record<string, number>;
+    /** Trials scored with the agent, the scoring and the verifier on separate runners (schema 2). */
+    split_runner_trials: number;
+    /** How their generated tests ran during scoring: in the sandbox (bwrap) or directly (off). */
+    scoring_sandbox: Record<string, number>;
+    /** Trials whose agent runner sent back a trace of the corpus (a copied file, a file named after a bug). */
+    isolation_flagged_trials: string[];
   };
   tickets: TicketRow[];
 }
@@ -131,6 +139,10 @@ export function aggregate(scores: TrialScore[]): Report {
   for (const s of scores) for (const [tool, count] of Object.entries(s.unavailable_tools ?? {})) unavailable[tool] = (unavailable[tool] ?? 0) + count;
   const models: Record<string, number> = {};
   for (const s of scores) for (const model of s.models) models[model] = (models[model] ?? 0) + 1;
+  const sandbox: Record<string, number> = {};
+  for (const s of scores) if (s.scoring_sandbox) sandbox[s.scoring_sandbox] = (sandbox[s.scoring_sandbox] ?? 0) + 1;
+  const withTokens = scores.flatMap((s) => (s.tokens ? [s.tokens] : []));
+  const tokenSum = (k: 'input' | 'output' | 'cache_read' | 'cache_creation') => withTokens.reduce((a, t) => a + t[k], 0);
 
   return {
     schema_version: 1,
@@ -171,6 +183,10 @@ export function aggregate(scores: TrialScore[]): Report {
       p50: round(percentile(costs, 50)),
       p95: round(percentile(costs, 95)),
     },
+    tokens: {
+      n: withTokens.length, input: tokenSum('input'), output: tokenSum('output'), cache_read: tokenSum('cache_read'), cache_creation: tokenSum('cache_creation'),
+      mean_total_per_trial: withTokens.length ? Math.round(withTokens.reduce((a, t) => a + t.input + t.output + t.cache_read + t.cache_creation, 0) / withTokens.length) : null,
+    },
     phase1_duration_s: { n: durations.length, p50: round(percentile(durations, 50), 1), p95: round(percentile(durations, 95), 1), max: durations.length ? round(Math.max(...durations), 1) : null },
     phase1_turns: { n: turns.length, p50: round(percentile(turns, 50), 1), p95: round(percentile(turns, 95), 1) },
     guard_blocks: {
@@ -191,6 +207,10 @@ export function aggregate(scores: TrialScore[]): Report {
       corpus_examples: scores.flatMap((s) => s.corpus_calls.slice(0, 2).map((call) => ({ trial: `${s.ticket}-${s.trial}`, ...call })))
         .sort((a, b) => a.trial.localeCompare(b.trial, 'en', { numeric: true })),
       models,
+      split_runner_trials: scores.filter((s) => s.isolation_findings !== null).length,
+      scoring_sandbox: sandbox,
+      isolation_flagged_trials: scores.filter((s) => (s.isolation_findings ?? 0) > 0).map((s) => `${s.ticket}-${s.trial}`)
+        .sort((a, b) => a.localeCompare(b, 'en', { numeric: true })),
     },
     tickets: ticketRows,
   };
@@ -225,6 +245,12 @@ const counts = (byName: Record<string, number>) => Object.entries(byName).sort((
 /** Warnings first, then one line on what the transcripts were checked for. */
 function checkLines(k: Report['checks'], trials: number): string[] {
   const warnings = [
+    ...(k.isolation_flagged_trials.length
+      ? [`**Warning, corpus in the agent's output:** in ${k.isolation_flagged_trials.length} trial(s) (${k.isolation_flagged_trials.join(', ')}), what the agent's runner sent back holds a copy of a corpus file or a file named after a bug. Their scores do not measure the agent: read score.json.`]
+      : []),
+    ...(k.split_runner_trials && (k.scoring_sandbox.off ?? 0) > 0
+      ? [`**Warning, scoring without the sandbox:** ${k.scoring_sandbox.off} trial(s) ran their generated tests outside the sandbox (EVAL_SANDBOX=off).`]
+      : []),
     ...(k.corpus_exposed_trials.length
       ? [[`**Warning, corpus exposure:** in ${k.corpus_exposed_trials.length} trial(s) (${k.corpus_exposed_trials.join(', ')}), a tool call or the session's own context named the corpus. Their scores may not measure the agent: read those transcripts.`, '',
         ...k.corpus_examples.map((c) => `- ${c.trial}: ${c.tool} \`${c.input.replace(/[`\n\r|]/g, ' ')}\``)].join('\n')]
@@ -238,7 +264,10 @@ function checkLines(k: Report['checks'], trials: number): string[] {
     ? `corpus exposure: ${k.corpus_exposed_trials.length ? `${k.corpus_exposed_trials.length} trial(s)` : 'none'}; missing tools: ${k.unavailable_tool_calls ? counts(k.unavailable_by_tool) : 'none'}`
     : 'corpus exposure and missing tools not checked';
   const tools = Object.keys(k.tool_calls).length ? ` Phase 1 tool calls: ${counts(k.tool_calls)}.` : '';
-  const summary = `**Checks:** transcripts read for ${k.trials_with_transcript} of ${trials} trials; ${found}. Models: ${models}.${tools}`;
+  const isolation = k.split_runner_trials
+    ? ` Isolation: ${k.split_runner_trials} of ${trials} trials ran the agent, the scoring and the verifier on separate runners; generated tests scored ${Object.entries(k.scoring_sandbox).map(([mode, n]) => `${n} ${mode === 'bwrap' ? 'in the sandbox' : 'without it'}`).join(', ') || 'in none'}; corpus in the agent's output: ${k.isolation_flagged_trials.length ? `${k.isolation_flagged_trials.length} trial(s)` : 'none'}.`
+    : ` Isolation: the trials ran before the agent and the scoring had separate runners.`;
+  const summary = `**Checks:** transcripts read for ${k.trials_with_transcript} of ${trials} trials; ${found}. Models: ${models}.${tools}${isolation}`;
   return [...warnings.flatMap((w) => [w, '']), summary, ''];
 }
 
@@ -262,6 +291,10 @@ export function toMarkdown(report: Report): string {
     guardLine(report.guard_blocks),
     '',
     `**Cost:** $${report.cost_usd.total.toFixed(4)} in total, $${report.cost_usd.mean_per_trial?.toFixed(4) ?? 'n/a'} per trial (p50 $${report.cost_usd.p50?.toFixed(4) ?? 'n/a'}, p95 $${report.cost_usd.p95?.toFixed(4) ?? 'n/a'}), as reported by the Claude CLI.`,
+    '',
+    report.tokens.n
+      ? `**Tokens** (${report.tokens.n} trials, phases 1 and 2): ${report.tokens.input} input, ${report.tokens.output} output, ${report.tokens.cache_read} cache read, ${report.tokens.cache_creation} cache write; ${report.tokens.mean_total_per_trial} in all per trial, as reported by the Claude CLI.`
+      : '**Tokens:** not reported for these trials.',
     '',
     `**Phase 1 duration** (${report.phase1_duration_s.n} runs): p50 ${report.phase1_duration_s.p50 ?? 'n/a'} s, p95 ${report.phase1_duration_s.p95 ?? 'n/a'} s, max ${report.phase1_duration_s.max ?? 'n/a'} s. Turns (${report.phase1_turns.n} runs): p50 ${report.phase1_turns.p50 ?? 'n/a'}, p95 ${report.phase1_turns.p95 ?? 'n/a'}.`,
     '',
@@ -312,6 +345,12 @@ export function readTrial(file: string): TrialRecord {
       return usage && typeof usage === 'object' ? Object.keys(usage).sort() : [];
     } catch { return []; }
   };
+  const tokens = (label: string) => {
+    try { return tokensFromModelUsage((JSON.parse(readFileSync(join(dir, `${label}-run.json`), 'utf8')) as { modelUsage?: unknown }).modelUsage); } catch { return null; }
+  };
+  for (const [label, run] of [['phase1', record.phase1], ['phase2-gold', record.phase2?.gold], ['phase2-bug', record.phase2?.bug]] as const) {
+    if (run && !run.tokens) { const t = tokens(label); if (t) run.tokens = t; }
+  }
   if (!record.phase1.models) record.phase1.models = models('phase1');
   if (record.phase2?.gold && !record.phase2.gold.models) record.phase2.gold.models = models('phase2-gold');
   if (record.phase2?.bug && !record.phase2.bug.models) record.phase2.bug.models = models('phase2-bug');

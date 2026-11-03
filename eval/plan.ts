@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Validates the inputs of the "QA eval" workflow and prints the trial matrix for GITHUB_OUTPUT.
+// Validates the inputs of the "QA eval" workflow and prints the trial matrix, and the tickets whose
+// specs go into the agent bundle, for GITHUB_OUTPUT.
 // Inputs come from the environment: TICKETS ("all" or keys separated by spaces or commas),
 // TRIALS (1-10) and MAX_PARALLEL (1-20). RECHECK lists earlier QA eval run ids, separated by spaces
 // or commas, to aggregate again with the current code instead of running trials.
@@ -30,6 +31,7 @@ for (const run of recheck) {
 }
 if (recheck.length > 32) { console.error(`At most 32 runs to recheck, got ${recheck.length}`); process.exit(1); }
 console.log(`include=${JSON.stringify(include)}`);
+console.log(`tickets=${tickets.join(' ')}`);
 console.log(`max_parallel=${maxParallel}`);
 console.log(`recheck=${JSON.stringify(recheck)}`);
 console.error(recheck.length

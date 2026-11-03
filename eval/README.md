@@ -57,19 +57,68 @@ A grader is only as good as its tasks: a broken task shows up here, not as a 0% 
 
 ## One trial
 
-`eval/trial.ts` runs one trial in steps, so that CI can keep the API key out of the steps that run application code:
+`eval/trial.ts` runs one trial in steps. In CI, each step runs on a runner of its own, so that no runner where an agent works ever holds the corpus, and the code an agent wrote never runs next to a secret.
 
-1. **prepare**: the workspace and the ticket.
-   - In CI (`EVAL_IN_PLACE=1`), each trial has a fresh runner and the agents work in `examples/shop` itself, with the dependencies `npm ci` installed, as in "QA write tests". The untouched shop is saved first, for scoring.
+| Runner | Gets | Step | Sends back |
+|---|---|---|---|
+| **Agent** | the agent bundle only: no checkout, no git history | `prepare`, `write`: phase 1 with `qa/run-qa.sh`. The API key reaches the `write` step only. | the agent's output (`agent-out-*`) |
+| **Scoring** | a checkout with the corpus; no secret | `score`, with no model call: the generated tests run, in a sandbox, on the shop, the reference implementation (3 times) and each bug | the scores (`score-out-*`), the implementations for phase 2 (`verifier-in-*`) |
+| **Verifier** | the agent bundle, the agent's workspace and two implementations under neutral names | `verify`: phase 2. The API key reaches this step only. | the verdicts (`verifier-out-*`) |
+| **Report** | a checkout and the three parts | `finish-all`, then `eval/lib/aggregate.ts` | `eval-trials`, `eval-report` |
+
+1. **prepare** (agent runner): the workspace and the ticket's spec.
+   - In CI (`EVAL_IN_PLACE=1`), the agents work in `examples/shop` of the bundle, with the dependencies `npm ci` installed, as in "QA write tests".
    - Locally, the workspace is a copy of the shop. A copied workspace made the dev server drop connections inside the agent sandbox in CI.
-   - Either way, the workspace gets a git repository of its own, with a baseline commit. In CI, git would otherwise see the whole checkout, where the corpus moved out of `eval/tickets` shows up as deleted files. Claude Code adds that git status to every new session, so the corpus file names, bug names included, reached every agent of the campaigns before this change. Their content was within reach of an agent's `git diff`; none read it. See [results/2026-11-03-corpus-recheck.md](results/2026-11-03-corpus-recheck.md).
-2. **write**: phase 1 with `qa/run-qa.sh`. It records the exit code, the verdict, the cost, duration and turns reported by the Claude CLI, the transcript when the CLI saved one and those of the subagents the session started, the new test files, and any other file the agent changed. When the session answered again after a background task ended, the CLI's result covers only that last turn: the duration and turns are then left unknown, and the cost, which is the session's total, is kept.
-3. **score** (no model call): the generated tests run on three kinds of variant:
+   - Either way, the workspace gets a git repository of its own, with a baseline commit. Before this, Claude Code's git status showed the corpus file names to every session ([results/2026-11-03-corpus-recheck.md](results/2026-11-03-corpus-recheck.md)).
+   - The step reads the spec and nothing else of the corpus: the ticket's kind and its bugs stay on the scoring runner.
+2. **write** (agent runner): phase 1 with `qa/run-qa.sh`. It records:
+   - the exit code, the verdict, and the cost, duration, turns, models and tokens reported by the Claude CLI;
+   - the transcript, when the CLI saved one, and those of the subagents the session started;
+   - the new test files, and any other file the agent changed;
+   - the workspace itself (`workspace.tar`), for phase 2.
+
+   When the session answered again after a background task ended, the CLI's result covers only that last turn: the duration and turns are then left unknown, and the cost, which is the session's total, is kept.
+3. **score** (scoring runner, no model call): the generated tests run on three kinds of variant:
    - the shop as it is;
    - the reference implementation, 3 times, to detect flaky tests;
    - each injected bug.
-4. **verify**: phase 2 runs on the reference implementation, then on the first bug. Before it, a scripted approval stands in for the human review and says so in its text. It is only used to measure phase 2. The full suite is left out of this step, as in `qa-verify.yml`, and Playwright runs one worker, as in phase 1.
-5. **finish**: writes `trial.json`, which holds every observation the scores are computed from.
+
+   The step also checks the shop against the bundle's manifest, so the variants are built from the shop the agent worked on. It scans what the agent's runner sent back for the corpus: a copy of a private file, or a file named after a bug.
+4. **verify** (verifier runner): phase 2 on two implementations, `impl-1` (the reference) and `impl-2` (the reference with the ticket's first bug). The mapping to the reference and the bug stays on the scoring runner. The step reads both diffs and deletes them before any agent starts. Before phase 2, a scripted approval stands in for the human review and says so in its text; it is only used to measure phase 2. The full suite is left out of this step, as in `qa-verify.yml`, and Playwright runs one worker, as in phase 1.
+5. **finish** (report runner): assembles `trial.json` (schema 2) from the three parts. Every score is computed from this file. Phase 2's neutral names become `phase2-gold` and `phase2-bug` again.
+
+Locally, all steps run on one machine, in the same folders: `EVAL_WORK/<TICKET>-<TRIAL>/{agent,score,verify-input,verify,trial}`.
+
+## Isolation
+
+What keeps the measurement independent of what the agent can see, and how each part is checked:
+
+- **The agent bundle** (`node eval/bundle.ts build`, in the plan job) is an allowlist (`eval/lib/isolation.ts`): `.claude`, `qa` without the kit's own tests, `examples/shop`, the trial steps, and the spec of each ticket. It holds no `.git`, `eval/tickets`, `eval/results` or `eval/README.md`.
+  - The plan job scans the bundle for the corpus and fails on any trace. It looks for:
+    - a copy of any private file (everything in a ticket's folder but its spec);
+    - any distinctive private line found anywhere in the bundle: the added lines of the reference implementations and bugs, the hidden tests, the ticket metadata, except lines that also appear in the shop or a spec;
+    - a corpus file name, and an injected bug's name.
+  - Findings name the file and the kind of trace, never the private text.
+  - The bundle travels as a tar, which keeps the executable bit of the guard hook. Without it, Claude Code would report a hook error and go on without the guard.
+- **The agent's runner** checks the bundle before anything runs (`node eval/bundle.ts verify`):
+  - its files match the manifest, and nothing was added but installed packages;
+  - the executables are still executable;
+  - no corpus folder exists on the runner.
+
+  The trial records the result (`bundle_verified`).
+- **The scoring sandbox** (`eval/lib/sandbox.ts`, `EVAL_SANDBOX=bwrap`, set by CI) runs the generated tests, which are the agent's code, with bubblewrap:
+  - a new network namespace, with loopback only, so the shop's preview server still works;
+  - an empty environment, apart from a short allowlist;
+  - home folders, the checkout with its corpus, the runner's temp folder and `/run` hidden behind empty tmpfs mounts;
+  - `node_modules` read-only, and a fresh, randomly named copy of the variant as the only writable folder, besides a private `/tmp`. A test cannot tell the variants apart by their path, or keep state from one run to the next.
+
+  The sandbox fails closed when bubblewrap cannot start. `eval/tests/sandbox.test.ts` runs a probe test that tries to read the corpus, a secret, the network and an earlier run's state. Each try must fail in the sandbox. The same probe sees the corpus and the secret without the sandbox.
+- **The report** warns when:
+  - what an agent's runner sent back holds a trace of the corpus;
+  - a trial's tests were scored outside the sandbox;
+  - a transcript names the corpus (see Checks below).
+
+`eval/tests/isolation.test.ts` and `eval/tests/trial.test.ts` check that the real bundle is clean, that the scan finds planted traces, and that the agent's steps run from the bundle without the corpus and send back nothing of it. The "QA eval corpus" workflow runs these tests, with the sandbox, on every pull request that touches `eval/`.
 
 ## Metrics
 
@@ -90,6 +139,8 @@ Computed by `eval/lib/score.ts` (one trial) and `eval/lib/aggregate.ts` (the cam
 | Verifier, pass on gold / fail on bug | Phase 2's verdict compared with the truth. |
 | Verifier, faithful | Phase 2's verdict compared with what the approved tests can see: when they miss the bug, a faithful verifier passes. |
 | Agent error | The agent or the API failed (exit code 3, or an error reported by the CLI). |
+| Tokens | Input, output, cache read and cache write tokens of phases 1 and 2, from the CLI's `modelUsage`. A trial recorded before they were kept gets them from the CLI results in its artifact. |
+| Isolation | Trials run on separate runners (schema 2), how their generated tests were scored (in the sandbox or not), and any trace of the corpus in what the agent's runner sent back. Shown in the checks line, as a warning when something is wrong. |
 | Trial success | Feature tickets: valid RED, at least one generated test, no false positive, every bug detected, policy respected. EVAL-9: no invented tests, no agent error, policy respected. EVAL-10: policy respected. |
 
 ## Statistics
@@ -102,7 +153,7 @@ Computed by `eval/lib/score.ts` (one trial) and `eval/lib/aggregate.ts` (the cam
 
 ## Run it
 
-Locally, with no model call (needs `npm ci` in the root and in `examples/shop`, and Chromium for Playwright):
+Locally, with no model call (needs `npm ci` in the root and in `examples/shop`, Chromium for Playwright, and bubblewrap for the sandbox tests):
 
 ```bash
 node eval/validate-corpus.ts
@@ -117,10 +168,12 @@ In GitHub Actions, **QA eval** (Actions tab → Run workflow):
 | `trials` | Trials per ticket, 1 to 10. |
 | `max_parallel` | Trials running at the same time, 1 to 20. |
 | `verify` | Also run phase 2. |
-| `dry_run` | No model call: the hidden tests stand in for the agent's tests, and the ambiguous ticket answers `blocked`, to check the harness end to end. A working harness succeeds on every ticket. |
+| `dry_run` | No model call: the agent's runner writes nothing, and the scoring runner puts the hidden tests in place of the agent's and gives the ambiguous ticket its right answer, `blocked`, to check the harness end to end. A working harness succeeds on every ticket. |
 | `recheck` | Instead of running trials, earlier QA eval run ids, separated by spaces. Each run's trial artifacts are aggregated again with the current code, so new checks also cover old campaigns. Nothing from the artifacts is run. |
 
-Each trial uploads its folder as `eval-<TICKET>-<TRIAL>`, with `trial.json`, the logs, the generated tests and the transcripts. The **report** job writes the summary to the run page and uploads `eval-report.json` and `eval-report.md`.
+Each runner uploads its part of a trial (`agent-out-*`, `score-out-*`, `verifier-in-*`, `verifier-out-*`). The **report** job assembles them into `eval-trials`, one folder per trial with `trial.json`, the logs, the generated tests and the transcripts, writes the summary to the run page, and uploads `eval-report.json` and `eval-report.md`. Campaigns run before the split uploaded one `eval-<TICKET>-<TRIAL>` folder per trial; `recheck` reads both layouts.
+
+The split costs runner time: each trial installs the shop and its browser on three runners instead of one. It costs no tokens.
 
 **Cost ceilings** are the kit's per-run budgets: $1.00 per writer run and $0.20 per verifier run. A campaign of 10 tickets × 3 trials with `verify` therefore has a ceiling of 30 × $1.00 + 60 × $0.20 = $42. Ceilings are limits, not estimates. Read transcripts from a few trials before trusting a score: they show whether a failure comes from the agent or from the task.
 
@@ -130,6 +183,8 @@ Each trial uploads its folder as `eval-<TICKET>-<TRIAL>`, with `trial.json`, the
 - **Authorship.** The bugs and reference implementations are written by hand. They are realistic but not representative of every defect, and they were written by the same authors as the kit. Mutation testing of the generated unit tests (for example StrykerJS with its Vitest runner) would add an independent, automatic measure.
 - **Scripted approval.** The approval before phase 2 is scripted. It measures phase 2, not the value of a human review.
 - **Sources of failure.** Phase 1 runs inside the sandbox on a GitHub-hosted runner. An infrastructure failure counts as an agent error, so read the logs before concluding.
+- **A public corpus.** The corpus is in this repository, so it is public. The isolation keeps it off the agent's runner, and the agent's sandbox allows no network, so the agent cannot fetch it either. A model trained on public code after the corpus was published might still have seen it. A private corpus would need its own repository, read only by the scoring runner.
+- **The verifier sees an implementation.** Phase 2 verifies the reference and a bug, so the verifier's runner holds their code as the workspace's source. It never holds the hidden tests, the ticket metadata or the names of the implementations.
 
 ## Sources
 

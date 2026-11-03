@@ -163,6 +163,9 @@ test('the report warns first about a sight of the corpus and about missing tools
     corpus_exposed_trials: ['EVAL-1-3'],
     corpus_examples: [{ trial: 'EVAL-1-3', tool: 'Bash', input: '{"command":"git diff"}' }],
     models: { 'model-a': 2, 'model-b': 1 },
+    split_runner_trials: 0,
+    scoring_sandbox: {},
+    isolation_flagged_trials: [],
   });
   const md = toMarkdown(report);
   assert.match(md, /\*\*Warning, corpus exposure:\*\* in 1 trial\(s\) \(EVAL-1-3\)/);
@@ -241,4 +244,38 @@ test('a record checked before the context check is checked again from its transc
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('tokens add up over both phases, and a trial without them is left out of the count', () => {
+  const tokens = (input: number) => ({ input, output: 10, cache_read: 100, cache_creation: 5 });
+  const s = scoreTrial(record({
+    phase1: run({ tokens: tokens(1) }),
+    phase2: { gold: run({ exit_code: 0, tokens: tokens(2) }), bug: { ...run({ exit_code: 1, tokens: tokens(3) }), id: 'b1' } },
+  }));
+  assert.deepEqual(s.tokens, { input: 6, output: 30, cache_read: 300, cache_creation: 15 });
+  assert.equal(scoreTrial(record()).tokens, null);
+  const report = aggregate([s, scoreTrial(record({ trial: 2 }))]);
+  assert.deepEqual(report.tokens, { n: 1, input: 6, output: 30, cache_read: 300, cache_creation: 15, mean_total_per_trial: 351 });
+  assert.match(toMarkdown(report), /\*\*Tokens\*\* \(1 trials, phases 1 and 2\): 6 input, 30 output/);
+  assert.match(toMarkdown(aggregate([scoreTrial(record())])), /\*\*Tokens:\*\* not reported/);
+});
+
+test('the report warns about corpus traces in the agent output and about scoring outside the sandbox', () => {
+  const isolated = (findings: { path: string; reason: string }[], sandbox: 'off' | 'bwrap' = 'bwrap') => ({ schema_version: 2 as const, isolation: { scoring_sandbox: sandbox, findings } });
+  const scores = [
+    scoreTrial(record({ trial: 1, ...isolated([]) })),
+    scoreTrial(record({ trial: 2, ...isolated([{ path: 'out/generated/e2e/x.spec.ts', reason: 'copy of a corpus file (EVAL-1/hidden.spec.ts)' }]) })),
+    scoreTrial(record({ trial: 3, ...isolated([], 'off') })),
+  ];
+  assert.equal(scores[1].isolation_findings, 1);
+  assert.equal(scoreTrial(record()).isolation_findings, null, 'a trial from before the split has no isolation check');
+  const report = aggregate(scores);
+  assert.equal(report.checks.split_runner_trials, 3);
+  assert.deepEqual(report.checks.scoring_sandbox, { bwrap: 2, off: 1 });
+  assert.deepEqual(report.checks.isolation_flagged_trials, ['EVAL-1-2']);
+  const md = toMarkdown(report);
+  assert.match(md, /\*\*Warning, corpus in the agent's output:\*\* in 1 trial\(s\) \(EVAL-1-2\)/);
+  assert.match(md, /\*\*Warning, scoring without the sandbox:\*\* 1 trial\(s\)/);
+  assert.match(md, /Isolation: 3 of 3 trials ran the agent, the scoring and the verifier on separate runners/);
+  assert.match(toMarkdown(aggregate([scoreTrial(record())])), /Isolation: the trials ran before the agent and the scoring had separate runners\./);
 });

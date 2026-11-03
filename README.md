@@ -94,6 +94,8 @@ The agent's commands run in a sandbox without network access, and never see the 
 - whether the agents stayed within their rules, including on an ambiguous ticket and on a ticket that hides an instruction;
 - the verifier's accuracy, pass^k, cost and duration.
 
+The agent of a trial never shares a runner with the corpus: it gets a bundle with the kit, the shop and the ticket's spec only, and its tests are scored on another runner, in a sandbox without network or secrets.
+
 Run **QA eval** from the Actions tab, or check the corpus locally with `node eval/validate-corpus.ts`. See [eval/README.md](eval/README.md) for the method, the definitions and the limits.
 
 ## Cost

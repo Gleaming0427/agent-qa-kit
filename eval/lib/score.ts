@@ -9,6 +9,21 @@ export type Status = 'pass' | 'fail' | 'flaky' | 'other';
 
 export interface TestResult { title: string; level: Level; criteria: string[]; status: Status; message?: string }
 export interface VariantResult { ran: boolean; error?: string; tests: TestResult[] }
+/** Tokens the CLI reports in modelUsage, summed over the models that served the run. */
+export interface Tokens { input: number; output: number; cache_read: number; cache_creation: number }
+/** Sums the CLI's modelUsage ({ model: { inputTokens, ... } }) into one token count; null when it has none. */
+export function tokensFromModelUsage(usage: unknown): Tokens | null {
+  if (!usage || typeof usage !== 'object' || !Object.keys(usage).length) return null;
+  const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+  const total: Tokens = { input: 0, output: 0, cache_read: 0, cache_creation: 0 };
+  for (const m of Object.values(usage as Record<string, Record<string, unknown>>)) {
+    total.input += n(m?.inputTokens);
+    total.output += n(m?.outputTokens);
+    total.cache_read += n(m?.cacheReadInputTokens);
+    total.cache_creation += n(m?.cacheCreationInputTokens);
+  }
+  return total;
+}
 export interface AgentRun {
   exit_code: number;
   verdict: string | null;
@@ -28,6 +43,8 @@ export interface AgentRun {
   tools?: ToolHealth;
   /** The models that served the run, as the CLI reports them in modelUsage. */
   models?: string[];
+  /** Tokens the run used, from the CLI's modelUsage; missing from records made before it was kept. */
+  tokens?: Tokens;
   /**
    * The CLI's result covers only the last turn: the session answered again after a background
    * task ended. Its duration and turn count are then unknown, and left null.
@@ -35,8 +52,18 @@ export interface AgentRun {
   last_turn_only?: boolean;
 }
 export interface Bug { id: string; criterion: string; description?: string }
+/** How the trial was kept apart from the corpus (schema 2: agent, scoring and verifier on separate runners). */
+export interface Isolation {
+  /** How the generated tests ran during scoring: "bwrap" in the sandbox, "off" directly. */
+  scoring_sandbox: 'off' | 'bwrap';
+  /** Traces of the corpus found in what the agent's runner sent back (whole-file copies, bug names in file names). */
+  findings: { path: string; reason: string }[];
+  /** The agent's runner checked its bundle against the manifest before the agent started. */
+  bundle_verified?: boolean;
+}
 export interface TrialRecord {
-  schema_version: 1;
+  /** 1: one runner per trial. 2: the agent, the scoring and the verifier ran on separate runners. */
+  schema_version: 1 | 2;
   ticket: string;
   trial: number;
   kind: Kind;
@@ -51,6 +78,7 @@ export interface TrialRecord {
   bugs: Bug[];
   variants: { base?: VariantResult; gold?: VariantResult; bugs: Record<string, VariantResult> };
   phase2: { gold?: AgentRun; bug?: AgentRun & { id: string } } | null;
+  isolation?: Isolation;
 }
 
 const sumCounts = (counts: Record<string, number>[]) => {
@@ -88,6 +116,12 @@ export interface TrialScore {
   corpus_calls: { tool: string; input: string }[];
   /** Models that served phases 1 and 2, as the CLI reports them. */
   models: string[];
+  /** Tokens of phases 1 and 2; null when phase 1 has no token count (records made before they were kept). */
+  tokens: Tokens | null;
+  /** Corpus traces found in the agent runner's output; null for a trial run before the runners were split. */
+  isolation_findings: number | null;
+  /** How the generated tests ran during scoring; null before the runners were split. */
+  scoring_sandbox: Isolation['scoring_sandbox'] | null;
   f2p: { criterion: string; level: Level; ok: boolean }[];
   false_positives: string[];
   flaky: string[];
@@ -154,6 +188,13 @@ export function scoreTrial(record: TrialRecord): TrialScore {
   const checked = [record.phase1, record.phase2?.gold, record.phase2?.bug].flatMap((run) => (run?.tools ? [run.tools] : []));
   const bugDetected = bugRun ? (bugs.find((b) => b.id === bugRun.id)?.detected ?? false) : null;
   const cost = record.phase1.cost_usd + (record.phase2?.gold?.cost_usd ?? 0) + (record.phase2?.bug?.cost_usd ?? 0);
+  const runs = [record.phase1, record.phase2?.gold, record.phase2?.bug].filter((r): r is AgentRun => Boolean(r));
+  const tokens = record.phase1.tokens
+    ? runs.reduce((sum, r) => ({
+      input: sum.input + (r.tokens?.input ?? 0), output: sum.output + (r.tokens?.output ?? 0),
+      cache_read: sum.cache_read + (r.tokens?.cache_read ?? 0), cache_creation: sum.cache_creation + (r.tokens?.cache_creation ?? 0),
+    }), { input: 0, output: 0, cache_read: 0, cache_creation: 0 })
+    : null;
   const wall = Date.parse(record.finished_at) - Date.parse(record.started_at);
 
   return {
@@ -176,6 +217,9 @@ export function scoreTrial(record: TrialRecord): TrialScore {
     corpus_calls: record.phase1.tools ? [...checked.flatMap((run) => run.corpus), ...checked.flatMap((run) => (run.context ?? []).map((c) => ({ tool: `context (${c.type})`, input: c.sample })))] : [],
     corpus_in_context: record.phase1.tools ? checked.reduce((n, run) => n + (run.context?.length ?? 0), 0) : null,
     models: [...new Set([record.phase1, record.phase2?.gold, record.phase2?.bug].flatMap((run) => run?.models ?? []))].sort(),
+    tokens,
+    isolation_findings: record.isolation ? record.isolation.findings.length : null,
+    scoring_sandbox: record.isolation?.scoring_sandbox ?? null,
     f2p,
     false_positives: falsePositives,
     flaky,
