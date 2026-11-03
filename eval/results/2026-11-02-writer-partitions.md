@@ -114,7 +114,7 @@ B missed 4 bugs:
   - the search field looked up with the role `textbox` instead of `searchbox` (A: 1 trial, B: 2, C: 0);
   - the expectation that a cart line shows its discounted amount, which the ticket does not ask for (EVAL-13-1 in A and B);
   - wrong expected search results in A: for "k", Desk lamp also contains a k.
-- **A gap in the kit itself, outside these changes:** a unit test that uses a jest-dom matcher without importing `@testing-library/jest-dom/vitest` fails with "Invalid Chai property" on every variant, and the kit accepts that failure as a valid RED. This happened in the control trial before the campaigns and in one false positive of the first pilot (EVAL-8-1), now corrected in its report.
+- **A gap in the kit itself, outside these changes:** a unit test that uses a jest-dom matcher without importing `@testing-library/jest-dom/vitest` cannot pass, even on a correct implementation: there it fails with "Invalid Chai property". Before the feature exists, it fails earlier for a valid reason (an element not found), so the RED check cannot see the problem. This happened in the control trial before the campaigns and in one false positive of the first pilot (EVAL-8-1). An earlier version of this report said the test failed with "Invalid Chai property" on every variant; rerunning it on the shop without the feature showed otherwise. The kit now checks the import statically in phase 1.
 
 ## Decision under the rule fixed in advance
 
