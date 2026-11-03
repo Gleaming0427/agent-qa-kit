@@ -1,5 +1,7 @@
 # Writer rules for separating cases, 2 November 2026
 
+> **Note, 3 November 2026:** the corpus was visible to the agent in these campaigns, through `git status` and `git diff`. Whether any trial used this is not known yet: see [2026-11-03-glob-grep.md](2026-11-03-glob-grep.md#the-corpus-was-visible-to-the-agent).
+
 Changes to the writer's prompt, measured on six tickets it had never seen, against the writer as it was.
 
 ## The changes

@@ -69,6 +69,16 @@ case "$TOOL" in
       rel="$(relative_path "$path")" || exit 2
       check_not_secret "$rel"
     fi
+    if [[ "$TOOL" == Glob ]]; then
+      # An absolute pattern, or a parent path in it, lists files outside the path searched.
+      pattern="$(jq -r '.tool_input.pattern // empty' <<<"$INPUT")"
+      [[ -n "$pattern" && "$pattern" != *$'\n'* ]] || deny 'Empty or multi-line Glob pattern'
+      [[ "$pattern" != *..* ]] || deny "Parent-path traversal: $pattern"
+      [[ ! "$pattern" =~ [{,][[:space:]]*[/~] && "$pattern" != '~'* ]] || deny "Glob pattern outside project: $pattern"
+      if [[ "$pattern" == /* ]]; then
+        [[ "$pattern" == "$PROJECT"/* ]] || deny "Glob pattern outside project: $pattern"
+      fi
+    fi
     ;;
   Write|Edit)
     rel="$(relative_path "$(jq -r '.tool_input.file_path // empty' <<<"$INPUT")")" || exit 2

@@ -61,7 +61,8 @@ A grader is only as good as its tasks: a broken task shows up here, not as a 0% 
 
 1. **prepare**: the workspace and the ticket.
    - In CI (`EVAL_IN_PLACE=1`), each trial has a fresh runner and the agents work in `examples/shop` itself, with the dependencies `npm ci` installed, as in "QA write tests". The untouched shop is saved first, for scoring.
-   - Locally, the workspace is a copy of the shop with a git baseline. A copied workspace made the dev server drop connections inside the agent sandbox in CI.
+   - Locally, the workspace is a copy of the shop. A copied workspace made the dev server drop connections inside the agent sandbox in CI.
+   - Either way, the workspace gets a git repository of its own, with a baseline commit. In CI, the agent's `git status` and `git diff` would otherwise run on the whole checkout. There, the corpus moved out of `eval/tickets` shows up as deleted files, with the reference implementations, the bugs and the hidden tests in full. Campaigns before this change ran that way: see [results/2026-11-03-glob-grep.md](results/2026-11-03-glob-grep.md#the-corpus-was-visible-to-the-agent).
 2. **write**: phase 1 with `qa/run-qa.sh`. It records the exit code, the verdict, the cost, duration and turns reported by the Claude CLI, the transcript when the CLI saved one and those of the subagents the session started, the new test files, and any other file the agent changed. When the session answered again after a background task ended, the CLI's result covers only that last turn: the duration and turns are then left unknown, and the cost, which is the session's total, is kept.
 3. **score** (no model call): the generated tests run on three kinds of variant:
    - the shop as it is;

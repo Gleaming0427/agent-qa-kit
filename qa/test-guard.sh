@@ -28,6 +28,12 @@ check 2 'read outside project'                "$(action Read file_path /root/.ss
 check 2 'read /etc/passwd'                    "$(action Read file_path /etc/passwd)"
 check 2 'search secrets folder'               "$(action Grep path config/secrets)"
 check 2 'unscoped Grep search (might expose secrets)' '{"tool_name":"Grep","tool_input":{"pattern":"PASSWORD"}}'
+check 0 'glob source files'                   "$(action Glob pattern 'src/**/*.{ts,tsx}')"
+check 0 'glob with an absolute pattern inside the project' "$(action Glob pattern '/project/src/**/*.tsx')"
+check 2 'glob with an absolute pattern outside the project' "$(action Glob pattern '/home/runner/work/kit/eval/**/*.md')"
+check 2 'glob with a parent path'             "$(action Glob pattern '../../eval/**')"
+check 2 'glob with an absolute alternative'   "$(action Glob pattern '{src,/etc}/*')"
+check 2 'glob in the home folder'             "$(action Glob pattern '~/.ssh/*')"
 echo 'Writes' 
 check 0 'write component test'                "$(file_action Write apps/services/src/ServiceList.test.tsx "it('AC-2', () => {})")"
 check 0 'write Playwright scenario'           "$(file_action Write /project/e2e/TICKET-42.spec.ts "test.describe('@services', () => {})")"
