@@ -157,6 +157,7 @@ test('the report warns first about a sight of the corpus and about missing tools
   const report = aggregate(scores);
   assert.deepEqual(report.checks, {
     trials_with_transcript: 3,
+    tool_calls: { Read: 15 },
     unavailable_tool_calls: 2,
     unavailable_by_tool: { Glob: 2 },
     corpus_exposed_trials: ['EVAL-1-3'],
@@ -165,7 +166,7 @@ test('the report warns first about a sight of the corpus and about missing tools
   const md = toMarkdown(report);
   assert.match(md, /\*\*Warning, corpus exposure:\*\* in 1 trial\(s\) \(EVAL-1-3\)/);
   assert.match(md, /\*\*Warning, missing tools:\*\* 2 tool call\(s\) answered "No such tool available" \(Glob 2\)/);
-  assert.match(md, /transcripts read for 3 of 4 trials; corpus exposure: 1 trial\(s\); missing tools: Glob 2\. Models: model-a \(2 trials\), model-b \(1 trials\)\./);
+  assert.match(md, /transcripts read for 3 of 4 trials; corpus exposure: 1 trial\(s\); missing tools: Glob 2\. Models: model-a \(2 trials\), model-b \(1 trials\)\. Phase 1 tool calls: Read 15\./);
   assert.ok(md.indexOf('Warning, corpus exposure') < md.indexOf('| Metric |'));
 });
 

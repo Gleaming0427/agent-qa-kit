@@ -70,6 +70,8 @@ export interface TrialScore {
   guard_block_reasons: Record<string, number> | null;
   /** Subagents whose transcript was not found: the guard count is then a lower bound. */
   subagents_without_transcript: number | null;
+  /** Phase 1 tool calls by tool; null without a transcript. */
+  tool_calls: Record<string, number> | null;
   /** Phase 1 tool calls answered "No such tool available", by tool; null without a transcript. */
   unavailable_tools: Record<string, number> | null;
   /** Phase 1 tool calls whose input or result names the corpus; null without a transcript. */
@@ -157,6 +159,7 @@ export function scoreTrial(record: TrialRecord): TrialScore {
     guard_blocks: record.phase1.guard_blocks ?? null,
     guard_block_reasons: record.phase1.guard_block_reasons ?? null,
     subagents_without_transcript: record.phase1.subagents ? Math.max(0, record.phase1.subagents.spawned - record.phase1.subagents.transcripts) : null,
+    tool_calls: record.phase1.tools?.calls ?? null,
     unavailable_tools: record.phase1.tools?.unavailable ?? null,
     corpus_exposures: record.phase1.tools ? record.phase1.tools.corpus.length : null,
     models: [...new Set([record.phase1, record.phase2?.gold, record.phase2?.bug].flatMap((run) => run?.models ?? []))].sort(),

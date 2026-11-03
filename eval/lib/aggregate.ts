@@ -53,6 +53,8 @@ export interface Report {
   /** What only the transcripts show. Each check covers the trials whose phase 1 transcript was read. */
   checks: {
     trials_with_transcript: number;
+    /** Phase 1 tool calls by tool, over those trials. */
+    tool_calls: Record<string, number>;
     /** Tool calls answered "No such tool available": the agents ran without these tools. */
     unavailable_tool_calls: number;
     unavailable_by_tool: Record<string, number>;
@@ -121,6 +123,8 @@ export function aggregate(scores: TrialScore[]): Report {
   const blocks = scores.flatMap((s) => (s.guard_blocks === null ? [] : [s.guard_blocks]));
   const reasons: Record<string, number> = {};
   for (const s of scores) for (const [reason, count] of Object.entries(s.guard_block_reasons ?? {})) reasons[reason] = (reasons[reason] ?? 0) + count;
+  const calls: Record<string, number> = {};
+  for (const s of scores) for (const [tool, count] of Object.entries(s.tool_calls ?? {})) calls[tool] = (calls[tool] ?? 0) + count;
   const unavailable: Record<string, number> = {};
   for (const s of scores) for (const [tool, count] of Object.entries(s.unavailable_tools ?? {})) unavailable[tool] = (unavailable[tool] ?? 0) + count;
   const models: Record<string, number> = {};
@@ -177,6 +181,7 @@ export function aggregate(scores: TrialScore[]): Report {
     },
     checks: {
       trials_with_transcript: scores.filter((s) => s.corpus_exposures !== null).length,
+      tool_calls: calls,
       unavailable_tool_calls: Object.values(unavailable).reduce((a, b) => a + b, 0),
       unavailable_by_tool: unavailable,
       corpus_exposed_trials: scores.filter((s) => (s.corpus_exposures ?? 0) > 0).map((s) => `${s.ticket}-${s.trial}`)
@@ -227,7 +232,8 @@ function checkLines(k: Report['checks'], trials: number): string[] {
   const found = k.trials_with_transcript
     ? `corpus exposure: ${k.corpus_exposed_trials.length ? `${k.corpus_exposed_trials.length} trial(s)` : 'none'}; missing tools: ${k.unavailable_tool_calls ? counts(k.unavailable_by_tool) : 'none'}`
     : 'corpus exposure and missing tools not checked';
-  const summary = `**Checks:** transcripts read for ${k.trials_with_transcript} of ${trials} trials; ${found}. Models: ${models}.`;
+  const tools = Object.keys(k.tool_calls).length ? ` Phase 1 tool calls: ${counts(k.tool_calls)}.` : '';
+  const summary = `**Checks:** transcripts read for ${k.trials_with_transcript} of ${trials} trials; ${found}. Models: ${models}.${tools}`;
   return [...warnings.flatMap((w) => [w, '']), summary, ''];
 }
 
