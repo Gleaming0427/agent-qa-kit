@@ -77,6 +77,7 @@ $FAILURES
     --settings "$KIT/.claude/repair-settings.json" \
     --append-system-prompt-file "$SYSTEM_PROMPT" \
     --model "$MODEL" --effort "$EFFORT" \
+    --allowedTools 'Glob,Grep' \
     --permission-mode dontAsk \
     --max-budget-usd "$BUDGET" --max-turns "$TURNS" --output-format json \
     < /dev/null > "$OUTPUT" || fail "repair agent command failed; see $OUTPUT"

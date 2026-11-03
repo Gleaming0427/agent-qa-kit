@@ -59,11 +59,15 @@ export QA_RUN_ID="$TICKET-phase$PHASE-$(date +%s)-$$"
 # Commands the agent starts (the application's tests included) get no credentials,
 # and on Linux cannot read other processes' environments.
 export CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1
+# On Linux and macOS the default tool set leaves out Glob and Grep, and searches would go through
+# find and grep in Bash, which the guard refuses. Naming them in --allowedTools brings them back;
+# an allow rule in the settings file does not. The guard still checks their paths.
 claude -p "$REQUEST" \
   --settings "$KIT/.claude/qa-settings.json" \
   --append-system-prompt-file "$SYSTEM_PROMPT" \
   --model "$MODEL" --effort "$EFFORT" \
   ${RESTRICTIONS[@]+"${RESTRICTIONS[@]}"} \
+  --allowedTools 'Glob,Grep' \
   --permission-mode dontAsk \
   --max-budget-usd "$BUDGET" --max-turns "$TURNS" --output-format json \
   < /dev/null > "$OUTPUT" || fail "agent command failed; see $OUTPUT"
