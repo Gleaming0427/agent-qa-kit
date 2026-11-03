@@ -2,8 +2,8 @@
  * Agents do not get to choose which criteria exist: the ticket manifest is the authority.
  * Each test title MUST contain [TICKET-42][AC-1]. The reports must contain actual results.
  */
-import { readFileSync, existsSync } from 'node:fs';
-import { basename, resolve } from 'node:path';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 
 export type Level = 'mfe' | 'shell';
@@ -46,7 +46,7 @@ export interface PlaywrightReport {
   errors?: PlaywrightError[]; // global errors, e.g. the web server never started
 }
 
-interface UnitTest { file: string; title: string; status?: string; duration?: number }
+interface UnitTest { file: string; title: string; status?: string; duration?: number; messages: string[] }
 export interface E2eTest { file: string; title: string; tags: string[]; status?: string; results: PlaywrightResult[] }
 type Result = 'pass' | 'fail' | 'blocked' | 'not_run';
 export interface Evidence { criterion: string; level: Level; result: Result; tests: { title: string; status?: string; file: string }[] }
@@ -54,6 +54,20 @@ export interface Evidence { criterion: string; level: Level; result: Result; tes
 const LEVELS: Level[] = ['mfe', 'shell'];
 // Failures caused by the test environment, not by the application's behavior.
 const ENVIRONMENT_ERROR = /net::ERR_|ECONNREFUSED|Executable doesn't exist|browserType\.launch|Target page, context or browser has been closed|config\.webServer/;
+// Unit test failures caused by the test code itself: they fail on any implementation, so they prove nothing.
+// "Invalid Chai property": a matcher such as toBeInTheDocument used without registering it (jest-dom import missing).
+// "ReferenceError": the test uses an identifier it never declared.
+const TEST_CODE_ERROR = /^(?:Error: )?Invalid Chai property\b|^ReferenceError: /;
+// The matchers of @testing-library/jest-dom 6.8.0 (Object.keys of '@testing-library/jest-dom/matchers').
+// Vitest only knows them once jest-dom is imported; none of them is a built-in Vitest matcher.
+const JEST_DOM_MATCHERS = [
+  'toBeChecked', 'toBeDisabled', 'toBeEmpty', 'toBeEmptyDOMElement', 'toBeEnabled', 'toBeInTheDOM', 'toBeInTheDocument', 'toBeInvalid',
+  'toBePartiallyChecked', 'toBePartiallyPressed', 'toBePressed', 'toBeRequired', 'toBeValid', 'toBeVisible', 'toContainElement', 'toContainHTML',
+  'toHaveAccessibleDescription', 'toHaveAccessibleErrorMessage', 'toHaveAccessibleName', 'toHaveAttribute', 'toHaveClass', 'toHaveDescription',
+  'toHaveDisplayValue', 'toHaveErrorMessage', 'toHaveFocus', 'toHaveFormValues', 'toHaveRole', 'toHaveSelection', 'toHaveStyle',
+  'toHaveTextContent', 'toHaveValue',
+];
+const JEST_DOM_CALL = new RegExp(`\\.(${JEST_DOM_MATCHERS.join('|')})\\(`, 'g');
 const formatKey = (id: string, level: Level) => `${id}:${level}`;
 const cleanName = (s: unknown) => String(s ?? '');
 
@@ -72,6 +86,7 @@ export function extractVitestTests(report: VitestReport | null | undefined): Uni
         title: cleanName(test.fullName || test.title),
         status: test.status,
         duration: test.duration,
+        messages: (test.failureMessages ?? []).map((m) => String(m ?? '')),
       });
     }
   }
@@ -125,6 +140,37 @@ export function e2eRedProblem(test: E2eTest): string | null {
   if (ENVIRONMENT_ERROR.test(message)) return `failed because of the test environment, not missing behavior: ${message.slice(0, 160)}`;
   if (!/\bexpect\(/.test(message)) return `failed outside an expect() assertion: ${message.slice(0, 160)}`;
   return null;
+}
+/** Why a failing unit test is not valid RED evidence, or null when its failure can come from missing behavior. */
+export function unitRedProblem(test: { status?: string; messages?: string[] }): string | null {
+  if (test.status !== 'failed') return null;
+  for (const raw of test.messages ?? []) {
+    const first = cleanMessage(String(raw).split('\n')[0]);
+    if (TEST_CODE_ERROR.test(first)) return `failed because of the test code, not missing behavior: ${first.slice(0, 160)}`;
+  }
+  return null;
+}
+/** True when a Vite or Vitest config between dir and root declares setupFiles, which may register jest-dom. */
+function hasSetupFiles(dir: string, root: string): boolean {
+  for (let current = resolve(dir); ; current = dirname(current)) {
+    let names: string[] = [];
+    try { names = readdirSync(current); } catch { /* unreadable folder */ }
+    for (const name of names) {
+      if (/^(vite|vitest)\.config\.[cm]?[jt]s$/.test(name) && readFileSync(join(current, name), 'utf8').includes('setupFiles')) return true;
+    }
+    if (current === resolve(root) || dirname(current) === current || relative(resolve(root), current).startsWith('..')) return false;
+  }
+}
+/**
+ * Why a unit test file will fail once the feature exists, whatever the implementation: it calls jest-dom
+ * matchers without importing jest-dom. Before the feature exists, such a test usually fails earlier for a valid
+ * reason (an element not found), so its failure message cannot show the problem.
+ */
+export function jestDomImportProblem(source: string, hasSetup: boolean): string | null {
+  if (hasSetup || source.includes('@testing-library/jest-dom')) return null;
+  const used = [...new Set([...source.matchAll(JEST_DOM_CALL)].map((m) => m[1]))];
+  if (!used.length) return null;
+  return `uses jest-dom matchers (${used.slice(0, 3).join(', ')}) without importing @testing-library/jest-dom: once the feature exists they fail with "Invalid Chai property". Add import '@testing-library/jest-dom/vitest'`;
 }
 function allSame(values: Result[]): Result { return values.length === 1 ? values[0] : 'blocked'; }
 function collectMatches<T extends { file: string; title: string }>(tests: T[], ticket: string, id: string, level: Level): T[] {
@@ -196,6 +242,16 @@ export function validateEvidence({ verdict, manifest, phase, vitest, playwright,
   if ((playwright?.stats?.unexpected ?? 0) > e2eTests.filter((t) => t.status === 'unexpected').length) {
     problems.push('Playwright summary reports failures missing from individual tests.');
   }
+  if (phase === 1) {
+    // Each unit test file of the ticket, once: a missing jest-dom import breaks every test that uses its matchers.
+    const files = new Set(unitTests.filter((t) => t.title.includes(`[${verdict.ticket}]`) && t.file).map((t) => t.file));
+    for (const file of files) {
+      const path = resolve(root, file);
+      if (!existsSync(path)) continue;
+      const why = jestDomImportProblem(readFileSync(path, 'utf8'), hasSetupFiles(dirname(path), root));
+      if (why) problems.push(`"${relative(root, path) || file}" ${why}.`);
+    }
+  }
   for (const id of expected) {
     for (const level of LEVELS) {
       const c = declared.get(formatKey(id, level));
@@ -208,6 +264,12 @@ export function validateEvidence({ verdict, manifest, phase, vitest, playwright,
       evidence.push({ criterion: id, level, result, tests: matches.map((t) => ({ title: t.title, status: t.status, file: t.file })) });
       if (phase === 1) {
         if (level === 'mfe' && result !== 'fail') problems.push(`${id} MFE must have a failing [${verdict.ticket}][${id}] test before implementation (got ${result}).`);
+        if (level === 'mfe') {
+          for (const t of unitMatches) {
+            const why = unitRedProblem(t);
+            if (why) problems.push(`${id} MFE "${t.title}" ${why}.`);
+          }
+        }
         if (level === 'shell') {
           const shellPath = resolve(root, 'e2e', `${verdict.ticket}.spec.ts`);
           if (!existsSync(shellPath)) problems.push(`Missing ${shellPath}.`);

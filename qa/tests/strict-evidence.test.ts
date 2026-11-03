@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { buildManifest } from '../criteria-manifest.ts';
-import { validateEvidence } from '../../.claude/hooks/strict-evidence.ts';
+import { jestDomImportProblem, unitRedProblem, validateEvidence } from '../../.claude/hooks/strict-evidence.ts';
 import type { PlaywrightReport, Verdict, VitestReport } from '../../.claude/hooks/strict-evidence.ts';
 
 const specText = '# TICKET-42\n- AC-1: list servers\n- AC-2: filter servers\n- AC-3: empty state\n';
@@ -131,4 +131,52 @@ test('phase 1 rejects a browser run whose application never started', () => inTe
   const { v, r } = redPhase1(root);
   r.playwright = { stats: { expected: 0, unexpected: 0, flaky: 0 }, suites: [], errors: [{ message: 'Error: http://127.0.0.1:4173 is already used' }] };
   assert(validate(v, r, 1, root).problems.some((p) => p.includes('Playwright could not run')));
+}));
+
+// First lines of real Vitest failure messages, from vitest 4 with jsdom and Testing Library.
+const UNIT_FAILURES = {
+  missingMatcherImport: 'Error: Invalid Chai property: toBeInTheDocument\n    at Object.proxyGetter [as get] (chai/index.js:1690:17)',
+  undeclaredHelper: 'ReferenceError: addToCartTwice is not defined\n    at src/RED.test.tsx:15:5',
+  missingElement: 'TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Empty cart"',
+  assertion: 'AssertionError: expected 4 to be 99 // Object.is equality',
+  notImplemented: 'TypeError: notYet is not a function',
+};
+test('a unit failure caused by the test code is not RED evidence', () => {
+  assert.match(unitRedProblem({ status: 'failed', messages: [UNIT_FAILURES.missingMatcherImport] }) ?? '', /test code.*Invalid Chai property/);
+  assert.match(unitRedProblem({ status: 'failed', messages: [UNIT_FAILURES.undeclaredHelper] }) ?? '', /test code.*ReferenceError/);
+  // Missing behavior: an element, a value or a function that does not exist yet.
+  for (const message of [UNIT_FAILURES.missingElement, UNIT_FAILURES.assertion, UNIT_FAILURES.notImplemented]) {
+    assert.equal(unitRedProblem({ status: 'failed', messages: [message] }), null, message);
+  }
+  assert.equal(unitRedProblem({ status: 'passed', messages: [] }), null);
+});
+test('phase 1 rejects a unit test that fails because of its own code', () => inTempDir((root) => {
+  const { v, r } = redPhase1(root);
+  const unit = r.vitest.testResults![0].assertionResults!;
+  unit[0].failureMessages = [UNIT_FAILURES.missingMatcherImport];
+  unit[1].failureMessages = [UNIT_FAILURES.undeclaredHelper];
+  unit[2].failureMessages = [UNIT_FAILURES.missingElement];
+  const problems = validate(v, r, 1, root).problems;
+  assert(problems.some((p) => p.startsWith('AC-1 MFE') && p.includes('Invalid Chai property')));
+  assert(problems.some((p) => p.startsWith('AC-2 MFE') && p.includes('ReferenceError')));
+  assert(!problems.some((p) => p.startsWith('AC-3 MFE')));
+}));
+test('a unit test file that calls jest-dom matchers must import jest-dom', () => {
+  const uses = "expect(screen.getByRole('button')).toBeInTheDocument();\nexpect(row).not.toBeVisible();";
+  assert.match(jestDomImportProblem(uses, false) ?? '', /toBeInTheDocument, toBeVisible.*without importing @testing-library\/jest-dom/);
+  assert.equal(jestDomImportProblem(`import '@testing-library/jest-dom/vitest';\n${uses}`, false), null);
+  // A setup file may register it for the whole project.
+  assert.equal(jestDomImportProblem(uses, true), null);
+  // Built-in Vitest matchers only.
+  assert.equal(jestDomImportProblem("expect(names()).toEqual(['Pen set']);\nexpect(total).toBe(1300);", false), null);
+});
+test('phase 1 sends back a unit test file that misses the jest-dom import', () => inTempDir((root) => {
+  const { v, r } = redPhase1(root);
+  mkdirSync(join(root, 'src'));
+  const file = join(root, 'src/TICKET-42.test.tsx');
+  r.vitest.testResults![0].name = file;
+  writeFileSync(file, "import { render, screen } from '@testing-library/react';\ntest('[TICKET-42][AC-1] x', () => { expect(screen.getByText('x')).toBeInTheDocument(); });\n");
+  assert(validate(v, r, 1, root).problems.some((p) => p.startsWith('"src/TICKET-42.test.tsx" uses jest-dom matchers (toBeInTheDocument)')));
+  writeFileSync(join(root, 'vite.config.ts'), "export default { test: { setupFiles: ['./src/setup.ts'] } };\n");
+  assert(!validate(v, r, 1, root).problems.some((p) => p.includes('jest-dom')));
 }));
