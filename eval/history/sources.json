@@ -523,6 +523,40 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 41834419007,
+      "run_number": 35,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-04T13:02:03Z",
+      "commit": "577f51c49db97b0f58422f81f284bdc907f4224d",
+      "label": "rule 5, run 35",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41834419007,
+        "commit": "577f51c49db97b0f58422f81f284bdc907f4224d"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41834419007.json",
+        "sha256": "446030c7111c9f89de31ac1c294793e83d7c9d36784da3fb92b387b651b47634",
+        "artifact": {
+          "id": 13329096034,
+          "name": "eval-report",
+          "digest": "sha256:b3e820e4624ead09d2da8cc4de4bc4168809cda38036a0cc67a744f7bf8e6303"
+        }
+      },
+      "doc": "eval/results/2026-11-04-rule-5.md",
+      "notes": [
+        "The first campaign of the writer's prompt with the new rule 5 (one case per plausible wrong implementation), on every ticket, EVAL-17 included."
+      ],
+      "inputs": {
+        "tickets": "all",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }
