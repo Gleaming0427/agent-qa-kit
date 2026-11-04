@@ -4,7 +4,9 @@
 
 AI agents now write code, and other AI agents review it. That pipeline has a blind spot: nothing proves that the application still works for the person using it. Agent QA Kit adds an independent QA step that produces this proof, with Claude Code agents, Playwright browser tests and deterministic checks.
 
-> **Experimental:** the demo and the deterministic CI checks are included and tested. The full agent workflow has not been measured on real project tickets yet.
+> **Experimental:** the demo and the deterministic CI checks are included and tested. The agents are measured on an evaluation corpus of 17 shop tickets ([Measure the agents](#measure-the-agents)), not yet on real project tickets.
+
+Version 0.2.0. What changed in each version: [CHANGELOG.md](CHANGELOG.md).
 
 ## Why a code review is not enough
 
@@ -87,14 +89,35 @@ The agent's commands run in a sandbox without network access, and never see the 
 
 ## Measure the agents
 
-`eval/` measures the agents on a fixed corpus of sixteen shop tickets, each with a reference implementation, injected bugs and hidden tests. It runs several trials per ticket and reports each metric with a 95% confidence interval:
+`eval/` measures the agents on a fixed corpus of 17 shop tickets. Each ticket has a reference implementation, injected bugs and hidden tests. Seven of them were written as tickets the agents were not tuned on. The QA eval workflow runs several trials per ticket and reports each metric with a 95% confidence interval:
 
 - how often the written tests fail for the right reason, and how often they fail on a correct implementation;
 - how many injected bugs they catch;
 - whether the agents stayed within their rules, including on an ambiguous ticket and on a ticket that hides an instruction;
 - the verifier's accuracy, pass^k, cost and duration.
 
-The agent of a trial never shares a runner with the corpus: it gets a bundle with the kit, the shop and the ticket's spec only, and its tests are scored on another runner, in a sandbox without network or secrets. Every campaign is kept in a versioned history (`eval/history`) that says which campaigns can be compared, and on which tickets. `node eval/compare.ts` compares two versions ticket by ticket and bug by bug, with paired tests across tickets, and gives a decision (accepted, review or rejected) under the rules of `eval/compare-policy.json`. `tickets: smoke` runs a few tickets chosen from the history (the critical ones, those that regressed or were unstable, and a rotation) instead of all 16. Each run ends with a release decision against the release baseline, under the rules in force at the run's commit: a rejected version fails the job, one to review asks for a human review. `trials: adaptive` gives each ticket its trials from its history: more for critical and unstable tickets, fewer for stable ones.
+How a campaign runs:
+
+- **The agent never sees the corpus.** It gets a bundle with the kit, the shop and the ticket's spec only, scanned for any trace of the corpus. Its tests are scored on another runner, in a sandbox without network or secrets, and the verifier gets two implementations under neutral names.
+- **Every campaign is kept** in a versioned history (`eval/history`), with the agent version, the scorer and where the figures come from. The history says which campaigns can be compared, and on which tickets.
+- **Two versions are compared** ticket by ticket and bug by bug, with paired tests across tickets (`node eval/compare.ts`). The decision is accepted, review or rejected, under the rules of `eval/compare-policy.json`. A difference that is not significant is never read as equivalence.
+- **Each run ends with a release decision** against the release baseline, under the rules in force at the run's commit. A rejected version fails the job, one to review asks for a human review. A ticket rerun for its results gets one follow-up, then a human review.
+- **Fewer trials where they are not needed.**
+  - `tickets: smoke` runs a few tickets chosen from the history: the critical ones, those that regressed or were unstable, and a rotation.
+  - `trials: adaptive` gives each ticket its trials from its history: more for critical and unstable tickets, fewer for stable ones.
+- **A cost cap.** The plan estimates the campaign's cost from the history and starts nothing above `max_cost_usd` (5 dollars by default).
+
+What the measurements say so far ([eval/results](eval/results)):
+
+- **The release baseline**, the two "D clean" campaigns (16 tickets, 3 trials each):
+  - 45 of 48 trials succeed;
+  - 86 of 87 injected bugs are detected;
+  - 43 of 45 trials have no false positive;
+  - about $0.11 per trial.
+
+  Its agent also passed EVAL-17, the ticket added since, 3 times out of 3.
+- **Its weak spot:** EVAL-1's shipping bug, missed in 8 of 15 trials. The tests then use a cart where shipping is free, on which the bug cannot show.
+- **A change to the writer fixed it, and was not kept.** It found that bug 3 times out of 3, but more than doubled the false positives.
 
 Run **QA eval** from the Actions tab, or check the corpus locally with `node eval/validate-corpus.ts`. See [eval/README.md](eval/README.md) for the method, the definitions and the limits.
 
@@ -107,6 +130,8 @@ Run **QA eval** from the Actions tab, or check the corpus locally with `node eva
 - **Repair agent:** Sonnet, medium effort, up to 40 turns, with a default budget of **$1.00 per repair**. The loop makes at most two repairs.
 
 In CI, a ticket costs one writer run, then one verifier run per push to the developer's pull request; a newer push cancels the run in progress.
+
+Measuring the agents costs one writer run and up to two verifier runs per trial: about $0.10 to $0.14 per trial on the corpus, measured. A smoke run costs about $2 to $3, and every ticket with 3 trials about $6. The writer makes about 95% of it. QA eval estimates each campaign's cost before it starts, and `max_cost_usd` caps it.
 
 One writer run plus one verifier run has **$1.20 in configured budget ceilings**; with the repair loop at its limit (three verifications, two repairs), the ceilings reach **$3.60**. These are limits passed to the CLI, **not measured costs or a per-ticket price**. The development agent, any new writing cycle, and CI compute are separate. Claude's reported cost is saved under `reports/`. You can override the budgets, models and effort with `QA_BUDGET_USD`, `QA_MODEL`, `QA_EFFORT`, `QA_REPAIR_BUDGET_USD`, `QA_REPAIR_MODEL` and `QA_REPAIR_EFFORT`.
 
@@ -154,6 +179,7 @@ Each rule has regression tests, which `npm run check` runs in CI.
 
 - Checks can prove that named tests ran and reported the expected result; they cannot prove the assertions capture the user's intent. Human review remains necessary.
 - The demo is a small React app, not a real micro-frontend shell. The kit does not connect to Jira.
-- The CI workflows have not run against the real API yet: their deterministic parts are tested, the agents' behavior in CI is not.
+- The writer and the verifier have run in CI against the real API through QA eval, on the evaluation corpus. The QA write tests and QA verify workflows have not: their deterministic parts are tested, their runs on a real ticket are not. The repair agent is not measured.
+- The evaluation corpus is 17 tickets of one small shop. Its results say how the agents do on it, not on a real project. With 3 trials per ticket, a difference of one trial on a ticket is often variation between runs, not a change.
 - The visual review can miss a problem or report one that is not there, which is why it only warns.
 - For the security limits, see [Security](#security).
