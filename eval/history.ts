@@ -90,18 +90,19 @@ const [command, ...args] = process.argv.slice(2);
 if (command === 'build') {
   const sources = JSON.parse(readFileSync(join(HISTORY, 'sources.json'), 'utf8')) as { repository: string; campaigns: SourceEntry[] };
   const out = args[0] ?? CAMPAIGNS;
-  const campaigns = sources.campaigns.map((entry) => {
-    const raw = readFileSync(join(HISTORY, entry.source.file));
-    if (sha256(raw) !== entry.source.sha256) throw new Error(`${entry.source.file} does not match its sha256 in sources.json`);
-    return campaignFor(entry, sources.repository, JSON.parse(raw.toString('utf8')) as { trials?: TrialScore[] }, raw, entry.inputs);
-  });
   // A campaign file without a source would be lost: it must come from sources.json, or be removed by hand.
-  const built = new Set(campaigns.map((c) => `${c.id}.json`));
+  // A campaign's id is its run's, so this needs neither git nor the campaigns' commits.
+  const built = new Set(sources.campaigns.map((entry) => `gh-${entry.run_id}.json`));
   const orphans = existsSync(out) ? readdirSync(out).filter((f) => f.endsWith('.json') && !built.has(f)) : [];
   if (orphans.length) {
     console.error(`Not in sources.json, so build would delete them: ${orphans.join(', ')}. Add each report to eval/history/sources and an entry to sources.json, or remove the file.`);
     process.exit(1);
   }
+  const campaigns = sources.campaigns.map((entry) => {
+    const raw = readFileSync(join(HISTORY, entry.source.file));
+    if (sha256(raw) !== entry.source.sha256) throw new Error(`${entry.source.file} does not match its sha256 in sources.json`);
+    return campaignFor(entry, sources.repository, JSON.parse(raw.toString('utf8')) as { trials?: TrialScore[] }, raw, entry.inputs);
+  });
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
   for (const c of campaigns) writeFileSync(join(out, `${c.id}.json`), json(c));
