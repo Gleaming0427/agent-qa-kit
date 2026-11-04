@@ -51,15 +51,18 @@ test('every critical ticket and every kind is in every selection, each pick with
   assert.ok(s.tickets.find((p) => p.ticket === 'EVAL-8')!.reasons.some((r) => r.startsWith('regressed from D to D, clean: 3/3 → 2/3')));
 });
 
-test('the first real smoke run moved the rotation on', () => {
-  const before = select().tickets.map((p) => p.ticket);
-  const after = select(everything).tickets;
-  assert.deepEqual(before, ['EVAL-9', 'EVAL-10', 'EVAL-1', 'EVAL-8', 'EVAL-12', 'EVAL-13']);
-  // EVAL-12 and EVAL-13 ran in smoke run 30: the rotation now takes the next ones.
-  assert.deepEqual(after.map((p) => p.ticket), ['EVAL-9', 'EVAL-10', 'EVAL-1', 'EVAL-8', 'EVAL-14', 'EVAL-15']);
-  assert.deepEqual(after.filter((p) => p.because === 'rotation').map((p) => p.ticket), ['EVAL-14', 'EVAL-15']);
+test('each real smoke run moved the rotation on', () => {
+  const upTo = (t: string) => everything.filter((c) => (c.source.started_at ?? '') < t);
+  const rotation = (cs: Campaign[]) => select(cs).tickets.filter((p) => p.because === 'rotation').map((p) => p.ticket);
+  assert.deepEqual(select().tickets.map((p) => p.ticket), ['EVAL-9', 'EVAL-10', 'EVAL-1', 'EVAL-8', 'EVAL-12', 'EVAL-13']);
+  // EVAL-12 and EVAL-13 ran in smoke run 30, EVAL-14 and EVAL-15 in smoke run 32: the rotation takes the next ones.
+  const after30 = upTo('2026-11-04T08:00:00Z');
+  assert.deepEqual(select(after30).tickets.map((p) => p.ticket), ['EVAL-9', 'EVAL-10', 'EVAL-1', 'EVAL-8', 'EVAL-14', 'EVAL-15']);
+  assert.deepEqual(rotation(after30), ['EVAL-14', 'EVAL-15']);
+  const after32 = upTo('2026-11-04T12:00:00Z');
+  assert.deepEqual(rotation(after32), ['EVAL-16', 'EVAL-2']);
   // A smoke run is not a full run: the backtest leaves it out of its version's full run.
-  assert.deepEqual(backtest(everything, policy, critical), backtest(campaigns, policy, critical));
+  assert.deepEqual(backtest(after32, policy, critical), backtest(campaigns, policy, critical));
 });
 
 test('a ticket whose corpus changed comes first after the critical ones', () => {

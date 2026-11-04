@@ -421,6 +421,40 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 41822486138,
+      "run_number": 32,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-04T11:37:55Z",
+      "commit": "f63336c89ec1d09f67ba3900704be38d375272fd",
+      "label": "smoke, run 32",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41822486138,
+        "commit": "f63336c89ec1d09f67ba3900704be38d375272fd"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41822486138.json",
+        "sha256": "b724b433ace49a1a6b80a75895ca61c2afb552a9b68a64ffd5b1cf5905185fe8",
+        "artifact": {
+          "id": 13318193969,
+          "name": "eval-report",
+          "digest": "sha256:a0a60470d1e243e7576956fde7633685948ed5a4783a6daac32232441edb6ccd"
+        }
+      },
+      "doc": "eval/results/2026-11-04-smoke-backtest.md",
+      "notes": [
+        "The second smoke run, and the first with adaptive trials: the 6 tickets eval/smoke.ts picked (EVAL-9, EVAL-10, EVAL-1, EVAL-8, EVAL-14, EVAL-15), with 5, 5, 5, 5, 2 and 2 trials from eval/trials-policy.json, with the agent of D clean. Run 31, the same campaign, is left out: the API credit ran out halfway (12 of 24 trials, and every verifier run), and GitHub never started 4 of its scoring jobs."
+      ],
+      "inputs": {
+        "tickets": "smoke",
+        "trials": "adaptive",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }

@@ -55,6 +55,37 @@ QA eval run 41793345183 (run 30) ran with `tickets: smoke` on 4 November: the ag
 - **Rotation:** EVAL-12 and EVAL-13 ran, so the next selection takes EVAL-14 and EVAL-15 in their place. The four other tickets stay: the critical ones, and EVAL-1 and EVAL-8 for their earlier regressions.
 - **Backtest:** unchanged, since a version's full run leaves out its smoke runs.
 
+## The second smoke run, with adaptive trials
+
+QA eval run 41822486138 (run 32) ran with `tickets: smoke` and `trials: adaptive` on 4 November: the agent of D clean again, on the six tickets the history then gave. It is in the history as "smoke, run 32".
+
+| Ticket | Picked as | Trials | D clean (before) | Smoke run |
+|---|---|---|---|---|
+| EVAL-9 | critical | 5 | 3/3 | 5/5 |
+| EVAL-10 | critical | 5 | 3/3 | 5/5 |
+| EVAL-1 | kind, regressed, unstable | 5 | 1/3 | 1/5 |
+| EVAL-8 | regressed, unstable | 5 | 2/3 | 4/5 |
+| EVAL-14 | rotation | 2 | 3/3 | 2/2 |
+| EVAL-15 | rotation | 2 | 3/3 | 2/2 |
+
+- **Trials:** `eval/trials-policy.json` gave 5 to the critical and risky tickets and 2 to the stable ones: 24 trials instead of 18. The plan estimated $2.55; the run cost $2.38 in all, $0.099 per trial.
+- **Results:**
+  - 19 of 24 trials succeeded, and 28 of 33 bugs were detected;
+  - EVAL-1 failed 4 times out of 5 on the same bug, `discount-includes-shipping`, detected once;
+  - one trial of EVAL-8 had a false positive;
+  - the verifier passed the reference in 18 of 19 runs and failed the bug in 15 of 19.
+- **Release decision** against D clean, under the rules at the run's commit: review. One rule did not pass, `unstable_worse`:
+  - EVAL-1, 1/3 → 1/5;
+  - its bug `discount-includes-shipping`, 2/3 → 1/5;
+  - EVAL-8's bug `bar-hidden-on-phones`, 3/3 → 4/5.
+
+  It is the same agent as the baseline, so these are differences between two measurements of one agent, which the decision neither confirms nor rules out. It asks for a rerun of EVAL-1 and EVAL-8 with 3 trials. `enough_trials` passed: EVAL-14 and EVAL-15 ran 2 trials each, but they are not critical and their outcome did not change.
+- **Rotation:** EVAL-14 and EVAL-15 ran, so the next selection takes EVAL-16 and EVAL-2.
+- **Backtest:** unchanged.
+- **Run 31**, the same campaign launched first, is not in the history:
+  - the API credit ran out halfway, so 12 of its 24 trials and every verifier run ended with an API error;
+  - GitHub never started 4 of its scoring jobs, and their trials were assembled without scores. That is why the history now records such a trial as a `scoring_error`, left out of comparisons like an agent error.
+
 ## Limits
 
 - 4 changes of version and 4 tickets that got worse, each by one or two trials of three: these are differences the same agent also shows between two campaigns (see [2026-11-04-paired-comparisons.md](2026-11-04-paired-comparisons.md)). The backtest measures how well the selection follows them, not how well it catches a real regression, which the history has none of.
