@@ -49,3 +49,21 @@ test('percentiles interpolate between ranks', () => {
   close(percentile([1, 2, 3, 4], 95), 3.85);
   assert.equal(percentile([], 50), null);
 });
+
+test('the exact sign test matches the binomial distribution', async () => {
+  const { signTest, mcnemarExact } = await import('../lib/stats.ts');
+  assert.deepEqual(signTest(0, 0), { n: 0, plus: 0, minus: 0, p: 1, min_p: 1 });
+  // All in one direction: 2 x 0.5^n.
+  assert.equal(signTest(5, 0).p, 0.0625);
+  assert.equal(signTest(0, 6).p, 0.03125);
+  assert.equal(signTest(5, 0).min_p, 0.0625);
+  // 3 against 1: 2 x (C(4,0) + C(4,1)) / 16.
+  assert.equal(signTest(3, 1).p, 0.625);
+  // 10 against 2: 2 x (1 + 12 + 66) / 4096.
+  assert.ok(Math.abs(signTest(10, 2).p - 158 / 4096) < 1e-12);
+  // Balanced: capped at 1.
+  assert.equal(signTest(2, 2).p, 1);
+  // McNemar: the same test on the discordant pairs, whichever way they are given.
+  assert.equal(mcnemarExact(0, 6).p, 0.03125);
+  assert.equal(mcnemarExact(1, 3).p, mcnemarExact(3, 1).p);
+});

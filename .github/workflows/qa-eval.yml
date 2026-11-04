@@ -1,17 +1,26 @@
 name: QA eval
 # Started by hand. Runs the QA agents on the evaluation corpus (eval/tickets): several trials
-# per ticket, each on a fresh runner, then aggregates the metrics. See eval/README.md.
-# The API key reaches only the steps that start an agent; the scoring runs without it.
+# per ticket, then aggregates the metrics. See eval/README.md.
+#
+# Each trial runs on three runners, so that the agent never shares one with the corpus, and the
+# code it wrote never shares one with a secret:
+#   agent     the agent bundle only (no checkout, no git history, no corpus but the spec); the API
+#             key reaches the phase 1 step only.
+#   scoring   a checkout with the corpus, no secret; the generated tests run in a sandbox without
+#             network, environment or a view of the corpus.
+#   verifier  the agent bundle, the agent's workspace and the two implementations to verify, under
+#             neutral names; the API key reaches the phase 2 step only.
+# The report job assembles the three parts of each trial and computes the metrics.
 on:
   workflow_dispatch:
     inputs:
       tickets:
-        description: Eval tickets, separated by spaces, or "all"
+        description: Eval tickets, separated by spaces, "all", or "smoke" (a few tickets chosen from the history, see eval/smoke.ts)
         required: true
         default: all
         type: string
       trials:
-        description: Trials per ticket (1-10)
+        description: Trials per ticket (1-10), or "adaptive" (each ticket's trials from eval/trials-policy.json)
         required: true
         default: '3'
         type: string
@@ -19,6 +28,11 @@ on:
         description: Trials running at the same time (1-20)
         required: true
         default: '6'
+        type: string
+      max_cost_usd:
+        description: Do not start if the estimated cost is above this many dollars (each trial at its ticket's mean cost in the history); empty for no cap. A smoke run fits in 5, every ticket with 3 trials needs about 6.
+        required: false
+        default: '5'
         type: string
       verify:
         description: Also run phase 2 (the verifier) on the reference implementation and on one bug
@@ -35,6 +49,11 @@ on:
         required: false
         default: ''
         type: string
+      baseline:
+        description: Release decision against these campaigns of the history (ids such as gh-41605000003, separated by spaces); empty for eval/release-baseline.json
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -43,9 +62,12 @@ concurrency:
   group: qa-eval
   cancel-in-progress: false
 
+env:
+  EVAL_DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+
 jobs:
   plan:
-    name: Plan the trials
+    name: Plan the trials and build the agent bundle
     runs-on: ubuntu-24.04
     outputs:
       include: ${{ steps.plan.outputs.include }}
@@ -63,15 +85,32 @@ jobs:
           TICKETS: ${{ inputs.tickets }}
           TRIALS: ${{ inputs.trials }}
           MAX_PARALLEL: ${{ inputs.max_parallel }}
+          MAX_COST_USD: ${{ inputs.max_cost_usd }}
           RECHECK: ${{ inputs.recheck }}
         run: node eval/plan.ts >> "$GITHUB_OUTPUT"
+      - name: Build the agent bundle, and check it holds no trace of the corpus
+        if: ${{ inputs.recheck == '' }}
+        env:
+          TICKET_LIST: ${{ steps.plan.outputs.tickets }}
+        run: |
+          # shellcheck disable=SC2086 # one argument per ticket
+          node eval/bundle.ts build "$RUNNER_TEMP/agent-bundle" $TICKET_LIST
+          # A tar keeps the executable bits, which an artifact drops: the guard hook needs its own.
+          tar -cf "$RUNNER_TEMP/agent-bundle.tar" -C "$RUNNER_TEMP/agent-bundle" .
+      - name: Upload the agent bundle
+        if: ${{ inputs.recheck == '' }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: agent-bundle
+          path: ${{ runner.temp }}/agent-bundle.tar
+          if-no-files-found: error
 
-  trial:
-    name: ${{ matrix.ticket }} trial ${{ matrix.trial }}
+  agent:
+    name: ${{ matrix.ticket }}-${{ matrix.trial }} agent
     needs: plan
     if: ${{ inputs.recheck == '' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       max-parallel: ${{ fromJSON(needs.plan.outputs.max_parallel) }}
@@ -80,22 +119,26 @@ jobs:
     env:
       TICKET: ${{ matrix.ticket }}
       TRIAL: ${{ matrix.trial }}
-      # One fresh runner per trial: the agents work in examples/shop itself, as in "QA write tests".
+      # The agents work in examples/shop of the bundle, as in "QA write tests".
       EVAL_IN_PLACE: '1'
     steps:
-      - uses: actions/checkout@v5
+      # No checkout: this runner never holds the repository, its history or the corpus.
+      - uses: actions/download-artifact@v7
         with:
-          # No token on disk while the agent and the application's code run.
-          persist-credentials: false
+          name: agent-bundle
+          path: ${{ runner.temp }}
+      - name: Unpack the agent bundle
+        run: |
+          tar -xf "$RUNNER_TEMP/agent-bundle.tar" -C "$GITHUB_WORKSPACE"
+          rm "$RUNNER_TEMP/agent-bundle.tar"
+          echo "EVAL_WORK=$RUNNER_TEMP/eval" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - name: Move the corpus out of the checkout
-        # The reference implementations and hidden tests stay out of the repository the agent works next to.
+      - name: Check the bundle before anything runs
         run: |
-          mv eval/tickets "$RUNNER_TEMP/eval-tickets"
-          echo "EVAL_TICKETS=$RUNNER_TEMP/eval-tickets" >> "$GITHUB_ENV"
-          echo "EVAL_WORK=$RUNNER_TEMP/eval" >> "$GITHUB_ENV"
+          node eval/bundle.ts verify
+          echo "EVAL_BUNDLE_VERIFIED=1" >> "$GITHUB_ENV"
       - name: Install the shop and its browser
         working-directory: examples/shop
         run: |
@@ -112,35 +155,157 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           DISABLE_AUTOUPDATER: 1
         run: node eval/trial.ts write "$TICKET" "$TRIAL"
-      - name: Phase 1, dry run (the hidden tests stand in for the agent's)
+      - name: Phase 1, dry run (no agent; the scoring runner puts the hidden tests in place)
         if: ${{ inputs.dry_run }}
+        run: node eval/trial.ts write "$TICKET" "$TRIAL"
+      - name: Upload what the agent produced
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: agent-out-${{ matrix.ticket }}-${{ matrix.trial }}
+          path: ${{ runner.temp }}/eval/${{ matrix.ticket }}-${{ matrix.trial }}/agent/
+          if-no-files-found: warn
+
+  score:
+    name: ${{ matrix.ticket }}-${{ matrix.trial }} scoring
+    needs: [plan, agent]
+    if: ${{ always() && inputs.recheck == '' && needs.plan.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(needs.plan.outputs.max_parallel) }}
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.include) }}
+    env:
+      TICKET: ${{ matrix.ticket }}
+      TRIAL: ${{ matrix.trial }}
+      # The generated tests are the agent's code: they run in the sandbox, which fails closed.
+      EVAL_SANDBOX: bwrap
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Locate the trial
+        run: echo "EVAL_WORK=$RUNNER_TEMP/eval" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v7
+        # A failed agent job may have sent nothing back: the trial is then recorded as an agent error.
+        continue-on-error: true
+        with:
+          name: agent-out-${{ matrix.ticket }}-${{ matrix.trial }}
+          path: ${{ runner.temp }}/eval/${{ matrix.ticket }}-${{ matrix.trial }}/agent
+      - uses: actions/download-artifact@v7
+        with:
+          name: agent-bundle
+          path: ${{ runner.temp }}
+      - name: Read the bundle's manifest (the shop the agent worked on)
         run: |
-          mkdir -p "$RUNNER_TEMP/dry/e2e"
-          if [[ -f "$EVAL_TICKETS/$TICKET/hidden.spec.ts" ]]; then cp "$EVAL_TICKETS/$TICKET/hidden.spec.ts" "$RUNNER_TEMP/dry/e2e/$TICKET.spec.ts"; fi
-          EVAL_DRY_RUN_TESTS="$RUNNER_TEMP/dry" node eval/trial.ts write "$TICKET" "$TRIAL"
-      - name: Score the generated tests (no model call)
+          mkdir -p "$RUNNER_TEMP/bundle"
+          tar -xf "$RUNNER_TEMP/agent-bundle.tar" -C "$RUNNER_TEMP/bundle" ./eval/bundle-manifest.json
+          echo "EVAL_BUNDLE_MANIFEST=$RUNNER_TEMP/bundle/eval/bundle-manifest.json" >> "$GITHUB_ENV"
+      - name: Install the shop and its browser
+        working-directory: examples/shop
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Install the scoring sandbox
+        run: bash eval/ci/install-sandbox.sh
+      - name: Score the generated tests (no model call, sandboxed)
         run: node eval/trial.ts score "$TICKET" "$TRIAL"
+      - name: Upload the scores
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: score-out-${{ matrix.ticket }}-${{ matrix.trial }}
+          path: ${{ runner.temp }}/eval/${{ matrix.ticket }}-${{ matrix.trial }}/score/
+          if-no-files-found: warn
+      - name: Upload the implementations for phase 2
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: verifier-in-${{ matrix.ticket }}-${{ matrix.trial }}
+          path: ${{ runner.temp }}/eval/${{ matrix.ticket }}-${{ matrix.trial }}/verify-input/
+          if-no-files-found: warn
+
+  verify:
+    name: ${{ matrix.ticket }}-${{ matrix.trial }} verifier
+    needs: [plan, score]
+    if: ${{ always() && inputs.recheck == '' && inputs.verify && !inputs.dry_run && needs.plan.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(needs.plan.outputs.max_parallel) }}
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.include) }}
+    env:
+      TICKET: ${{ matrix.ticket }}
+      TRIAL: ${{ matrix.trial }}
+      EVAL_IN_PLACE: '1'
+    steps:
+      # No checkout, as for the agent: the bundle, then the agent's workspace.
+      - uses: actions/download-artifact@v7
+        with:
+          name: agent-bundle
+          path: ${{ runner.temp }}
+      - name: Unpack the agent bundle
+        run: |
+          tar -xf "$RUNNER_TEMP/agent-bundle.tar" -C "$GITHUB_WORKSPACE"
+          rm "$RUNNER_TEMP/agent-bundle.tar"
+          echo "EVAL_WORK=$RUNNER_TEMP/eval" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Check the bundle before anything runs
+        run: node eval/bundle.ts verify
+      - uses: actions/download-artifact@v7
+        continue-on-error: true
+        with:
+          name: agent-out-${{ matrix.ticket }}-${{ matrix.trial }}
+          path: ${{ runner.temp }}/eval/${{ matrix.ticket }}-${{ matrix.trial }}/agent
+      - uses: actions/download-artifact@v7
+        continue-on-error: true
+        with:
+          name: verifier-in-${{ matrix.ticket }}-${{ matrix.trial }}
+          path: ${{ runner.temp }}/eval/${{ matrix.ticket }}-${{ matrix.trial }}/verify-input
+      - id: input
+        name: Is there anything to verify?
+        run: |
+          input="$EVAL_WORK/$TICKET-$TRIAL/verify-input/verify.json"
+          if [[ -f "$input" ]] && [[ "$(jq -r '.run' "$input")" == true ]]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; fi
+      - name: Install the shop and its browser
+        if: ${{ steps.input.outputs.run == 'true' }}
+        working-directory: examples/shop
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Install Claude Code and the agent sandbox
+        if: ${{ steps.input.outputs.run == 'true' }}
+        run: bash qa/ci-install-agents.sh
       - name: Phase 2, QA verifier agent
-        if: ${{ inputs.verify && !inputs.dry_run }}
+        if: ${{ steps.input.outputs.run == 'true' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           DISABLE_AUTOUPDATER: 1
         run: node eval/trial.ts verify "$TICKET" "$TRIAL"
-      - name: Record the trial
-        if: always()
-        run: node eval/trial.ts finish "$TICKET" "$TRIAL"
-      - name: Upload the trial
+      - name: Phase 2 skipped
+        if: ${{ steps.input.outputs.run != 'true' }}
+        run: node eval/trial.ts verify "$TICKET" "$TRIAL"
+      - name: Upload the verifier's verdicts
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: eval-${{ matrix.ticket }}-${{ matrix.trial }}
-          path: ${{ runner.temp }}/eval/${{ matrix.ticket }}-${{ matrix.trial }}/out/
+          name: verifier-out-${{ matrix.ticket }}-${{ matrix.trial }}
+          path: ${{ runner.temp }}/eval/${{ matrix.ticket }}-${{ matrix.trial }}/verify/
           if-no-files-found: warn
 
   report:
-    name: Aggregate the metrics
-    needs: trial
-    if: ${{ always() && inputs.recheck == '' }}
+    name: Assemble the trials and aggregate the metrics
+    needs: [plan, agent, score, verify]
+    if: ${{ always() && inputs.recheck == '' && needs.plan.result == 'success' }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
@@ -151,12 +316,32 @@ jobs:
           node-version: 22
       - uses: actions/download-artifact@v7
         with:
-          pattern: eval-*
-          path: ${{ runner.temp }}/trials
+          pattern: '*-out-*'
+          path: ${{ runner.temp }}/parts
+      - name: Assemble each trial from its three runners
+        run: |
+          export EVAL_WORK="$RUNNER_TEMP/eval"
+          for dir in "$RUNNER_TEMP"/parts/*-out-*; do
+            name="${dir##*/}"
+            case "$name" in
+              agent-out-*) part=agent; trial="${name#agent-out-}" ;;
+              score-out-*) part=score; trial="${name#score-out-}" ;;
+              verifier-out-*) part=verify; trial="${name#verifier-out-}" ;;
+              *) continue ;;
+            esac
+            mkdir -p "$EVAL_WORK/$trial"
+            mv "$dir" "$EVAL_WORK/$trial/$part"
+          done
+          node eval/trial.ts finish-all
       - name: Compute the report
         run: |
-          node eval/lib/aggregate.ts "$RUNNER_TEMP/trials" "$RUNNER_TEMP/eval-report.json" "$RUNNER_TEMP/eval-report.md"
+          node eval/lib/aggregate.ts "$RUNNER_TEMP/eval" "$RUNNER_TEMP/eval-report.json" "$RUNNER_TEMP/eval-report.md"
           cat "$RUNNER_TEMP/eval-report.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Record the campaign for the history (eval/history)
+        env:
+          EVAL_INPUTS: ${{ toJSON(inputs) }}
+          HISTORY_LABEL: ${{ inputs.tickets == 'smoke' && format('smoke, run {0}', github.run_number) || '' }}
+        run: node eval/history.ts from-report "$RUNNER_TEMP/eval-report.json" "$RUNNER_TEMP/eval-history.json"
       - name: Upload the report
         if: always()
         uses: actions/upload-artifact@v6
@@ -165,6 +350,50 @@ jobs:
           path: |
             ${{ runner.temp }}/eval-report.json
             ${{ runner.temp }}/eval-report.md
+            ${{ runner.temp }}/eval-history.json
+          if-no-files-found: warn
+      - name: Upload the assembled trials
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: eval-trials
+          path: ${{ runner.temp }}/eval/*/trial/
+          if-no-files-found: warn
+
+  decision:
+    # The new version against the release baseline, under eval/compare-policy.json as it was at this
+    # commit, so before the results. A rejected version fails this job; one to review passes with a
+    # warning and asks for a human review. See eval/validate.ts.
+    name: Release decision
+    needs: report
+    if: ${{ always() && inputs.recheck == '' && !inputs.dry_run && needs.report.result == 'success' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v7
+        with:
+          name: eval-report
+          path: ${{ runner.temp }}/report
+      - name: Validate the new version against the release baseline
+        env:
+          BASELINE: ${{ inputs.baseline }}
+        run: |
+          args=(--candidate "$RUNNER_TEMP/report/eval-history.json" --ci --md "$RUNNER_TEMP/release-decision.md" --json "$RUNNER_TEMP/release-decision.json")
+          for id in $BASELINE; do args+=(--baseline "$id"); done
+          node eval/validate.ts "${args[@]}"
+      - name: Upload the release decision
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-decision
+          path: |
+            ${{ runner.temp }}/release-decision.md
+            ${{ runner.temp }}/release-decision.json
           if-no-files-found: warn
 
   recheck:
@@ -192,7 +421,8 @@ jobs:
           node-version: 22
       - uses: actions/download-artifact@v7
         with:
-          pattern: eval-EVAL-*
+          # eval-<TICKET>-<TRIAL> for campaigns run on one runner per trial, eval-trials since the split.
+          pattern: eval-*
           path: ${{ runner.temp }}/trials
           run-id: ${{ matrix.run }}
           github-token: ${{ github.token }}

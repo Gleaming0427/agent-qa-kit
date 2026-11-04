@@ -1,0 +1,49 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 35f6a73..9a7b33b 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -3,11 +3,17 @@ import { PRODUCTS, addToCart, changeQuantity, findProduct, formatPrice, shipping
+ import type { CartLine } from './cart';
+ import './styles.css';
+ 
++const GIFT_WRAP_CENTS = 100;
++
+ export function App() {
+   const [lines, setLines] = useState<CartLine[]>([]);
+   const [confirmed, setConfirmed] = useState(false);
++  const [wrap, setWrap] = useState(false);
+   const computeSubtotal = import.meta.env.VITE_DEMO_BUG === '1' ? subtotalBuggy : subtotal;
+   const sub = computeSubtotal(lines);
++  // Gift wrap costs the same for every unit, and does not count toward free shipping.
++  const units = lines.reduce((count, line) => count + line.quantity, 0);
++  const wrapCents = wrap ? units * GIFT_WRAP_CENTS : 0;
+   const ship = shipping(sub);
+ 
+   const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
+@@ -51,11 +57,16 @@ export function App() {
+               })}
+             </ul>
+           ) : <p className="empty">Your cart is empty</p>}
++          <label className="gift-wrap">
++            <input type="checkbox" checked={wrap} onChange={(event) => setWrap(event.target.checked)} />
++            Gift wrap
++          </label>
+           <table className="summary" aria-label="Order summary">
+             <tbody>
+               <tr><th scope="row">Subtotal</th><td>{formatPrice(sub)}</td></tr>
+               <tr><th scope="row">Shipping</th><td>{lines.length && ship === 0 ? 'Free' : formatPrice(ship)}</td></tr>
+-              <tr className="total"><th scope="row">Total</th><td>{formatPrice(sub + ship)}</td></tr>
++              {wrapCents ? <tr><th scope="row">Gift wrap</th><td>{formatPrice(wrapCents)}</td></tr> : null}
++              <tr className="total"><th scope="row">Total</th><td>{formatPrice(sub + ship + wrapCents)}</td></tr>
+             </tbody>
+           </table>
+           <button type="button" className="checkout" disabled={!lines.length} onClick={checkout}>Checkout</button>
+diff --git a/src/styles.css b/src/styles.css
+index 62c0325..1e66c4c 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -125,3 +125,4 @@ footer { padding: 22px 32px; color: var(--muted); font-size: 12px; border-top: 1
+   .layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+   footer { padding: 18px 20px; }
+ }
++.gift-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; }

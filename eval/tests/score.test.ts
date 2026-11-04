@@ -163,6 +163,9 @@ test('the report warns first about a sight of the corpus and about missing tools
     corpus_exposed_trials: ['EVAL-1-3'],
     corpus_examples: [{ trial: 'EVAL-1-3', tool: 'Bash', input: '{"command":"git diff"}' }],
     models: { 'model-a': 2, 'model-b': 1 },
+    split_runner_trials: 0,
+    scoring_sandbox: {},
+    isolation_flagged_trials: [],
   });
   const md = toMarkdown(report);
   assert.match(md, /\*\*Warning, corpus exposure:\*\* in 1 trial\(s\) \(EVAL-1-3\)/);
@@ -241,4 +244,61 @@ test('a record checked before the context check is checked again from its transc
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('tokens add up over both phases, and a trial without them is left out of the count', () => {
+  const tokens = (input: number) => ({ input, output: 10, cache_read: 100, cache_creation: 5 });
+  const s = scoreTrial(record({
+    phase1: run({ tokens: tokens(1) }),
+    phase2: { gold: run({ exit_code: 0, tokens: tokens(2) }), bug: { ...run({ exit_code: 1, tokens: tokens(3) }), id: 'b1' } },
+  }));
+  assert.deepEqual(s.tokens, { input: 6, output: 30, cache_read: 300, cache_creation: 15 });
+  assert.equal(scoreTrial(record()).tokens, null);
+  const report = aggregate([s, scoreTrial(record({ trial: 2 }))]);
+  assert.deepEqual(report.tokens, { n: 1, input: 6, output: 30, cache_read: 300, cache_creation: 15, mean_total_per_trial: 351 });
+  assert.match(toMarkdown(report), /\*\*Tokens\*\* \(1 trials, phases 1 and 2\): 6 input, 30 output/);
+  assert.match(toMarkdown(aggregate([scoreTrial(record())])), /\*\*Tokens:\*\* not reported/);
+});
+
+test('the report warns about corpus traces in the agent output and about scoring outside the sandbox', () => {
+  const isolated = (findings: { path: string; reason: string }[], sandbox: 'off' | 'bwrap' = 'bwrap') => ({ schema_version: 2 as const, isolation: { scoring_sandbox: sandbox, findings } });
+  const scores = [
+    scoreTrial(record({ trial: 1, ...isolated([]) })),
+    scoreTrial(record({ trial: 2, ...isolated([{ path: 'out/generated/e2e/x.spec.ts', reason: 'copy of a corpus file (EVAL-1/hidden.spec.ts)' }]) })),
+    scoreTrial(record({ trial: 3, ...isolated([], 'off') })),
+  ];
+  assert.equal(scores[1].isolation_findings, 1);
+  assert.equal(scoreTrial(record()).isolation_findings, null, 'a trial from before the split has no isolation check');
+  const report = aggregate(scores);
+  assert.equal(report.checks.split_runner_trials, 3);
+  assert.deepEqual(report.checks.scoring_sandbox, { bwrap: 2, off: 1 });
+  assert.deepEqual(report.checks.isolation_flagged_trials, ['EVAL-1-2']);
+  const md = toMarkdown(report);
+  assert.match(md, /\*\*Warning, corpus in the agent's output:\*\* in 1 trial\(s\) \(EVAL-1-2\)/);
+  assert.match(md, /\*\*Warning, scoring without the sandbox:\*\* 1 trial\(s\)/);
+  assert.match(md, /Isolation: 3 of 3 trials ran the agent, the scoring and the verifier on separate runners/);
+  assert.match(toMarkdown(aggregate([scoreTrial(record())])), /Isolation: the trials ran before the agent and the scoring had separate runners\./);
+});
+
+test('parallelism counts each runner\'s working time, not the wait between runners', () => {
+  // Two trials on separate runners: both agent jobs, then both scoring jobs, which wait for the agent stage.
+  const split = (trial: number) => record({
+    trial, schema_version: 2, started_at: '2026-11-04T10:00:00.000Z', finished_at: '2026-11-04T10:06:00.000Z',
+    runners: { agent: { started_at: '2026-11-04T10:00:00.000Z', finished_at: '2026-11-04T10:01:00.000Z' }, score: { started_at: '2026-11-04T10:05:00.000Z', finished_at: '2026-11-04T10:06:00.000Z' } },
+  });
+  const scores = [scoreTrial(split(1)), scoreTrial(split(2))];
+  assert.deepEqual(scores[0].runner_ms, { agent: 60_000, score: 60_000 });
+  assert.equal(scores[0].wall_clock_ms, 120_000);
+  const report = aggregate(scores);
+  assert.equal(report.campaign.span_ms, 360_000);
+  // 4 minutes of work over a 6-minute span. Counting start to finish would give 2.0: both trials "busy" all along.
+  assert.equal(report.campaign.effective_parallelism, 0.67);
+  assert.deepEqual(report.runner_time_s.agent, { n: 2, total: 120, p50: 60, p95: 60 });
+  assert.deepEqual(report.runner_time_s.verify, { n: 0, total: 0, p50: null, p95: null });
+  assert.match(toMarkdown(report), /effective parallelism 0\.67 \(the trials' working time over the span; installs left out\)\. Working time by runner: agent 2 run\(s\), p50 60 s, p95 60 s, 120 s in all; score 2 run\(s\)/);
+  // A trial run on one runner keeps its start-to-finish time.
+  const single = scoreTrial(record());
+  assert.equal(single.runner_ms, null);
+  assert.equal(single.wall_clock_ms, 300_000);
+  assert.doesNotMatch(toMarkdown(aggregate([single])), /Working time by runner/);
 });

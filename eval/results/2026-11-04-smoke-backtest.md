@@ -1,0 +1,99 @@
+# Smoke runs replayed on the history, 4 November 2026
+
+`node eval/smoke.ts backtest`, on the 14 campaigns of the history, with no model call. Five agent versions follow one another: the writer as it was (pilots and A), B, C, D and D clean. That gives four changes of version.
+
+For each change:
+- the smoke selection is made from the campaigns that started before the new version, as it would have been on that day;
+- the smoke run is replayed with the new version's own trials on the selected tickets;
+- the "full run" is everything the new version's campaigns ran;
+- a ticket is "worse" when its success rate fell against the latest earlier version that ran it with the same corpus.
+
+## With the policy's 6 tickets
+
+| Version (after) | Smoke selection | Worse in the full run | Caught | Better | Caught | Cost smoke / full |
+|---|---|---|---|---|---|---|
+| B (after the writer as it was) | EVAL-9 EVAL-10 EVAL-2 EVAL-4 EVAL-5 EVAL-1 | none | – | EVAL-1 EVAL-2 EVAL-11 EVAL-12 EVAL-15 | 2/5 | $1.28 / $4.16 |
+| C (after B) | EVAL-9 EVAL-10 EVAL-4 EVAL-5 EVAL-8 EVAL-6 | EVAL-1 EVAL-8 | 1/2 | EVAL-2 EVAL-4 EVAL-5 EVAL-14 EVAL-15 | 2/5 | $1.89 / $6.11 |
+| D (after C) | EVAL-9 EVAL-10 EVAL-1 EVAL-8 EVAL-13 EVAL-12 | none | – | EVAL-1 EVAL-8 | 2/2 | $1.85 / $5.17 |
+| D clean (after D) | EVAL-9 EVAL-10 EVAL-1 EVAL-8 EVAL-13 EVAL-12 | EVAL-1 EVAL-8 | 2/2 | EVAL-13 | 1/1 | $2.04 / $5.45 |
+
+- **Catch:** 3 of the 4 tickets that got worse; 7 of the 13 that got better.
+- **Regressions:** no ticket regressed in the strict sense (every trial passing before, every trial failing after), so the backtest cannot tell how well the selection catches one.
+- **Cost:** $7.06 for the smoke runs, $20.88 for the full runs (34%), 73 trials against 194.
+- **The miss:** EVAL-1 when C followed B. Before C, EVAL-1 had failed every trial of the pilots (0/6), then passed every trial of B (3/3): stable in each version, and better, so no signal pointed to it. C passed it once in 3 trials.
+- **What came back:** EVAL-1 and EVAL-8, worse with C and with D clean, are the two tickets the selection now picks for their regressions. The current selection is EVAL-9, EVAL-10, EVAL-1, EVAL-8, EVAL-12 and EVAL-13.
+
+## The size
+
+| Size | Worse tickets caught | Cost of the smoke runs |
+|---|---|---|
+| 4 | 1/4 | 22% of the full runs |
+| 5 | 2/4 | 28% |
+| 6 | 3/4 | 34% |
+| 7 | 3/4 | 40% |
+
+The policy's size went from 5, the first hypothesis, to 6: on this history, the sixth ticket catches one more worse ticket, and the seventh catches none.
+
+## The first smoke run
+
+QA eval run 41793345183 (run 30) ran with `tickets: smoke` on 4 November: the agent of D clean, 3 trials each, on the six tickets above. It is in the history as "smoke, run 30".
+
+| Ticket | Picked as | D clean (before) | Smoke run |
+|---|---|---|---|
+| EVAL-9 | critical | 3/3 | 3/3 |
+| EVAL-10 | critical | 3/3 | 3/3 |
+| EVAL-1 | kind, regressed, unstable | 1/3 | 3/3 |
+| EVAL-8 | regressed, unstable | 2/3 | 3/3 |
+| EVAL-12 | rotation | 3/3 | 3/3 |
+| EVAL-13 | rotation | 3/3 | 3/3 |
+
+- **Results:**
+  - 18 of 18 trials succeeded, and 27 of 27 bugs were detected, with no false positive;
+  - the verifier was right in 15 of 15 runs on the reference and on the bug;
+  - $1.89 in all, $0.105 per trial.
+- **Release decision** against D clean, under the rules at the run's commit: accepted. It is the same agent as the baseline, so this says that the smoke run found no problem, not that a new version can be released.
+- **Rotation:** EVAL-12 and EVAL-13 ran, so the next selection takes EVAL-14 and EVAL-15 in their place. The four other tickets stay: the critical ones, and EVAL-1 and EVAL-8 for their earlier regressions.
+- **Backtest:** unchanged, since a version's full run leaves out its smoke runs.
+
+## The second smoke run, with adaptive trials
+
+QA eval run 41822486138 (run 32) ran with `tickets: smoke` and `trials: adaptive` on 4 November: the agent of D clean again, on the six tickets the history then gave. It is in the history as "smoke, run 32".
+
+| Ticket | Picked as | Trials | D clean (before) | Smoke run |
+|---|---|---|---|---|
+| EVAL-9 | critical | 5 | 3/3 | 5/5 |
+| EVAL-10 | critical | 5 | 3/3 | 5/5 |
+| EVAL-1 | kind, regressed, unstable | 5 | 1/3 | 1/5 |
+| EVAL-8 | regressed, unstable | 5 | 2/3 | 4/5 |
+| EVAL-14 | rotation | 2 | 3/3 | 2/2 |
+| EVAL-15 | rotation | 2 | 3/3 | 2/2 |
+
+- **Trials:** `eval/trials-policy.json` gave 5 to the critical and risky tickets and 2 to the stable ones: 24 trials instead of 18. The plan estimated $2.55; the run cost $2.38 in all, $0.099 per trial.
+- **Results:**
+  - 19 of 24 trials succeeded, and 28 of 33 bugs were detected;
+  - EVAL-1 failed 4 times out of 5 on the same bug, `discount-includes-shipping`, detected once;
+  - one trial of EVAL-8 had a false positive;
+  - the verifier passed the reference in 18 of 19 runs and failed the bug in 15 of 19.
+- **Release decision** against D clean, under the rules at the run's commit: review. One rule did not pass, `unstable_worse`:
+  - EVAL-1, 1/3 → 1/5;
+  - its bug `discount-includes-shipping`, 2/3 → 1/5;
+  - EVAL-8's bug `bar-hidden-on-phones`, 3/3 → 4/5.
+
+  It is the same agent as the baseline, so these are differences between two measurements of one agent, which the decision neither confirms nor rules out. It asks for a rerun of EVAL-1 and EVAL-8 with 3 trials. `enough_trials` passed: EVAL-14 and EVAL-15 ran 2 trials each, but they are not critical and their outcome did not change.
+- **Rotation:** EVAL-14 and EVAL-15 ran, so the next selection takes EVAL-16 and EVAL-2.
+- **Backtest:** unchanged.
+- **Follow-up, run 33:** EVAL-1 and EVAL-8 again, 3 trials each, in the history as "follow-up of smoke run 32, run 33".
+  - EVAL-8 passed 3/3. EVAL-1 failed 3/3, with `discount-includes-shipping` missed each time.
+  - Validated with run 32 as one candidate, the decision stays review: EVAL-1 at 1/3 → 1/8, `discount-includes-shipping` at 2/3 → 1/8, `bar-hidden-on-phones` at 3/3 → 7/8.
+  - It first asked for yet another rerun of both tickets. Since then, a ticket gets one follow-up, and the next step is a human review.
+  - That review is [2026-11-04-eval-1-ac-1.md](2026-11-04-eval-1-ac-1.md): the misses test a cart where shipping is free, on which the bug cannot show.
+- **Run 31**, the same campaign launched first, is not in the history:
+  - the API credit ran out halfway, so 12 of its 24 trials and every verifier run ended with an API error;
+  - GitHub never started 4 of its scoring jobs, and their trials were assembled without scores. That is why the history now records such a trial as a `scoring_error`, left out of comparisons like an agent error.
+
+## Limits
+
+- 4 changes of version and 4 tickets that got worse, each by one or two trials of three: these are differences the same agent also shows between two campaigns (see [2026-11-04-paired-comparisons.md](2026-11-04-paired-comparisons.md)). The backtest measures how well the selection follows them, not how well it catches a real regression, which the history has none of.
+- The replay uses the full run's own trials on the selected tickets: a real smoke run would have drawn other trials.
+- The "full runs" are what each version's campaigns ran. B's regression check lost 21 of its 30 trials to the spend limit, so B's data on EVAL-1 to EVAL-10 is partial.
+- The rotation only moves when smoke runs are added to the history (`eval/history`, see its README). Without that, every smoke run picks the same tickets.

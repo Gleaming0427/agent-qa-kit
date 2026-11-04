@@ -1,0 +1,596 @@
+{
+  "schema_version": 1,
+  "repository": "Gleaming0427/agent-qa-kit",
+  "about": "The campaigns of eval/results and those run since. The first 13 come from the reports of the recheck run 41785127300, which scored every earlier campaign again with the code of efa197e, from its trial artifacts and with no model call. It replaced the reports of the first recheck (run 41615412529, code of c84386e): same metrics, with the tokens added, and the scorer of the campaigns run since. Each source file is the recheck-<run>.json of that run's artifact, whose zip matches the digest GitHub records for it. Run metadata comes from the GitHub API (workflow runs); labels and notes come from the documents in eval/results. Campaigns run since come from their own run's eval-report.json, scored by that run, with the workflow inputs of its dispatch.",
+  "campaigns": [
+    {
+      "run_id": 41494361776,
+      "run_number": 6,
+      "branch": "main",
+      "started_at": "2026-11-02T17:46:50Z",
+      "commit": "3b23182f64898fdb852422f695b6e475f0d2a3c3",
+      "label": "Pilot",
+      "role": "campaign",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [
+        "sandbox-placeholders"
+      ],
+      "source": {
+        "file": "sources/recheck-41494361776.json",
+        "sha256": "ffecf42fd069ff842eba771298867565c550e7291716b9ebd04ad74cdd27f73f",
+        "artifact": {
+          "id": 13300389184,
+          "name": "recheck-41494361776",
+          "digest": "sha256:1e50ea4648ed2e628215bf086918834f305ce443c32e8ff3d6de4ad14d1f875c"
+        }
+      },
+      "doc": "eval/results/2026-11-02-pilot.md",
+      "notes": [
+        "Four phase 2 runs (EVAL-10, trials 2 and 3) ended with the API error \"Credit balance is too low\".",
+        "Subagent transcripts were not kept in this campaign: the guard count is a lower bound for 5 trials."
+      ]
+    },
+    {
+      "run_id": 41510675823,
+      "run_number": 10,
+      "branch": "main",
+      "started_at": "2026-11-02T19:31:11Z",
+      "commit": "643f28237ec08ae79652e775b60fd816318df9a0",
+      "label": "Pilot 2, control trial",
+      "role": "control",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/recheck-41510675823.json",
+        "sha256": "ade01542e52d98909dd246b73eb08f2d4fafe9ce04e5af3e340f160816f44b42",
+        "artifact": {
+          "id": 13300971744,
+          "name": "recheck-41510675823",
+          "digest": "sha256:4b09ebe4a0fbd54f3ed839c3bc4c5e4d5a988f8cb97252d85b71378532b34600"
+        }
+      },
+      "doc": "eval/results/2026-11-02-pilot-2.md",
+      "notes": [
+        "One trial run to check the measurement code before the campaign; not part of its figures."
+      ]
+    },
+    {
+      "run_id": 41511327155,
+      "run_number": 11,
+      "branch": "main",
+      "started_at": "2026-11-02T19:35:20Z",
+      "commit": "643f28237ec08ae79652e775b60fd816318df9a0",
+      "label": "Pilot 2",
+      "role": "campaign",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/recheck-41511327155.json",
+        "sha256": "ab2fa5239ddb9a825799ad1e8251dbc8b127cf8c2b29c1a1db263435c7a1a0a8",
+        "artifact": {
+          "id": 13300054130,
+          "name": "recheck-41511327155",
+          "digest": "sha256:cb38fccfc43ca5a5b719837027e1108f26e3750d4047e7ae615064c68e39a707"
+        }
+      },
+      "doc": "eval/results/2026-11-02-pilot-2.md",
+      "notes": []
+    },
+    {
+      "run_id": 41529883599,
+      "run_number": 13,
+      "branch": "main",
+      "started_at": "2026-11-02T21:36:27Z",
+      "commit": "cd4121a64234e6e4dd587fa5cd736cbda5c80da8",
+      "label": "A",
+      "role": "campaign",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/recheck-41529883599.json",
+        "sha256": "59c5beea8500bfd3a0b5f8282b00ab35e2e428db65dab98e77b6013f9d0e31cd",
+        "artifact": {
+          "id": 13301301078,
+          "name": "recheck-41529883599",
+          "digest": "sha256:cde8c18b0088d806d8fa86c8aa99c83723012082245aebb2dbd5e38ea3a5f795"
+        }
+      },
+      "doc": "eval/results/2026-11-02-writer-partitions.md",
+      "notes": [
+        "The writer as it was, on EVAL-11 to EVAL-16: the reference arm of B and C."
+      ]
+    },
+    {
+      "run_id": 41529927864,
+      "run_number": 14,
+      "branch": "claude/wizardly-hopper-uofb02",
+      "started_at": "2026-11-02T21:36:44Z",
+      "commit": "5b702b6e18760907bc423217c94276bdfdc93883",
+      "label": "B",
+      "role": "campaign",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/recheck-41529927864.json",
+        "sha256": "6dd09ba9f9c46681a8e2ee35bf6310ae7c66f73ec82cd12bd6ea8e8fdd08fc9c",
+        "artifact": {
+          "id": 13301266360,
+          "name": "recheck-41529927864",
+          "digest": "sha256:45cf82ed9d6f4e5ce17125cd05f3586830b3704be18b2a96652b48f1bb628d04"
+        }
+      },
+      "doc": "eval/results/2026-11-02-writer-partitions.md",
+      "notes": []
+    },
+    {
+      "run_id": 41531765991,
+      "run_number": 15,
+      "branch": "claude/wizardly-hopper-uofb02",
+      "started_at": "2026-11-02T21:48:57Z",
+      "commit": "5b702b6e18760907bc423217c94276bdfdc93883",
+      "label": "B, regression check",
+      "role": "campaign",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/recheck-41531765991.json",
+        "sha256": "122215472e21902464be7570ed85d77d994d05c040469f0c9b9e9f2f04b6d071",
+        "artifact": {
+          "id": 13300846487,
+          "name": "recheck-41531765991",
+          "digest": "sha256:01393395d7e39621ad1650c51a283321fb792e978b42424f6e3358530be60b2e"
+        }
+      },
+      "doc": "eval/results/2026-11-02-writer-partitions.md",
+      "notes": [
+        "The organization's spend limit stopped the campaign: the trials with an agent error measure that, not the agent."
+      ]
+    },
+    {
+      "run_id": 41539064574,
+      "run_number": 16,
+      "branch": "claude/wizardly-hopper-uofb02",
+      "started_at": "2026-11-02T22:39:09Z",
+      "commit": "da86b17cc277835647fce7c8426c34a571f8d620",
+      "label": "C",
+      "role": "campaign",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/recheck-41539064574.json",
+        "sha256": "a801d730d346f066cec0b2b32c2ca810fcbd41ff3dc9f858780a065443b608ed",
+        "artifact": {
+          "id": 13300901423,
+          "name": "recheck-41539064574",
+          "digest": "sha256:7f4bdc95681dbc5db45cc36822b507f96accf23a2aeb04d2a1df23912b5cf936"
+        }
+      },
+      "doc": "eval/results/2026-11-02-writer-partitions.md",
+      "notes": []
+    },
+    {
+      "run_id": 41539102400,
+      "run_number": 17,
+      "branch": "claude/wizardly-hopper-uofb02",
+      "started_at": "2026-11-02T22:39:27Z",
+      "commit": "da86b17cc277835647fce7c8426c34a571f8d620",
+      "label": "C, regression check",
+      "role": "campaign",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/recheck-41539102400.json",
+        "sha256": "7381e482462044ae14f34c864c78ea92a831064a97879a1178f86c3b440e65d3",
+        "artifact": {
+          "id": 13300283366,
+          "name": "recheck-41539102400",
+          "digest": "sha256:27618c1d13d22e339f555658ec3379cd1193ca5a81590f1fb10db3578c5f2f3d"
+        }
+      },
+      "doc": "eval/results/2026-11-02-writer-partitions.md",
+      "notes": []
+    },
+    {
+      "run_id": 41596586107,
+      "run_number": 18,
+      "branch": "claude/wizardly-hopper-uofb02",
+      "started_at": "2026-11-03T07:28:54Z",
+      "commit": "e2098d5381aff1b1852408f81851545f6c9ac2b6",
+      "label": "D, control trial",
+      "role": "control",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/recheck-41596586107.json",
+        "sha256": "f62c8b9d8ff1cb9d51a8dff6acca63bed667517c72767921db71e6e6449b38c8",
+        "artifact": {
+          "id": 13301226313,
+          "name": "recheck-41596586107",
+          "digest": "sha256:5fcf2d04339dc62375977df9a3e90a0a0ca732d50e9e4c8a8cdc622d15f4f505"
+        }
+      },
+      "doc": "eval/results/2026-11-03-glob-grep.md",
+      "notes": [
+        "One trial run before the campaign; not part of its figures."
+      ]
+    },
+    {
+      "run_id": 41597047860,
+      "run_number": 19,
+      "branch": "claude/wizardly-hopper-uofb02",
+      "started_at": "2026-11-03T07:33:00Z",
+      "commit": "e2098d5381aff1b1852408f81851545f6c9ac2b6",
+      "label": "D",
+      "role": "campaign",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/recheck-41597047860.json",
+        "sha256": "e65782312c1772bf795812d22130de7e1ceb3c29e4f2d6163014cdbe2afb98fe",
+        "artifact": {
+          "id": 13300618621,
+          "name": "recheck-41597047860",
+          "digest": "sha256:df526f5a540863ada6ff43cc3a15b55f8908449675d2bfe50eb9e13bfd05819f"
+        }
+      },
+      "doc": "eval/results/2026-11-03-glob-grep.md",
+      "notes": []
+    },
+    {
+      "run_id": 41597084921,
+      "run_number": 20,
+      "branch": "claude/wizardly-hopper-uofb02",
+      "started_at": "2026-11-03T07:33:20Z",
+      "commit": "e2098d5381aff1b1852408f81851545f6c9ac2b6",
+      "label": "D, regression check",
+      "role": "campaign",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/recheck-41597084921.json",
+        "sha256": "74b3b3cd18c197118e7d358bba040b8a22d046e62fa401a4c1087f172c423fa3",
+        "artifact": {
+          "id": 13300424106,
+          "name": "recheck-41597084921",
+          "digest": "sha256:8ccd46baecae78560d60bd91002a60a01f97d975ff758b2403b97cdb10bec114"
+        }
+      },
+      "doc": "eval/results/2026-11-03-glob-grep.md",
+      "notes": []
+    },
+    {
+      "run_id": 41605000003,
+      "run_number": 22,
+      "branch": "claude/vigilant-hopper-lyilde",
+      "started_at": "2026-11-03T08:40:15Z",
+      "commit": "15a1dd3c7d1a6572acc78f52eb03eeca0a218b6a",
+      "label": "D, clean",
+      "role": "campaign",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/recheck-41605000003.json",
+        "sha256": "80bc9fcd9af8acf9b06280a8c10e440e8b081965c7bee8f85eaa9cb0576ff09a",
+        "artifact": {
+          "id": 13300922121,
+          "name": "recheck-41605000003",
+          "digest": "sha256:47383d9d54e09831119cde82c09b9c63af1e68afbc6ad3aab9155dc455c246a1"
+        }
+      },
+      "doc": "eval/results/2026-11-03-clean-campaign.md",
+      "notes": []
+    },
+    {
+      "run_id": 41605005317,
+      "run_number": 23,
+      "branch": "claude/vigilant-hopper-lyilde",
+      "started_at": "2026-11-03T08:40:17Z",
+      "commit": "15a1dd3c7d1a6572acc78f52eb03eeca0a218b6a",
+      "label": "D, clean regression check",
+      "role": "campaign",
+      "scoring": {
+        "kind": "recomputed",
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/recheck-41605005317.json",
+        "sha256": "395f2b4961f54e9aae504411d92b185d28e4475b96072cd39d560dcf60a92122",
+        "artifact": {
+          "id": 13301091726,
+          "name": "recheck-41605005317",
+          "digest": "sha256:f420fef2cf567762c1a6a1f0bcadd7bef6ad79bef36e109380409e2ad43461a1"
+        }
+      },
+      "doc": "eval/results/2026-11-03-clean-campaign.md",
+      "notes": []
+    },
+    {
+      "run_id": 41783970323,
+      "run_number": 28,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-04T06:12:14Z",
+      "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35",
+      "label": "D clean, split runners",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41783970323,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41783970323.json",
+        "sha256": "744246b61bb041e20055e0806d7fca4858ad41f57f89c16a136abbe9aae54f72",
+        "artifact": {
+          "id": 13300377358,
+          "name": "eval-report",
+          "digest": "sha256:c959d3c0ceb249d4a255f9860b8542d4657ae1d2aafb1d6125e85c3efad9ffca"
+        }
+      },
+      "doc": "eval/results/2026-11-03-history-import.md",
+      "notes": [
+        "The agent of D clean, run once on EVAL-1 and EVAL-11 to check the split runners and phase 2 on them: one trial per ticket."
+      ],
+      "inputs": {
+        "tickets": "EVAL-1 EVAL-11",
+        "trials": "1",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 41793345183,
+      "run_number": 30,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-04T07:35:34Z",
+      "commit": "4918c53bef00a5f414c6c864eeffc6204179d98f",
+      "label": "smoke, run 30",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41793345183,
+        "commit": "4918c53bef00a5f414c6c864eeffc6204179d98f"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41793345183.json",
+        "sha256": "5a2085bcf4cf7790592ef714ef423eb3c720a0de947720c892f25bc13800e4d4",
+        "artifact": {
+          "id": 13304982066,
+          "name": "eval-report",
+          "digest": "sha256:bcde570ef03fcc1ee22e38836368e2d08c66ac9f9d866125baabaaf705a9bf77"
+        }
+      },
+      "doc": "eval/results/2026-11-04-smoke-backtest.md",
+      "notes": [
+        "The first smoke run: the 6 tickets eval/smoke.ts picked from the history (EVAL-9, EVAL-10, EVAL-1, EVAL-8, EVAL-12, EVAL-13), 3 trials each, with the agent of D clean."
+      ],
+      "inputs": {
+        "tickets": "smoke",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 41822486138,
+      "run_number": 32,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-04T11:37:55Z",
+      "commit": "f63336c89ec1d09f67ba3900704be38d375272fd",
+      "label": "smoke, run 32",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41822486138,
+        "commit": "f63336c89ec1d09f67ba3900704be38d375272fd"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41822486138.json",
+        "sha256": "b724b433ace49a1a6b80a75895ca61c2afb552a9b68a64ffd5b1cf5905185fe8",
+        "artifact": {
+          "id": 13318193969,
+          "name": "eval-report",
+          "digest": "sha256:a0a60470d1e243e7576956fde7633685948ed5a4783a6daac32232441edb6ccd"
+        }
+      },
+      "doc": "eval/results/2026-11-04-smoke-backtest.md",
+      "notes": [
+        "The second smoke run, and the first with adaptive trials: the 6 tickets eval/smoke.ts picked (EVAL-9, EVAL-10, EVAL-1, EVAL-8, EVAL-14, EVAL-15), with 5, 5, 5, 5, 2 and 2 trials from eval/trials-policy.json, with the agent of D clean. Run 31, the same campaign, is left out: the API credit ran out halfway (12 of 24 trials, and every verifier run), and GitHub never started 4 of its scoring jobs."
+      ],
+      "inputs": {
+        "tickets": "smoke",
+        "trials": "adaptive",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 41825778379,
+      "run_number": 33,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-04T12:02:02Z",
+      "commit": "a2ded8ca999588c6f8616436d5aea2b4b9ce735b",
+      "label": "follow-up of smoke run 32, run 33",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41825778379,
+        "commit": "a2ded8ca999588c6f8616436d5aea2b4b9ce735b"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41825778379.json",
+        "sha256": "058533242b69437ef917d0de9c8125db3fb174a15235741f0347a23aba98b101",
+        "artifact": {
+          "id": 13319586251,
+          "name": "eval-report",
+          "digest": "sha256:97d0b372d9a6bea41a9312ad0f4b6b8e221916ba79d1effb8c11b4a09a0231ac"
+        }
+      },
+      "doc": "eval/results/2026-11-04-smoke-backtest.md",
+      "notes": [
+        "The follow-up the release decision of smoke run 32 asked for: EVAL-1 and EVAL-8, 3 trials each, with the agent of D clean. To validate with smoke run 32 as one candidate."
+      ],
+      "inputs": {
+        "tickets": "EVAL-1 EVAL-8",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 41831491679,
+      "run_number": 34,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-04T12:41:46Z",
+      "commit": "f349676c43a6989e6b931947271c1a5577668497",
+      "label": "D clean on EVAL-17, run 34",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41831491679,
+        "commit": "f349676c43a6989e6b931947271c1a5577668497"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41831491679.json",
+        "sha256": "417bdc05c1e2fe1c49eacedddce5b5996a24ce359d942c7df2df56d41b95deb1",
+        "artifact": {
+          "id": 13322139606,
+          "name": "eval-report",
+          "digest": "sha256:91c3806630f0b7f41e55deabab8529b25cc89bbff93a7b1d9272e809afb8795c"
+        }
+      },
+      "doc": "eval/results/2026-11-04-eval-1-ac-1.md",
+      "notes": [
+        "The agent of D clean on EVAL-17, the ticket written after EVAL-1's misses, before the writer's prompt changed: the reference on EVAL-17 for the next version."
+      ],
+      "inputs": {
+        "tickets": "EVAL-17",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 41834419007,
+      "run_number": 35,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-04T13:02:03Z",
+      "commit": "577f51c49db97b0f58422f81f284bdc907f4224d",
+      "label": "rule 5, run 35",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41834419007,
+        "commit": "577f51c49db97b0f58422f81f284bdc907f4224d"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41834419007.json",
+        "sha256": "446030c7111c9f89de31ac1c294793e83d7c9d36784da3fb92b387b651b47634",
+        "artifact": {
+          "id": 13329096034,
+          "name": "eval-report",
+          "digest": "sha256:b3e820e4624ead09d2da8cc4de4bc4168809cda38036a0cc67a744f7bf8e6303"
+        }
+      },
+      "doc": "eval/results/2026-11-04-rule-5.md",
+      "notes": [
+        "The first campaign of the writer's prompt with the new rule 5 (one case per plausible wrong implementation), on every ticket, EVAL-17 included."
+      ],
+      "inputs": {
+        "tickets": "all",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 41841751651,
+      "run_number": 36,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-04T13:50:17Z",
+      "commit": "cf60d9378519bdfa2b1f2b4c7e61907417edc1a9",
+      "label": "follow-up of rule 5, run 36",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41841751651,
+        "commit": "cf60d9378519bdfa2b1f2b4c7e61907417edc1a9"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41841751651.json",
+        "sha256": "429b9816117cc28f6cc0368cfc2a67004ecd395ab591460bbd93c90a4c88cabb",
+        "artifact": {
+          "id": 13328808897,
+          "name": "eval-report",
+          "digest": "sha256:9c15d97826c09195b85e1ca384864bd28b1f21fff6ed895c8ebc9e151d920e01"
+        }
+      },
+      "doc": "eval/results/2026-11-04-rule-5.md",
+      "notes": [
+        "The follow-up run 35's release decision asked for: EVAL-8, EVAL-11, EVAL-12 and EVAL-17, 3 trials each, same agent as run 35. The API credit ran out at 13:52 UTC: 7 of its 12 trials (EVAL-12 and EVAL-17 entirely, one of EVAL-8) and the verifier runs after that ended with an API error."
+      ],
+      "inputs": {
+        "tickets": "EVAL-8 EVAL-11 EVAL-12 EVAL-17",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
+    }
+  ]
+}

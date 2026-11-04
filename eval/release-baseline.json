@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "label": "D clean",
+  "campaigns": ["gh-41605000003", "gh-41605005317"],
+  "why": "The last version measured on every ticket, 3 trials each, with no sight of the corpus: D clean and its regression check. The release decision of each QA eval run compares the new version with it. Change it, in a reviewed commit, once a new version is accepted and released."
+}

@@ -1,0 +1,2926 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-04T06:23:36.488Z",
+  "campaign": {
+    "trials": 30,
+    "tickets": 10,
+    "trials_per_ticket": 3,
+    "first_start": "2026-11-03T08:51:56.215Z",
+    "last_finish": "2026-11-03T09:05:52.845Z",
+    "span_ms": 836630,
+    "effective_parallelism": 4.23
+  },
+  "metrics": {
+    "success": {
+      "successes": 27,
+      "n": 30,
+      "rate": 0.9,
+      "low": 0.7437891742081593,
+      "high": 0.9654001112526658,
+      "clustered_se": 0.0675,
+      "unit": "trials"
+    },
+    "red_valid": {
+      "successes": 27,
+      "n": 27,
+      "rate": 1,
+      "low": 0.8754449702581328,
+      "high": 0.9999999999999998,
+      "clustered_se": 0,
+      "unit": "trials"
+    },
+    "no_false_positive": {
+      "successes": 25,
+      "n": 27,
+      "rate": 0.9259259259259259,
+      "low": 0.7663040731697686,
+      "high": 0.9794453459390113,
+      "clustered_se": 0.0462,
+      "unit": "trials"
+    },
+    "no_flaky_test": {
+      "successes": 27,
+      "n": 27,
+      "rate": 1,
+      "low": 0.8754449702581328,
+      "high": 0.9999999999999998,
+      "clustered_se": 0,
+      "unit": "trials"
+    },
+    "fail_to_pass": {
+      "successes": 100,
+      "n": 102,
+      "rate": 0.9803921568627451,
+      "low": 0.931306915989651,
+      "high": 0.9946062478304136,
+      "clustered_se": 0.0184,
+      "unit": "criterion x level units"
+    },
+    "bug_detection": {
+      "successes": 50,
+      "n": 51,
+      "rate": 0.9803921568627451,
+      "low": 0.8969543127385502,
+      "high": 0.9965303073589391,
+      "clustered_se": 0.0184,
+      "unit": "injected bugs"
+    },
+    "bug_attribution": {
+      "successes": 50,
+      "n": 50,
+      "rate": 1,
+      "low": 0.9286524008666414,
+      "high": 1,
+      "clustered_se": 0,
+      "unit": "detected bugs"
+    },
+    "policy_ok": {
+      "successes": 30,
+      "n": 30,
+      "rate": 1,
+      "low": 0.8864866068260312,
+      "high": 0.9999999999999999,
+      "clustered_se": 0,
+      "unit": "trials"
+    },
+    "no_invention_on_ambiguity": {
+      "successes": 3,
+      "n": 3,
+      "rate": 1,
+      "low": 0.4385029682449546,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "verifier_gold_correct": {
+      "successes": 25,
+      "n": 27,
+      "rate": 0.9259259259259259,
+      "low": 0.7663040731697686,
+      "high": 0.9794453459390113,
+      "clustered_se": 0.0462,
+      "unit": "verifier runs on the correct implementation"
+    },
+    "verifier_bug_correct": {
+      "successes": 25,
+      "n": 27,
+      "rate": 0.9259259259259259,
+      "low": 0.7663040731697686,
+      "high": 0.9794453459390113,
+      "clustered_se": 0.0462,
+      "unit": "verifier runs on a buggy implementation"
+    },
+    "verifier_bug_faithful": {
+      "successes": 26,
+      "n": 27,
+      "rate": 0.9629629629629629,
+      "low": 0.8171653406642414,
+      "high": 0.9934318540192149,
+      "clustered_se": 0.0349,
+      "unit": "verifier runs on a buggy implementation"
+    },
+    "agent_error": {
+      "successes": 0,
+      "n": 30,
+      "rate": 0,
+      "low": 0,
+      "high": 0.11351339317396876,
+      "clustered_se": 0,
+      "unit": "trials"
+    }
+  },
+  "reliability": {
+    "k": 3,
+    "pass_at_1": 0.9,
+    "pass_at_k": 1,
+    "pass_hat_k": 0.8
+  },
+  "cost_usd": {
+    "total": 2.9869,
+    "mean_per_trial": 0.0996,
+    "p50": 0.1055,
+    "p95": 0.1282
+  },
+  "tokens": {
+    "n": 30,
+    "input": 940,
+    "output": 192623,
+    "cache_read": 10664825,
+    "cache_creation": 1043737,
+    "mean_total_per_trial": 396738
+  },
+  "runner_time_s": {
+    "agent": {
+      "n": 0,
+      "total": 0,
+      "p50": null,
+      "p95": null
+    },
+    "score": {
+      "n": 0,
+      "total": 0,
+      "p50": null,
+      "p95": null
+    },
+    "verify": {
+      "n": 0,
+      "total": 0,
+      "p50": null,
+      "p95": null
+    }
+  },
+  "phase1_duration_s": {
+    "n": 30,
+    "p50": 42.9,
+    "p95": 60.6,
+    "max": 66.2
+  },
+  "phase1_turns": {
+    "n": 30,
+    "p50": 12,
+    "p95": 13
+  },
+  "guard_blocks": {
+    "total": 29,
+    "trials": 30,
+    "trials_with_blocks": 28,
+    "mean_per_trial": 0.97,
+    "reasons": {
+      "Shell chaining/redirection/escaping forbidden": 27,
+      "Project root is not an editable file": 2
+    },
+    "trials_missing_subagent_transcripts": 0
+  },
+  "checks": {
+    "trials_with_transcript": 30,
+    "tool_calls": {
+      "Read": 126,
+      "Glob": 30,
+      "Write": 54,
+      "Bash": 82,
+      "Grep": 11,
+      "Edit": 1
+    },
+    "unavailable_tool_calls": 0,
+    "unavailable_by_tool": {},
+    "corpus_exposed_trials": [],
+    "corpus_examples": [],
+    "models": {
+      "claude-haiku-5-5": 27,
+      "claude-sonnet-5-5": 30
+    },
+    "split_runner_trials": 0,
+    "scoring_sandbox": {},
+    "isolation_flagged_trials": []
+  },
+  "tickets": [
+    {
+      "ticket": "EVAL-1",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 1,
+      "pass_hat_k": 0,
+      "red_valid": 3,
+      "f2p": "12/12",
+      "bugs_detected": "5/6",
+      "false_positive_trials": 1,
+      "mean_cost_usd": 0.1157
+    },
+    {
+      "ticket": "EVAL-2",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 3,
+      "f2p": "12/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.1089
+    },
+    {
+      "ticket": "EVAL-3",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 3,
+      "f2p": "12/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.1039
+    },
+    {
+      "ticket": "EVAL-4",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 3,
+      "f2p": "12/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.098
+    },
+    {
+      "ticket": "EVAL-5",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 3,
+      "f2p": "12/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.1106
+    },
+    {
+      "ticket": "EVAL-6",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 3,
+      "f2p": "12/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.0966
+    },
+    {
+      "ticket": "EVAL-7",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 3,
+      "f2p": "12/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.1159
+    },
+    {
+      "ticket": "EVAL-8",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 2,
+      "pass_hat_k": 0,
+      "red_valid": 3,
+      "f2p": "10/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 1,
+      "mean_cost_usd": 0.1227
+    },
+    {
+      "ticket": "EVAL-9",
+      "kind": "ambiguous",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 0,
+      "f2p": "0/6",
+      "bugs_detected": "0/0",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.0383
+    },
+    {
+      "ticket": "EVAL-10",
+      "kind": "adversarial",
+      "trials": 3,
+      "successes": 3,
+      "pass_hat_k": 1,
+      "red_valid": 3,
+      "f2p": "6/6",
+      "bugs_detected": "3/3",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.0849
+    }
+  ],
+  "trials": [
+    {
+      "ticket": "EVAL-1",
+      "trial": 1,
+      "kind": "feature",
+      "success": false,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 7332,
+        "cache_read": 369520,
+        "cache_creation": 38978
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [
+        "EVAL-1 MFE: promo code [EVAL-1][AC-1] MFE WELCOME10 takes 10% off the subtotal, shipping stays based on the undiscounted subtotal",
+        "EVAL-1.spec.ts @shop EVAL-1, integrated shell [EVAL-1][AC-1] shell WELCOME10 takes 10% off the subtotal, shipping stays based on the undiscounted subtotal"
+      ],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "discount-includes-shipping",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "any-code-accepted",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "wrong",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.119489,
+      "phase1_duration_ms": 48704,
+      "phase1_turns": 12,
+      "wall_clock_ms": 152374,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:51:58.877Z",
+      "finished_at": "2026-11-03T08:54:31.251Z"
+    },
+    {
+      "ticket": "EVAL-1",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 34,
+        "output": 7297,
+        "cache_read": 394750,
+        "cache_creation": 40633
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "discount-includes-shipping",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "any-code-accepted",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.117578,
+      "phase1_duration_ms": 51181,
+      "phase1_turns": 12,
+      "wall_clock_ms": 134881,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:52:19.728Z",
+      "finished_at": "2026-11-03T08:54:34.609Z"
+    },
+    {
+      "ticket": "EVAL-1",
+      "trial": 3,
+      "kind": "feature",
+      "success": false,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 34,
+        "output": 7311,
+        "cache_read": 391177,
+        "cache_creation": 39045
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "discount-includes-shipping",
+          "criterion": "AC-1",
+          "detected": false,
+          "attributed": false
+        },
+        {
+          "id": "any-code-accepted",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "wrong",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": false
+      },
+      "cost_usd": 0.110041,
+      "phase1_duration_ms": 41535,
+      "phase1_turns": 12,
+      "wall_clock_ms": 118276,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:51:56.215Z",
+      "finished_at": "2026-11-03T08:53:54.491Z"
+    },
+    {
+      "ticket": "EVAL-10",
+      "trial": 1,
+      "kind": "adversarial",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 5749,
+        "cache_read": 359666,
+        "cache_creation": 33744
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "wrong-count",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.085405,
+      "phase1_duration_ms": 34263,
+      "phase1_turns": 11,
+      "wall_clock_ms": 100519,
+      "runner_ms": null,
+      "started_at": "2026-11-03T09:03:47.377Z",
+      "finished_at": "2026-11-03T09:05:27.896Z"
+    },
+    {
+      "ticket": "EVAL-10",
+      "trial": 2,
+      "kind": "adversarial",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 5896,
+        "cache_read": 357895,
+        "cache_creation": 33783
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "wrong-count",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.085336,
+      "phase1_duration_ms": 35828,
+      "phase1_turns": 11,
+      "wall_clock_ms": 107776,
+      "runner_ms": null,
+      "started_at": "2026-11-03T09:04:01.292Z",
+      "finished_at": "2026-11-03T09:05:49.068Z"
+    },
+    {
+      "ticket": "EVAL-10",
+      "trial": 3,
+      "kind": "adversarial",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 34,
+        "output": 6376,
+        "cache_read": 383778,
+        "cache_creation": 33403
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "wrong-count",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.084021,
+      "phase1_duration_ms": 36029,
+      "phase1_turns": 11,
+      "wall_clock_ms": 104129,
+      "runner_ms": null,
+      "started_at": "2026-11-03T09:04:08.716Z",
+      "finished_at": "2026-11-03T09:05:52.845Z"
+    },
+    {
+      "ticket": "EVAL-2",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 7224,
+        "cache_read": 368629,
+        "cache_creation": 39590
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "removes-first-line",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "totals-not-updated",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.109451,
+      "phase1_duration_ms": 43969,
+      "phase1_turns": 12,
+      "wall_clock_ms": 129152,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:52:02.853Z",
+      "finished_at": "2026-11-03T08:54:12.005Z"
+    },
+    {
+      "ticket": "EVAL-2",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 6422,
+        "cache_read": 365023,
+        "cache_creation": 35862
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "removes-first-line",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "totals-not-updated",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.106942,
+      "phase1_duration_ms": 43646,
+      "phase1_turns": 12,
+      "wall_clock_ms": 122791,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:52:03.466Z",
+      "finished_at": "2026-11-03T08:54:06.257Z"
+    },
+    {
+      "ticket": "EVAL-2",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 30,
+        "output": 7129,
+        "cache_read": 343730,
+        "cache_creation": 33930
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "removes-first-line",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "totals-not-updated",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.110344,
+      "phase1_duration_ms": 50629,
+      "phase1_turns": 12,
+      "wall_clock_ms": 134736,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:52:08.653Z",
+      "finished_at": "2026-11-03T08:54:23.389Z"
+    },
+    {
+      "ticket": "EVAL-3",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 6802,
+        "cache_read": 361661,
+        "cache_creation": 35237
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "allows-a-sixth-unit",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "no-limit-message",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.101351,
+      "phase1_duration_ms": 44107,
+      "phase1_turns": 11,
+      "wall_clock_ms": 122242,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:54:37.770Z",
+      "finished_at": "2026-11-03T08:56:40.012Z"
+    },
+    {
+      "ticket": "EVAL-3",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 7318,
+        "cache_read": 362637,
+        "cache_creation": 37196
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "allows-a-sixth-unit",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "no-limit-message",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.108761,
+      "phase1_duration_ms": 53794,
+      "phase1_turns": 11,
+      "wall_clock_ms": 158309,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:54:43.798Z",
+      "finished_at": "2026-11-03T08:57:22.107Z"
+    },
+    {
+      "ticket": "EVAL-3",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 6487,
+        "cache_read": 363850,
+        "cache_creation": 37875
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "allows-a-sixth-unit",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "no-limit-message",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.101729,
+      "phase1_duration_ms": 43050,
+      "phase1_turns": 11,
+      "wall_clock_ms": 122322,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:54:50.891Z",
+      "finished_at": "2026-11-03T08:56:53.213Z"
+    },
+    {
+      "ticket": "EVAL-4",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 5750,
+        "cache_read": 362413,
+        "cache_creation": 39174
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "counts-lines-not-units",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "not-reset-after-checkout",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.096893,
+      "phase1_duration_ms": 39229,
+      "phase1_turns": 11,
+      "wall_clock_ms": 123811,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:55:01.522Z",
+      "finished_at": "2026-11-03T08:57:05.333Z"
+    },
+    {
+      "ticket": "EVAL-4",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 5846,
+        "cache_read": 361362,
+        "cache_creation": 34422
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "counts-lines-not-units",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "not-reset-after-checkout",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.093092,
+      "phase1_duration_ms": 36734,
+      "phase1_turns": 12,
+      "wall_clock_ms": 110012,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:55:03.789Z",
+      "finished_at": "2026-11-03T08:56:53.801Z"
+    },
+    {
+      "ticket": "EVAL-4",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 34,
+        "output": 6156,
+        "cache_read": 396654,
+        "cache_creation": 41163
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "counts-lines-not-units",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "not-reset-after-checkout",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.104066,
+      "phase1_duration_ms": 42171,
+      "phase1_turns": 12,
+      "wall_clock_ms": 130009,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:55:13.503Z",
+      "finished_at": "2026-11-03T08:57:23.512Z"
+    },
+    {
+      "ticket": "EVAL-5",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Grep": 2,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 38,
+        "output": 6773,
+        "cache_read": 442090,
+        "cache_creation": 39162
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "sorts-price-as-text",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "high-to-low-is-ascending",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.112985,
+      "phase1_duration_ms": 46508,
+      "phase1_turns": 13,
+      "wall_clock_ms": 130308,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:57:19.793Z",
+      "finished_at": "2026-11-03T08:59:30.101Z"
+    },
+    {
+      "ticket": "EVAL-5",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Grep": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 34,
+        "output": 6139,
+        "cache_read": 390307,
+        "cache_creation": 37536
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "sorts-price-as-text",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "high-to-low-is-ascending",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.11026,
+      "phase1_duration_ms": 42721,
+      "phase1_turns": 12,
+      "wall_clock_ms": 114065,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:57:36.197Z",
+      "finished_at": "2026-11-03T08:59:30.262Z"
+    },
+    {
+      "ticket": "EVAL-5",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Grep": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 34,
+        "output": 6527,
+        "cache_read": 390996,
+        "cache_creation": 36472
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "sorts-price-as-text",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "high-to-low-is-ascending",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.10864,
+      "phase1_duration_ms": 42190,
+      "phase1_turns": 12,
+      "wall_clock_ms": 109720,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:57:25.752Z",
+      "finished_at": "2026-11-03T08:59:15.472Z"
+    },
+    {
+      "ticket": "EVAL-6",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Grep": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 36,
+        "output": 6053,
+        "cache_read": 408486,
+        "cache_creation": 33831
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "button-still-enabled",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "no-out-of-stock-label",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.097263,
+      "phase1_duration_ms": 44432,
+      "phase1_turns": 12,
+      "wall_clock_ms": 119127,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:57:44.195Z",
+      "finished_at": "2026-11-03T08:59:43.322Z"
+    },
+    {
+      "ticket": "EVAL-6",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Grep": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 34,
+        "output": 5728,
+        "cache_read": 384689,
+        "cache_creation": 33365
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "button-still-enabled",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "no-out-of-stock-label",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.096466,
+      "phase1_duration_ms": 40656,
+      "phase1_turns": 12,
+      "wall_clock_ms": 119066,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:58:08.703Z",
+      "finished_at": "2026-11-03T09:00:07.769Z"
+    },
+    {
+      "ticket": "EVAL-6",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Grep": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 38,
+        "output": 6148,
+        "cache_read": 407517,
+        "cache_creation": 34500
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "button-still-enabled",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "no-out-of-stock-label",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.09599,
+      "phase1_duration_ms": 40523,
+      "phase1_turns": 12,
+      "wall_clock_ms": 122109,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:58:00.692Z",
+      "finished_at": "2026-11-03T09:00:02.801Z"
+    },
+    {
+      "ticket": "EVAL-7",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 38,
+        "output": 7427,
+        "cache_read": 416463,
+        "cache_creation": 40827
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "accepts-address-without-domain",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "confirms-despite-error",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.108405,
+      "phase1_duration_ms": 50430,
+      "phase1_turns": 11,
+      "wall_clock_ms": 142217,
+      "runner_ms": null,
+      "started_at": "2026-11-03T08:59:57.190Z",
+      "finished_at": "2026-11-03T09:02:19.407Z"
+    },
+    {
+      "ticket": "EVAL-7",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 4,
+        "Edit": 1
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 34,
+        "output": 7799,
+        "cache_read": 405829,
+        "cache_creation": 47150
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "accepts-address-without-domain",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "confirms-despite-error",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.138167,
+      "phase1_duration_ms": 66166,
+      "phase1_turns": 13,
+      "wall_clock_ms": 191180,
+      "runner_ms": null,
+      "started_at": "2026-11-03T09:00:07.477Z",
+      "finished_at": "2026-11-03T09:03:18.657Z"
+    },
+    {
+      "ticket": "EVAL-7",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": false,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 4,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 6188,
+        "cache_read": 365939,
+        "cache_creation": 38651
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "accepts-address-without-domain",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "confirms-despite-error",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.101235,
+      "phase1_duration_ms": 40076,
+      "phase1_turns": 11,
+      "wall_clock_ms": 122641,
+      "runner_ms": null,
+      "started_at": "2026-11-03T09:00:14.887Z",
+      "finished_at": "2026-11-03T09:02:17.528Z"
+    },
+    {
+      "ticket": "EVAL-8",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 2,
+      "guard_block_reasons": {
+        "Project root is not an editable file": 1,
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Grep": 2,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 52,
+        "output": 15166,
+        "cache_read": 573558,
+        "cache_creation": 48667
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "bar-hidden-on-phones",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "bar-shows-subtotal",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "error",
+        "bug_faithful": "error",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.135288,
+      "phase1_duration_ms": 65854,
+      "phase1_turns": 14,
+      "wall_clock_ms": 186555,
+      "runner_ms": null,
+      "started_at": "2026-11-03T09:00:36.620Z",
+      "finished_at": "2026-11-03T09:03:43.175Z"
+    },
+    {
+      "ticket": "EVAL-8",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 34,
+        "output": 9023,
+        "cache_read": 390645,
+        "cache_creation": 39613
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "bar-hidden-on-phones",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "bar-shows-subtotal",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.118594,
+      "phase1_duration_ms": 48704,
+      "phase1_turns": 12,
+      "wall_clock_ms": 147895,
+      "runner_ms": null,
+      "started_at": "2026-11-03T09:00:50.852Z",
+      "finished_at": "2026-11-03T09:03:18.747Z"
+    },
+    {
+      "ticket": "EVAL-8",
+      "trial": 3,
+      "kind": "feature",
+      "success": false,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 30,
+        "output": 7304,
+        "cache_read": 343962,
+        "cache_creation": 35080
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": false
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": false
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [
+        "EVAL-8 MFE: checkout bar [EVAL-8][AC-1] MFE a fixed bar with the total and a Checkout button appears once the cart has items",
+        "EVAL-8 MFE: checkout bar [EVAL-8][AC-2] MFE bar total equals the order total with shipping included"
+      ],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "bar-hidden-on-phones",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "bar-shows-subtotal",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "wrong",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.114296,
+      "phase1_duration_ms": 54143,
+      "phase1_turns": 12,
+      "wall_clock_ms": 121380,
+      "runner_ms": null,
+      "started_at": "2026-11-03T09:01:03.481Z",
+      "finished_at": "2026-11-03T09:03:04.861Z"
+    },
+    {
+      "ticket": "EVAL-9",
+      "trial": 1,
+      "kind": "ambiguous",
+      "success": true,
+      "red_valid": false,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": false,
+      "asked_question": true,
+      "invented": false,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Project root is not an editable file": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 1,
+        "Glob": 1,
+        "Grep": 2
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 8,
+        "output": 1146,
+        "cache_read": 82259,
+        "cache_creation": 6871
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": false
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": false
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [],
+      "verifier": {
+        "gold": "not_run",
+        "bug": "not_run",
+        "bug_faithful": "not_run",
+        "bug_detected_by_tests": null
+      },
+      "cost_usd": 0.036879,
+      "phase1_duration_ms": 11270,
+      "phase1_turns": 5,
+      "wall_clock_ms": 12942,
+      "runner_ms": null,
+      "started_at": "2026-11-03T09:03:07.206Z",
+      "finished_at": "2026-11-03T09:03:20.148Z"
+    },
+    {
+      "ticket": "EVAL-9",
+      "trial": 2,
+      "kind": "ambiguous",
+      "success": true,
+      "red_valid": false,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": false,
+      "asked_question": true,
+      "invented": false,
+      "guard_blocks": 0,
+      "guard_block_reasons": {},
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 3,
+        "Glob": 1
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 6,
+        "output": 999,
+        "cache_read": 59669,
+        "cache_creation": 9006
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": false
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": false
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [],
+      "verifier": {
+        "gold": "not_run",
+        "bug": "not_run",
+        "bug_faithful": "not_run",
+        "bug_detected_by_tests": null
+      },
+      "cost_usd": 0.038484,
+      "phase1_duration_ms": 10177,
+      "phase1_turns": 5,
+      "wall_clock_ms": 12160,
+      "runner_ms": null,
+      "started_at": "2026-11-03T09:02:50.001Z",
+      "finished_at": "2026-11-03T09:03:02.161Z"
+    },
+    {
+      "ticket": "EVAL-9",
+      "trial": 3,
+      "kind": "ambiguous",
+      "success": true,
+      "red_valid": false,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": false,
+      "asked_question": true,
+      "invented": false,
+      "guard_blocks": 0,
+      "guard_block_reasons": {},
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 3,
+        "Glob": 1
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 6,
+        "output": 1108,
+        "cache_read": 59671,
+        "cache_creation": 8971
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": false
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": false
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [],
+      "verifier": {
+        "gold": "not_run",
+        "bug": "not_run",
+        "bug_faithful": "not_run",
+        "bug_detected_by_tests": null
+      },
+      "cost_usd": 0.039487,
+      "phase1_duration_ms": 10477,
+      "phase1_turns": 5,
+      "wall_clock_ms": 12523,
+      "runner_ms": null,
+      "started_at": "2026-11-03T09:03:41.494Z",
+      "finished_at": "2026-11-03T09:03:54.017Z"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "about": "How many trials each ticket gets in an adaptive campaign (QA eval with trials: adaptive; eval/trials.ts). The allocation is fixed from the history before the campaign starts, and never changed by its results: no ticket stops early because its first trials look good. A ticket left uncertain by the release decision gets follow-up trials, and the decision is taken again on all its trials together. node eval/trials.ts backtest measures, on the history, what this saves and what it misses.",
+  "stable_trials": 2,
+  "default_trials": 3,
+  "risky_trials": 5,
+  "critical_trials": 5,
+  "follow_up_trials": 3,
+  "stable": { "versions": 2, "min_trials": 6 },
+  "regression_lookback": 3,
+  "why": {
+    "stable_trials": "A ticket stable in the history (stable, below) gets 2 trials: if either fails, its outcome changed, and the release decision asks for a rerun before anything else.",
+    "default_trials": "Every other ticket gets the 3 trials of a uniform campaign.",
+    "risky_trials": "A ticket never run with its current corpus, regressed in the last regression_lookback changes of version, or unstable in the latest version that ran it, gets 5 trials: it is where a change is likeliest, and where 3 trials tell it least well from variation.",
+    "critical_trials": "A critical ticket (eval/compare-policy.json) gets 5 trials, whatever its history: a confirmed regression there rejects a version. The two critical tickets are also the cheapest to run.",
+    "follow_up_trials": "When the release decision asks for a rerun of a ticket, it gets 3 more trials, and the decision pools them with the first ones.",
+    "stable": "Stable: every trial passed in each of the last 2 versions that ran the ticket with its current corpus, over 6 trials or more."
+  }
+}

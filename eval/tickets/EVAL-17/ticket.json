@@ -1,0 +1,22 @@
+{
+  "ticket": "EVAL-17",
+  "kind": "feature",
+  "mfe": "shop",
+  "bugs": [
+    {
+      "id": "wrap-per-line",
+      "criterion": "AC-1",
+      "description": "Gift wrap is charged €1.00 per cart line, whatever its quantity."
+    },
+    {
+      "id": "wrap-counts-toward-free-shipping",
+      "criterion": "AC-1",
+      "description": "Shipping is decided on the subtotal plus gift wrap."
+    },
+    {
+      "id": "total-keeps-wrap",
+      "criterion": "AC-2",
+      "description": "Unchecking removes the line, but the total keeps the gift wrap amount."
+    }
+  ]
+}

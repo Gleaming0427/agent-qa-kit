@@ -1,0 +1,193 @@
+{
+  "schema": "agent-qa-kit/eval-history-campaign",
+  "schema_version": 1,
+  "id": "gh-41783970323",
+  "label": "D clean, split runners",
+  "role": "campaign",
+  "source": {
+    "kind": "github-actions",
+    "repository": "Gleaming0427/agent-qa-kit",
+    "run_id": 41783970323,
+    "run_number": 28,
+    "branch": "claude/funny-knuth-tj8ugx",
+    "started_at": "2026-11-04T06:12:14Z",
+    "url": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/41783970323"
+  },
+  "agent": {
+    "id": "43cb10d883b4",
+    "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35",
+    "writer": {
+      "prompt": "b736198cb2fd1bfb7852e239d6d736004597cdbf",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "verifier": {
+      "prompt": "a2fbee34270186216f6d1be80442a1e308dedafd",
+      "model": "haiku",
+      "effort": "low"
+    },
+    "hooks": "5db3e94994831ca47aa94f9713eb7884097b3128",
+    "settings": "a675ad2392ff99dc1472008a08af56e2ee892f18",
+    "scripts": "882a5b983db5",
+    "claude_code": "2.1.303"
+  },
+  "environment": {
+    "corpus": {
+      "EVAL-1": "9a4bff9f70ad3edb6b3bbe20c255c35d7d5f1052",
+      "EVAL-11": "6130fd14e35a02847d2e8085f6607d15d4617902"
+    },
+    "app": "aca2b6e2add49ca19aadc670b33d28708887be2d",
+    "harness": "a8c7ae8b1d5a",
+    "harness_commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+  },
+  "config": {
+    "tickets": [
+      "EVAL-1",
+      "EVAL-11"
+    ],
+    "selection": "list",
+    "trials": 2,
+    "trials_per_ticket": 1,
+    "trials_mode": "uniform",
+    "verify": true,
+    "dry_run": false,
+    "inferred": []
+  },
+  "scoring": {
+    "kind": "original",
+    "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35",
+    "scorer": "939a3d87c514",
+    "run_id": 41783970323,
+    "corrections": []
+  },
+  "provenance": {
+    "file": "sources/eval-report-41783970323.json",
+    "sha256": "744246b61bb041e20055e0806d7fca4858ad41f57f89c16a136abbe9aae54f72",
+    "artifact": {
+      "id": 13300377358,
+      "name": "eval-report",
+      "digest": "sha256:c959d3c0ceb249d4a255f9860b8542d4657ae1d2aafb1d6125e85c3efad9ffca"
+    },
+    "doc": "eval/results/2026-11-03-history-import.md"
+  },
+  "notes": [
+    "The agent of D clean, run once on EVAL-1 and EVAL-11 to check the split runners and phase 2 on them: one trial per ticket."
+  ],
+  "missing": {},
+  "observations": [
+    {
+      "key": "EVAL-1#1",
+      "ticket": "EVAL-1",
+      "kind": "feature",
+      "trial": 1,
+      "started_at": "2026-11-04T06:13:02.995Z",
+      "finished_at": "2026-11-04T06:16:56.084Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "discount-includes-shipping",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "any-code-accepted",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.181945,
+      "duration_ms": 56745,
+      "turns": 15,
+      "wall_clock_ms": 143107,
+      "tokens": {
+        "input": 34,
+        "output": 7734,
+        "cache_read": 373064,
+        "cache_creation": 76930
+      },
+      "guard_blocks": 1,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "a0687871220db9c609a8c1d7b8326b40fe1dbc03f07f52d7818251082042124d"
+    },
+    {
+      "key": "EVAL-11#1",
+      "ticket": "EVAL-11",
+      "kind": "feature",
+      "trial": 1,
+      "started_at": "2026-11-04T06:13:03.139Z",
+      "finished_at": "2026-11-04T06:16:56.825Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "updates-first-line",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "zero-keeps-line",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.154807,
+      "duration_ms": 47501,
+      "turns": 14,
+      "wall_clock_ms": 136247,
+      "tokens": {
+        "input": 34,
+        "output": 6707,
+        "cache_read": 377353,
+        "cache_creation": 54827
+      },
+      "guard_blocks": 2,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "9edc874cc3e2353652f7a878ef1037fd12fabcaeb8d8855f8165d22a2405ed85"
+    }
+  ]
+}

@@ -2,10 +2,11 @@
 // Shared by the corpus validation and the trial scoring. Test results are read with the
 // kit's own report parsers, so the evaluation sees the same evidence as the kit.
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { extractPlaywrightTests, extractVitestTests } from '../../.claude/hooks/strict-evidence.ts';
 import type { PlaywrightReport, VitestReport } from '../../.claude/hooks/strict-evidence.ts';
+import { runIsolated } from './sandbox.ts';
 import type { Level, Status, TestResult, VariantResult } from './score.ts';
 
 export const KIT = resolve(import.meta.dirname, '../..');
@@ -28,18 +29,33 @@ export function listTickets(): string[] {
     .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
 }
 
+/** Caches that tools write inside node_modules; a variant gets its own, empty. */
+const MODULE_CACHES = new Set(['.vite', '.vite-temp', '.cache']);
+
 /**
- * Copies the application without build output or dependencies. By default it links the
- * installed node_modules; an agent's workspace gets its own copy instead (link: false),
- * because its sandbox only writes inside the project and the test tools write caches there.
+ * Copies the application without build output or dependencies, then gives it the installed
+ * node_modules in one of three ways:
+ *   - link (default): a symlink to the installed folder;
+ *   - copy: a full copy, for an agent's workspace, whose sandbox only writes inside the project
+ *     while the test tools write caches there;
+ *   - farm: a folder of its own holding one symlink per installed package. A variant's tools write
+ *     their caches (Vite's .vite and .vite-temp) in that folder, so the installed one can stay
+ *     read-only in the scoring sandbox, and nothing a test writes there reaches the next variant.
  */
-export function copyApp(dest: string, { from = APP, link = true, modules = join(from, 'node_modules') } = {}): void {
+export function copyApp(dest: string, { from = APP, mode = 'link' as 'link' | 'copy' | 'farm', modules = join(from, 'node_modules') } = {}): void {
   rmSync(dest, { recursive: true, force: true });
   mkdirSync(dest, { recursive: true });
   cpSync(from, dest, { recursive: true, filter: (src) => !SKIP.has(basename(src)) || src === from });
   if (!existsSync(modules)) throw new Error(`${modules} is missing: run npm ci in ${APP} first`);
-  if (link) symlinkSync(modules, join(dest, 'node_modules'), 'dir');
-  else cpSync(modules, join(dest, 'node_modules'), { recursive: true, verbatimSymlinks: true });
+  if (mode === 'link') symlinkSync(modules, join(dest, 'node_modules'), 'dir');
+  else if (mode === 'copy') cpSync(modules, join(dest, 'node_modules'), { recursive: true, verbatimSymlinks: true });
+  else {
+    const shared = realpathSync(modules);
+    mkdirSync(join(dest, 'node_modules'));
+    for (const name of readdirSync(shared)) {
+      if (!MODULE_CACHES.has(name)) symlinkSync(join(shared, name), join(dest, 'node_modules', name));
+    }
+  }
   // Local development only: use a Chromium that is already installed (CI installs its own).
   if (process.env.EVAL_CHROMIUM && !readFileSync(join(dest, 'playwright.config.ts'), 'utf8').includes('launchOptions')) {
     const config = join(dest, 'playwright.config.ts');
@@ -64,7 +80,7 @@ export function applyDiff(dir: string, diff: string): void {
 
 /** variant: 'base', 'gold' or a bug id (applied on top of gold). `from` is the untouched application. */
 export function makeVariant(ticket: Ticket & { dir: string }, variant: string, dest: string, from = APP): void {
-  copyApp(dest, { from, modules: join(APP, 'node_modules') });
+  copyApp(dest, { from, mode: 'farm', modules: join(APP, 'node_modules') });
   if (variant === 'base') return;
   applyDiff(dest, join(ticket.dir, 'gold.diff'));
   if (variant !== 'gold') applyDiff(dest, join(ticket.dir, 'bugs', `${variant}.diff`));
@@ -104,9 +120,14 @@ export function criteriaOf(title: string, ticket: string): string[] {
   return [...title.matchAll(new RegExp(`\\[${escaped}\\]\\[(AC-[1-9]\\d*)\\]`, 'g'))].map((m) => m[1]);
 }
 
-function env(): NodeJS.ProcessEnv {
-  // Screenshots are compared only when CI is set: variants change the page on purpose.
-  return { ...process.env, CI: '', FORCE_COLOR: '0' };
+// Screenshots are compared only when CI is set: variants change the page on purpose.
+const TEST_ENV = { CI: '', FORCE_COLOR: '0' };
+
+/** The installed node_modules a variant's farm points to: it stays readable, read-only, in the sandbox. */
+function sharedModules(dir: string): string[] {
+  const modules = join(dir, 'node_modules');
+  const first = existsSync(modules) ? readdirSync(modules)[0] : undefined;
+  return first ? [dirname(realpathSync(join(modules, first)))] : [];
 }
 
 /** Runs the given Vitest files; returns one result per test. */
@@ -114,7 +135,7 @@ export function runVitest(dir: string, files: string[], ticket: string): Variant
   if (!files.length) return { ran: false, tests: [] };
   const report = join(dir, 'reports/vitest.json');
   rmSync(report, { force: true });
-  const run = spawnSync('npx', ['vitest', 'run', ...files], { cwd: dir, encoding: 'utf8', env: env(), timeout: 300_000 });
+  const run = runIsolated('npx', ['vitest', 'run', ...files], { cwd: dir, env: TEST_ENV, readOnly: sharedModules(dir), timeout: 300_000 });
   if (!existsSync(report)) return { ran: false, error: `vitest produced no report (exit ${run.status}): ${run.stderr.slice(-400)}`, tests: [] };
   const tests = extractVitestTests(JSON.parse(readFileSync(report, 'utf8')) as VitestReport);
   return {
@@ -138,7 +159,7 @@ export function runPlaywright(dir: string, files: string[], ticket: string, { re
   rmSync(report, { force: true });
   // One worker, as in the kit's CI: parallel workers against one dev server make timeouts likelier.
   const args = ['playwright', 'test', ...files, `--repeat-each=${repeatEach}`, `--timeout=${timeoutMs}`, '--retries=0', '--workers=1'];
-  const run = spawnSync('npx', args, { cwd: dir, encoding: 'utf8', env: env(), timeout: 900_000 });
+  const run = runIsolated('npx', args, { cwd: dir, env: TEST_ENV, readOnly: sharedModules(dir), timeout: 900_000 });
   if (!existsSync(report)) return { ran: false, error: `playwright produced no report (exit ${run.status}): ${run.stderr.slice(-400)}`, tests: [] };
   const parsed = JSON.parse(readFileSync(report, 'utf8')) as PlaywrightReport;
   if (parsed.errors?.length) return { ran: false, error: `playwright could not run: ${String(parsed.errors[0].message).slice(0, 400)}`, tests: [] };

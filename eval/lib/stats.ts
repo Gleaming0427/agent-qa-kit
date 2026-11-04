@@ -59,3 +59,27 @@ export function percentile(values: number[], p: number): number | null {
   const upper = Math.ceil(rank);
   return sorted[lower] + (sorted[upper] - sorted[lower]) * (rank - lower);
 }
+
+/**
+ * Exact two-sided sign test. plus and minus count the paired units where the second version did
+ * better and worse; ties carry no information and are left out. Under the null hypothesis each
+ * discordant unit goes either way with probability 1/2, so the p-value is twice the binomial tail
+ * of the rarer direction, capped at 1. min_p is the smallest p-value that this many discordant
+ * units can give at all (all in one direction): with fewer than 6, no result reaches 0.05.
+ */
+export function signTest(plus: number, minus: number): { n: number; plus: number; minus: number; p: number; min_p: number } {
+  const n = plus + minus;
+  if (n === 0) return { n, plus, minus, p: 1, min_p: 1 };
+  let tail = 0;
+  for (let i = 0; i <= Math.min(plus, minus); i++) tail += binom(n, i);
+  return { n, plus, minus, p: Math.min(1, (2 * tail) / 2 ** n), min_p: Math.min(1, 2 / 2 ** n) };
+}
+
+/**
+ * Exact McNemar test for a binary outcome measured twice on the same units. Only the discordant
+ * pairs count: b units passed with the first version only, c with the second only. The exact test
+ * is the binomial test on b against c, which is the sign test on those pairs.
+ */
+export function mcnemarExact(b: number, c: number): { b: number; c: number; p: number } {
+  return { b, c, p: signTest(c, b).p };
+}

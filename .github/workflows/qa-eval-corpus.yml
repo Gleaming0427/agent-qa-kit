@@ -1,6 +1,7 @@
 name: QA eval corpus
 # Checks the evaluation corpus with no model call: every reference implementation and
-# injected bug still applies to the shop, and the hidden tests tell them apart.
+# injected bug still applies to the shop, and the hidden tests tell them apart. Also runs the
+# harness's own tests, the isolation of the corpus and the scoring sandbox included.
 on:
   pull_request:
     paths:
@@ -14,13 +15,15 @@ permissions:
 
 jobs:
   corpus:
-    name: Eval corpus is valid (no AI)
+    name: Eval corpus is valid, harness tests pass (no AI)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+          # The history's rebuild test reads the agent, corpus and scorer of each campaign at its commit.
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -29,5 +32,9 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           npx playwright install --with-deps chromium
+      - name: Install the scoring sandbox
+        run: bash eval/ci/install-sandbox.sh
+      - name: Harness tests, corpus isolation and scoring sandbox included (no AI)
+        run: node --test eval/tests/*.test.ts
       - name: Validate the corpus
         run: node eval/validate-corpus.ts

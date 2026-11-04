@@ -1,0 +1,30 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 9a7b33b..514c493 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -9,6 +9,7 @@ export function App() {
+   const [lines, setLines] = useState<CartLine[]>([]);
+   const [confirmed, setConfirmed] = useState(false);
+   const [wrap, setWrap] = useState(false);
++  const [charged, setCharged] = useState(false);
+   const computeSubtotal = import.meta.env.VITE_DEMO_BUG === '1' ? subtotalBuggy : subtotal;
+   const sub = computeSubtotal(lines);
+   // Gift wrap costs the same for every unit, and does not count toward free shipping.
+@@ -58,7 +59,7 @@ export function App() {
+             </ul>
+           ) : <p className="empty">Your cart is empty</p>}
+           <label className="gift-wrap">
+-            <input type="checkbox" checked={wrap} onChange={(event) => setWrap(event.target.checked)} />
++            <input type="checkbox" checked={wrap} onChange={(event) => { setWrap(event.target.checked); if (event.target.checked) setCharged(true); }} />
+             Gift wrap
+           </label>
+           <table className="summary" aria-label="Order summary">
+@@ -66,7 +67,7 @@ export function App() {
+               <tr><th scope="row">Subtotal</th><td>{formatPrice(sub)}</td></tr>
+               <tr><th scope="row">Shipping</th><td>{lines.length && ship === 0 ? 'Free' : formatPrice(ship)}</td></tr>
+               {wrapCents ? <tr><th scope="row">Gift wrap</th><td>{formatPrice(wrapCents)}</td></tr> : null}
+-              <tr className="total"><th scope="row">Total</th><td>{formatPrice(sub + ship + wrapCents)}</td></tr>
++              <tr className="total"><th scope="row">Total</th><td>{formatPrice(sub + ship + (charged ? units * GIFT_WRAP_CENTS : 0))}</td></tr>
+             </tbody>
+           </table>
+           <button type="button" className="checkout" disabled={!lines.length} onClick={checkout}>Checkout</button>
