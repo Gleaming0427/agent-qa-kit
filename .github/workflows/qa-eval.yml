@@ -44,6 +44,11 @@ on:
         required: false
         default: ''
         type: string
+      baseline:
+        description: Release decision against these campaigns of the history (ids such as gh-41605000003, separated by spaces); empty for eval/release-baseline.json
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -347,6 +352,42 @@ jobs:
         with:
           name: eval-trials
           path: ${{ runner.temp }}/eval/*/trial/
+          if-no-files-found: warn
+
+  decision:
+    # The new version against the release baseline, under eval/compare-policy.json as it was at this
+    # commit, so before the results. A rejected version fails this job; one to review passes with a
+    # warning and asks for a human review. See eval/validate.ts.
+    name: Release decision
+    needs: report
+    if: ${{ always() && inputs.recheck == '' && !inputs.dry_run && needs.report.result == 'success' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v7
+        with:
+          name: eval-report
+          path: ${{ runner.temp }}/report
+      - name: Validate the new version against the release baseline
+        env:
+          BASELINE: ${{ inputs.baseline }}
+        run: |
+          args=(--candidate "$RUNNER_TEMP/report/eval-history.json" --ci --md "$RUNNER_TEMP/release-decision.md" --json "$RUNNER_TEMP/release-decision.json")
+          for id in $BASELINE; do args+=(--baseline "$id"); done
+          node eval/validate.ts "${args[@]}"
+      - name: Upload the release decision
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-decision
+          path: |
+            ${{ runner.temp }}/release-decision.md
+            ${{ runner.temp }}/release-decision.json
           if-no-files-found: warn
 
   recheck:

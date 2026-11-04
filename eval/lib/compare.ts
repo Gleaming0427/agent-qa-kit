@@ -22,6 +22,8 @@ export const CATEGORIES: Category[] = ['both_pass', 'both_fail', 'improved', 're
 export interface Policy {
   schema_version: 1;
   alpha: number;
+  /** Which verdicts fail the release decision in CI (eval/validate.ts --ci). */
+  ci?: { fail_on: Verdict[]; why: string };
   critical: { kinds: string[]; tickets: string[]; why: string };
   rules: Record<string, { on_failure: 'review' | 'reject'; why: string; min?: number; max_rate?: number; max_increase?: number }>;
 }

@@ -178,6 +178,7 @@ In GitHub Actions, **QA eval** (Actions tab → Run workflow):
 | `verify` | Also run phase 2. |
 | `dry_run` | No model call: the agent's runner writes nothing, and the scoring runner puts the hidden tests in place of the agent's and gives the ambiguous ticket its right answer, `blocked`, to check the harness end to end. A working harness succeeds on every ticket. |
 | `recheck` | Instead of running trials, earlier QA eval run ids, separated by spaces. Each run's trial artifacts are aggregated again with the current code, so new checks also cover old campaigns. Nothing from the artifacts is run. |
+| `baseline` | The campaigns of the history to take the release decision against (ids such as `gh-41605000003`, separated by spaces). Empty: `eval/release-baseline.json`. |
 
 Each runner uploads its part of a trial (`agent-out-*`, `score-out-*`, `verifier-in-*`, `verifier-out-*`). The **report** job assembles them into `eval-trials`, one folder per trial with `trial.json`, the logs, the generated tests and the transcripts, writes the summary to the run page, and uploads `eval-report.json`, `eval-report.md` and `eval-history.json`, the campaign's file for the history. Campaigns run before the split uploaded one `eval-<TICKET>-<TRIAL>` folder per trial; `recheck` reads both layouts.
 
@@ -272,6 +273,36 @@ node eval/smoke.ts backtest    # what smoke runs would have caught in the histor
 ```
 
 The backtest replays the history. For each version, it makes the selection from the history before that version, then replays the smoke run with the version's own trials on the selected tickets. It compares the result with what the version's full run found against the previous version: tickets worse, tickets regressed (from every trial passing to every trial failing), tickets better. It also gives the cost of each. The policy's values are hypotheses to check this way; see [results/2026-11-04-smoke-backtest.md](results/2026-11-04-smoke-backtest.md).
+
+## Release validation
+
+Every QA eval run that calls the agents ends with a **Release decision** job. It compares the new version with the release baseline, with no model call, and says whether it can be released. The baseline is `eval/release-baseline.json`, currently D clean and its regression check; the `baseline` input overrides it. Locally:
+
+```bash
+node eval/validate.ts --candidate eval-history.json            # a run's campaign file
+node eval/validate.ts --candidate "D clean, split runners" --policy-current
+```
+
+- **Rules fixed before the campaign.** The decision applies `eval/compare-policy.json` as it was at the candidate campaign's own commit, so a rule changed after the results cannot decide them.
+  - A campaign that ran before the rules existed is refused, unless `--policy-current` is passed; the report then says that its rules came after its results.
+  - When the file has changed since the campaign, the report says so, and keeps the old rules.
+- **The decision is the comparison's**, rule by rule, never a single overall score (see Comparing two versions):
+
+  | Situation | Verdict | In CI |
+  |---|---|---|
+  | A security rule broke (a change outside the tests), the corpus leaked, or a critical ticket regressed, confirmed | rejected | the job fails |
+  | Too little data, a reference that saw the corpus, an isolated or unconfirmed regression, an unstable ticket that got worse, a significant worsening, a cost rise | review | passes with a warning: a human review is needed |
+  | Every rule passed | accepted | passes |
+
+  Which verdicts fail the job is the policy's `ci.fail_on`.
+- **Next steps.** Each reason of the decision comes with what to do:
+  - do not release;
+  - rerun the tickets behind an isolated regression or an unstable worsening, merged into one QA eval dispatch (`tickets`, `trials`) to validate again with both runs as the candidate;
+  - run every ticket;
+  - measure the reference again;
+  - or look at it.
+- **Output.** The decision goes to the run's summary, with annotations on the run page, and to the `release-decision` artifact (Markdown and JSON). The JSON holds the comparison, the next steps and where the rules came from.
+- **After a release**, make the released version the baseline, in a reviewed commit.
 
 ## Limits
 

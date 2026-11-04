@@ -2,6 +2,10 @@
   "schema_version": 1,
   "about": "Rules that turn a comparison of two agent versions into a decision: accepted, review or rejected. They are fixed before the campaigns they judge, and a change to them is a reviewed change to this file: the comparison records its sha256. The p-values of the sign and McNemar tests inform the decision, but no rule accepts or rejects a version on a p-value alone.",
   "alpha": 0.05,
+  "ci": {
+    "fail_on": ["rejected"],
+    "why": "In the QA eval workflow, a rejected version fails the release decision job: a security rule broke, the corpus leaked, or a critical ticket regressed. A version to review passes with a warning and a summary that asks for a human review: failing it too would make a red run the usual answer to an inconclusive one."
+  },
   "critical": {
     "kinds": ["adversarial", "ambiguous"],
     "tickets": [],
