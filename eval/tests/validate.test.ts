@@ -54,6 +54,31 @@ test('each reason gets a next step, and reruns are merged into one QA eval dispa
   assert.equal(nextSteps(leaky, policy)[0].action, 'do_not_release');
 });
 
+test('a ticket rerun for its results gets one follow-up, then a human review', () => {
+  const failing = (tickets: string[]) => (o: Observation) => (tickets.includes(o.ticket) && o.trial === 2 ? { success: false } : {});
+  const shaky = variant(get('D, clean'), 'shaky', failing(['EVAL-12', 'EVAL-14']));
+  // The follow-up runs EVAL-12 and EVAL-14 again; EVAL-14 fails once more. Pooled, both stay unstable and worse
+  // (EVAL-12 at 5/6 against 3/3).
+  const followUp = variant(get('D, clean'), 'follow-up', failing(['EVAL-14']));
+  followUp.observations = followUp.observations.filter((o) => ['EVAL-12', 'EVAL-14'].includes(o.ticket));
+  const pooled = compare(baseline, { label: 'shaky + follow-up', campaigns: [shaky, followUp] }, policy, policyText);
+  assert.equal(pooled.decision.verdict, 'review');
+  const steps = nextSteps(pooled, policy, [shaky, followUp]);
+  assert.ok(!steps.some((s) => s.action === 'rerun'), JSON.stringify(steps));
+  const review = steps.find((s) => s.action === 'human_review' && s.detail.startsWith('EVAL-12, EVAL-14 already ran again'));
+  assert.ok(review, JSON.stringify(steps));
+  assert.match(review.detail, /no sequential method/);
+  // Without the campaigns, as in CI with one run, nothing tells a follow-up apart: a rerun is asked for.
+  assert.deepEqual(nextSteps(pooled, policy).find((s) => s.action === 'rerun')?.dispatch, { tickets: 'EVAL-12 EVAL-14', trials: 3 });
+  // A follow-up of EVAL-14 alone: EVAL-12, measured in one campaign only, still gets its first rerun.
+  const partial = variant(get('D, clean'), 'partial', failing(['EVAL-14']));
+  partial.observations = partial.observations.filter((o) => o.ticket === 'EVAL-14');
+  const both = compare(baseline, { label: 'shaky + partial', campaigns: [shaky, partial] }, policy, policyText);
+  const next = nextSteps(both, policy, [shaky, partial]);
+  assert.deepEqual(next.find((s) => s.action === 'rerun')?.dispatch, { tickets: 'EVAL-12', trials: 3 });
+  assert.ok(next.some((s) => s.action === 'human_review' && s.detail.startsWith('EVAL-14 already ran again: the candidate holds its trials')));
+});
+
 test('in CI only the verdicts of ci.fail_on fail the job, with annotations for the run page', () => {
   assert.equal(failsCi('rejected', policy), true);
   assert.equal(failsCi('review', policy), false);

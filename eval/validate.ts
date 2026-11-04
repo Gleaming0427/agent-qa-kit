@@ -62,7 +62,7 @@ try {
     { label: candidates.map((c) => c.label).join(' + '), campaigns: candidates },
     policy, policyText,
   );
-  const steps = nextSteps(result, policy);
+  const steps = nextSteps(result, policy, candidates);
   const md = validationMarkdown(result, policy, steps, source, toMarkdown(result, policy));
   const json = one('--json');
   if (json) writeFileSync(json, `${JSON.stringify({ policy_source: source, next_steps: steps, comparison: result }, null, 2)}\n`);

@@ -7,9 +7,13 @@
 // - The decision is compare()'s (accepted, review or rejected, never a single overall score), and each
 //   reason comes with what to do next: release, do not release, rerun these tickets, run everything,
 //   measure the reference again, or look at it.
+// - A ticket rerun because of its results gets one follow-up. Once the candidate holds its trials from
+//   two campaigns, the decision pools them and asks for a human review: rerunning until a warning goes
+//   away would stop on a good result, with no sequential method to correct for it.
 // - In CI, the verdicts the policy lists in ci.fail_on fail the job; the others pass with a warning.
 import { spawnSync } from 'node:child_process';
 import type { Comparison, Policy, Verdict } from './compare.ts';
+import type { Campaign } from './history.ts';
 
 export type Action = 'release' | 'do_not_release' | 'rerun' | 'run_full' | 'remeasure_reference' | 'human_review';
 export interface NextStep { action: Action; detail: string; dispatch?: { tickets: string; trials: number } }
@@ -22,11 +26,26 @@ export function policyAt(kit: string, commit: string): string | null {
 
 const byTicket = (a: string, b: string) => a.localeCompare(b, 'en', { numeric: true });
 
-/** What to do about each reason of the decision; reruns of several reasons are merged into one dispatch. */
-export function nextSteps(c: Comparison, policy: Policy): NextStep[] {
+/** The tickets the candidate holds trials of from two campaigns or more: they already had their follow-up. */
+export function followedUp(candidates: Campaign[]): Map<string, number> {
+  const runs = new Map<string, number>();
+  for (const c of candidates) {
+    for (const t of new Set(c.observations.filter((o) => o.status === 'ok').map((o) => o.ticket))) runs.set(t, (runs.get(t) ?? 0) + 1);
+  }
+  return new Map([...runs].filter(([, n]) => n > 1));
+}
+
+/**
+ * What to do about each reason of the decision; reruns of several reasons are merged into one dispatch.
+ * candidates: the campaigns of the new version, to tell a first measurement from a follow-up.
+ */
+export function nextSteps(c: Comparison, policy: Policy, candidates: Campaign[] = []): NextStep[] {
   const steps: NextStep[] = [];
   const trials = policy.rules.enough_trials?.min ?? 3;
+  // Reruns asked for by the results (a regression, an unstable unit, too few trials on a changed ticket),
+  // and reruns that replace trials lost to errors, which do not depend on the results.
   const rerun = new Set<string>();
+  const refill = new Set<string>();
   // The tickets behind a regression that is not a confirmed critical one, or an unstable unit that got worse.
   const confirmed = (u: { a: { trials: number }; b: { trials: number } }) => Math.min(u.a.trials, u.b.trials) >= trials;
   const worse = (rule: 'regressions' | 'unstable_worse') => [...c.measurements.tickets, ...c.measurements.bugs]
@@ -55,7 +74,7 @@ export function nextSteps(c: Comparison, policy: Policy): NextStep[] {
         steps.push({ action: 'remeasure_reference', detail: `${r.message}: measure the baseline again on the split runners, or choose a baseline that did not see it.` });
         break;
       case 'b_agent_errors':
-        for (const t of c.measurements.tickets) if (t.b.trials < trials) rerun.add(t.ticket);
+        for (const t of c.measurements.tickets) if (t.b.trials < trials) refill.add(t.ticket);
         steps.push({ action: 'human_review', detail: `${r.message}: check the API and the runners before reading the scores.` });
         break;
       case 'regressions':
@@ -72,8 +91,17 @@ export function nextSteps(c: Comparison, policy: Policy): NextStep[] {
         steps.push({ action: 'human_review', detail: r.message });
     }
   }
-  if (rerun.size) {
-    const tickets = [...rerun].sort(byTicket).join(' ');
+  const done = followedUp(candidates);
+  const reviewed = [...rerun].filter((t) => done.has(t) && !refill.has(t)).sort(byTicket);
+  if (reviewed.length) {
+    steps.push({
+      action: 'human_review',
+      detail: `${reviewed.join(', ')} already ran again: the candidate holds ${reviewed.length > 1 ? 'their' : 'its'} trials from more than one campaign, pooled here. A ticket gets one follow-up: rerunning until the warning goes away would stop on a good result, with no sequential method to correct for it. Read ${reviewed.length > 1 ? 'their' : 'its'} trials and decide whether the agent has a weakness to fix or a variation to accept.`,
+    });
+  }
+  const again = new Set([...rerun].filter((t) => !reviewed.includes(t)).concat([...refill]));
+  if (again.size) {
+    const tickets = [...again].sort(byTicket).join(' ');
     steps.push({
       action: 'rerun',
       detail: `Run these tickets again (${trials} trials), add the run to the history, and validate again with both runs as the candidate: an unstable or isolated change often does not repeat.`,

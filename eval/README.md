@@ -297,7 +297,7 @@ node eval/validate.ts --candidate "D clean, split runners" --policy-current
   Which verdicts fail the job is the policy's `ci.fail_on`.
 - **Next steps.** Each reason of the decision comes with what to do:
   - do not release;
-  - rerun the tickets behind an isolated regression or an unstable worsening, merged into one QA eval dispatch (`tickets`, `trials`) to validate again with both runs as the candidate;
+  - rerun the tickets behind an isolated regression or an unstable worsening, merged into one QA eval dispatch (`tickets`, `trials`) to validate again with both runs as the candidate. A ticket gets this follow-up once: when the candidate already holds its trials from two campaigns, the decision asks for a human review instead (see No early stopping below);
   - run every ticket;
   - measure the reference again;
   - or look at it.
@@ -329,7 +329,8 @@ node eval/trials.ts allocate    # each ticket's trials for the next adaptive cam
   - the others get 3.
 - **No early stopping.** The allocation never changes with the campaign's results, and no ticket stops early because its first trials look good. The only second stage is a follow-up:
   - when the release decision asks for a rerun of a ticket whose trials disagree or look worse, it gets 3 more trials;
-  - the decision then pools all its trials.
+  - the decision then pools all its trials;
+  - if the pooled trials still disagree or look worse, the decision asks for a human review, not another rerun. Rerunning until the warning goes away would stop on a good result, which the sign test cannot correct for. Reruns that replace trials lost to agent errors do not count, since they do not depend on the results.
 
   The sign test's p-values are not exact for such a two-stage design, and no rule decides on them alone.
 - **The rule on the number of trials** (`enough_trials` in `eval/compare-policy.json`) has the scope `changed_or_critical`. A ticket with fewer than 3 trials is fine when it is not critical and its outcome did not change. A change on such a ticket asks for a rerun.
