@@ -30,19 +30,37 @@ test('the history is rebuilt from its sources, byte for byte, with no model call
   }
 });
 
-test('the imported history holds the 13 rechecked campaigns, with no error', () => {
-  assert.equal(committed.length, 13);
-  assert.equal(committed.reduce((n, c) => n + c.observations.length, 0), 272);
+test('the history holds the 13 rechecked campaigns and the campaigns run since, with no error', () => {
+  assert.equal(committed.length, 14);
+  assert.equal(committed.reduce((n, c) => n + c.observations.length, 0), 274);
   assert.deepEqual(checkHistory(committed).filter((p) => p.level === 'error'), []);
   for (const c of committed) {
-    assert.equal(c.scoring.kind, 'recomputed');
+    assert.equal(c.scoring.kind, c.label === 'D clean, split runners' ? 'original' : 'recomputed', c.label);
     assert.ok(c.provenance.sha256 && c.provenance.artifact?.digest.startsWith('sha256:'), c.id);
+  }
+  // A campaign run since records its inputs and is complete.
+  const split = byLabel('D clean, split runners');
+  assert.deepEqual(split.config.inferred, []);
+  assert.deepEqual(split.missing, {});
+  assert.equal(split.agent.id, byLabel('D, clean').agent.id, 'the same agent as D clean');
+});
+
+test('build refuses to delete a campaign file that has no source', () => {
+  const out = mkdtempSync(join(tmpdir(), 'eval-history-orphan-'));
+  try {
+    writeFileSync(join(out, 'gh-1.json'), '{}');
+    const run = spawnSync(process.execPath, [join(KIT, 'eval/history.ts'), 'build', out], { encoding: 'utf8' });
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /Not in sources\.json, so build would delete them: gh-1\.json/);
+    assert.ok(readdirSync(out).includes('gh-1.json'), 'the file is still there');
+  } finally {
+    rmSync(out, { recursive: true, force: true });
   }
 });
 
 test('the tokens are known for every trial a model answered', () => {
   const all = committed.flatMap((c) => c.observations.map((o) => ({ label: c.label, o })));
-  assert.equal(all.filter(({ o }) => o.tokens).length, 254);
+  assert.equal(all.filter(({ o }) => o.tokens).length, 256);
   // The 18 without: B's regression check, stopped by the spend limit before any model answered.
   const without = all.filter(({ o }) => !o.tokens);
   assert.deepEqual([...new Set(without.map(({ label }) => label))], ['B, regression check']);

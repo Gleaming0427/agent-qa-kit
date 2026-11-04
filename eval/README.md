@@ -203,7 +203,7 @@ The split costs runner time: each trial installs the shop and its browser on thr
   - excluded tickets: a ticket in one campaign only, or whose corpus changed;
   - warnings: a different harness, Claude Code version, number of trials or served model; a sight of the corpus; trials lost to errors; corrections.
   - It also lists what changed in the agent.
-- **New campaigns:** the report job writes `eval-history.json`. Commit it to `history/campaigns/` to keep it.
+- **New campaigns:** add the run's `eval-report.json` to `history/sources` and an entry to `sources.json`, then run `build`. The report job's `eval-history.json` is a preview of the result.
 
 ## Limits
 

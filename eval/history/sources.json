@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "repository": "Gleaming0427/agent-qa-kit",
-  "about": "The campaigns of eval/results, imported from the reports of the recheck run 41785127300, which scored every earlier campaign again with the code of efa197e, from its trial artifacts and with no model call. It replaced the reports of the first recheck (run 41615412529, code of c84386e): same metrics, with the tokens added, and the scorer of the campaigns run since. Each source file is the recheck-<run>.json of that run's artifact, whose zip matches the digest GitHub records for it. Run metadata comes from the GitHub API (workflow runs); labels and notes come from the documents in eval/results.",
+  "about": "The campaigns of eval/results and those run since. The first 13 come from the reports of the recheck run 41785127300, which scored every earlier campaign again with the code of efa197e, from its trial artifacts and with no model call. It replaced the reports of the first recheck (run 41615412529, code of c84386e): same metrics, with the tokens added, and the scorer of the campaigns run since. Each source file is the recheck-<run>.json of that run's artifact, whose zip matches the digest GitHub records for it. Run metadata comes from the GitHub API (workflow runs); labels and notes come from the documents in eval/results. Campaigns run since come from their own run's eval-report.json, scored by that run, with the workflow inputs of its dispatch.",
   "campaigns": [
     {
       "run_id": 41494361776,
@@ -353,6 +353,40 @@
       },
       "doc": "eval/results/2026-11-03-clean-campaign.md",
       "notes": []
+    },
+    {
+      "run_id": 41783970323,
+      "run_number": 28,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-04T06:12:14Z",
+      "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35",
+      "label": "D clean, split runners",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41783970323,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41783970323.json",
+        "sha256": "744246b61bb041e20055e0806d7fca4858ad41f57f89c16a136abbe9aae54f72",
+        "artifact": {
+          "id": 13300377358,
+          "name": "eval-report",
+          "digest": "sha256:c959d3c0ceb249d4a255f9860b8542d4657ae1d2aafb1d6125e85c3efad9ffca"
+        }
+      },
+      "doc": "eval/results/2026-11-03-history-import.md",
+      "notes": [
+        "The agent of D clean, run once on EVAL-1 and EVAL-11 to check the split runners and phase 2 on them: one trial per ticket."
+      ],
+      "inputs": {
+        "tickets": "EVAL-1 EVAL-11",
+        "trials": "1",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }

@@ -7,6 +7,7 @@ The 13 runs of `results/` are now one versioned file each, in `eval/history/camp
 > - **Metrics:** identical in all 272 trials. Only the fields added since differ: tokens, isolation and time per runner.
 > - **Tokens:** they are now known for 254 trials (see Missing data).
 > - **Scorer:** the history now has the one that scores new campaigns, so `compat` no longer blocks a comparison between them. Run 41783970323, two trials on EVAL-1 and EVAL-11 with the split runners, compares with D clean on EVAL-11 and with D clean's regression check on EVAL-1. The same agent ran in all three; the harness and the number of trials per ticket differ, and `compat` warns about both.
+> - **New campaign in the history:** that run is in the history as "D clean, split runners" (`gh-41783970323`). It is the first campaign with its workflow inputs recorded and no missing data.
 
 ## How it was checked
 

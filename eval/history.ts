@@ -5,14 +5,17 @@
 //     Rebuilds eval/history/campaigns/<id>.json and eval/history/index.json from eval/history/sources.json:
 //     each source report is checked against its sha256, then normalized, versioned from git (the
 //     agent, the corpus, the harness and the scorer at the recorded commits) and corrected only
-//     where the source says so. The output is deterministic: a rebuild changes no byte.
+//     where the source says so. The output is deterministic: a rebuild changes no byte. Every
+//     campaign comes from a source: build refuses to remove a campaign file that has none.
 //   node eval/history.ts check
-//     Schema, duplicates (a campaign or a trial imported twice) and missing data. Exits 1 on an error.
+//     Schema, duplicates (a campaign or a trial imported twice), missing data, and campaign files
+//     without a source (the next build could not rebuild them). Exits 1 on an error.
 //   node eval/history.ts compat <campaign id or label> <campaign id or label>
 //     Which tickets the two campaigns can be compared on, what blocks it, and what changed in the agent.
 //   node eval/history.ts from-report <eval-report.json> <out.json>
 //     In the QA eval workflow: the campaign file of the run that produced the report, from the
 //     GitHub environment (GITHUB_RUN_ID, GITHUB_SHA, ...) and EVAL_INPUTS (the workflow inputs).
+//     It is the preview of what build gives once the report is added to the sources.
 //   node eval/history.ts rows <campaign id or label>
 //     One JSON line per trial and bug, with the campaign's versions, for analysis elsewhere.
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -38,6 +41,8 @@ interface SourceEntry {
   source: { file: string; sha256: string; artifact: { id: number; name: string; digest: string } | null };
   doc: string | null;
   notes: string[];
+  /** The workflow inputs, when known (from the run's dispatch); otherwise they are inferred from the trials. */
+  inputs?: CampaignInput['inputs'];
 }
 
 const json = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`;
@@ -93,8 +98,15 @@ if (command === 'build') {
   const campaigns = sources.campaigns.map((entry) => {
     const raw = readFileSync(join(HISTORY, entry.source.file));
     if (sha256(raw) !== entry.source.sha256) throw new Error(`${entry.source.file} does not match its sha256 in sources.json`);
-    return campaignFor(entry, sources.repository, JSON.parse(raw.toString('utf8')) as { trials?: TrialScore[] }, raw);
+    return campaignFor(entry, sources.repository, JSON.parse(raw.toString('utf8')) as { trials?: TrialScore[] }, raw, entry.inputs);
   });
+  // A campaign file without a source would be lost: it must come from sources.json, or be removed by hand.
+  const built = new Set(campaigns.map((c) => `${c.id}.json`));
+  const orphans = existsSync(out) ? readdirSync(out).filter((f) => f.endsWith('.json') && !built.has(f)) : [];
+  if (orphans.length) {
+    console.error(`Not in sources.json, so build would delete them: ${orphans.join(', ')}. Add each report to eval/history/sources and an entry to sources.json, or remove the file.`);
+    process.exit(1);
+  }
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
   for (const c of campaigns) writeFileSync(join(out, `${c.id}.json`), json(c));
@@ -104,6 +116,10 @@ if (command === 'build') {
 } else if (command === 'check') {
   const campaigns = readCampaigns(args[0]);
   const problems = checkHistory(campaigns);
+  if (!args[0]) {
+    const sourced = new Set((JSON.parse(readFileSync(join(HISTORY, 'sources.json'), 'utf8')) as { campaigns: SourceEntry[] }).campaigns.map((e) => `gh-${e.run_id}`));
+    for (const c of campaigns) if (!sourced.has(c.id)) problems.push({ level: 'error', campaign: c.id, message: 'no entry in sources.json: the next build would delete it' });
+  }
   for (const c of campaigns) {
     console.log(`${c.id.padEnd(15)} ${c.label.padEnd(28)} ${c.role.padEnd(8)} agent ${c.agent.id} scorer ${c.scoring.scorer} (${c.scoring.kind}) ${c.observations.length} trials`);
   }
@@ -142,7 +158,7 @@ if (command === 'build') {
     tickets: inputs.tickets, trials: inputs.trials, verify: inputs.verify, dry_run: inputs.dry_run,
   });
   writeFileSync(outPath, json(campaign));
-  console.log(`Campaign ${campaign.id} (${campaign.observations.length} trials, agent ${campaign.agent.id}) in ${basename(outPath)}: commit it to eval/history/campaigns/ to keep it.`);
+  console.log(`Campaign ${campaign.id} (${campaign.observations.length} trials, agent ${campaign.agent.id}) in ${basename(outPath)}. To keep it, add eval-report.json to eval/history/sources and an entry to sources.json (with these inputs), then run node eval/history.ts build.`);
 } else if (command === 'rows') {
   const campaign = find(readCampaigns(), args[0] ?? '');
   for (const row of flatten(campaign)) console.log(JSON.stringify(row));

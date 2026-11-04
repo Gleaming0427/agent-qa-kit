@@ -60,6 +60,17 @@ An **observation** holds:
 
 ## Adding a campaign
 
-The QA eval workflow's report job writes `eval-history.json` with `from-report`, from the run's own environment and inputs. Commit it as `campaigns/gh-<run id>.json` to keep it.
+Every campaign comes from a source, so that `build` can rebuild it. `build` refuses to delete a file of `campaigns/` that has no entry in `sources.json`, and `check` reports one as an error.
 
-To import a report that was not produced that way, add its file to `sources/`, add an entry to `sources.json`, and run `build`. Examples: a recheck, or a run from before this history.
+To add a campaign:
+1. Add its report to `sources/`:
+   - for a QA eval run, its `eval-report.json`, as `eval-report-<run id>.json`;
+   - for a recheck, its `recheck-<run>.json`.
+2. Add an entry to `sources.json`: the run, its commit, a label and role, the scoring, the source with its sha256 and artifact, and, for a QA eval run, the inputs of its dispatch.
+3. Run `node eval/history.ts build`.
+
+The report job of a QA eval run also writes `eval-history.json` (`from-report`), a preview of what `build` gives. Two fields differ:
+- the provenance;
+- `source.started_at`: the first trial's start in the preview, the run's creation in `build`, as for the imported campaigns.
+
+Example: run 41783970323, "D clean, split runners".

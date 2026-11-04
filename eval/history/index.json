@@ -247,5 +247,24 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 2.9869
+  },
+  {
+    "id": "gh-41783970323",
+    "label": "D clean, split runners",
+    "role": "campaign",
+    "started_at": "2026-11-04T06:12:14Z",
+    "commit": "efa197e",
+    "agent": "43cb10d883b4",
+    "writer_prompt": "b736198",
+    "scoring": "original at efa197e",
+    "tickets": 2,
+    "trials": 2,
+    "agent_errors": 0,
+    "successes": 2,
+    "bugs_detected": "4/4",
+    "trials_with_false_positives": 0,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 0.3368
   }
 ]
