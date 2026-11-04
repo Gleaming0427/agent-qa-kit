@@ -49,7 +49,9 @@ interface AgentState {
   ticket: string;
   trial: number;
   criteria: string[];
+  /** The agent runner's own work, from prepare to the end of write: installs and queueing are left out. */
   started_at: string;
+  finished_at?: string;
   dry_run: boolean;
   bundle_verified: boolean;
   phase1?: AgentRun;
@@ -70,9 +72,12 @@ interface ScoreState {
   implementations: Record<string, 'gold' | { bug: string }>;
   isolation: Isolation;
   error?: string;
+  /** The scoring runner's own work. */
+  started_at: string;
+  finished_at: string;
 }
-/** What the verifier's runner sends back, by the neutral name of the implementation. */
-interface VerifyState { skipped?: string; runs: Record<string, AgentRun> }
+/** What the verifier's runner sends back, by the neutral name of the implementation; times only when phase 2 ran. */
+interface VerifyState { skipped?: string; runs: Record<string, AgentRun>; started_at?: string; finished_at?: string }
 
 const readJson = <T = Record<string, unknown>>(path: string): T | null => {
   try { return JSON.parse(readFileSync(path, 'utf8')) as T; } catch { return null; }
@@ -288,10 +293,11 @@ function write(ticket: string, trial: number): void {
     const spawned = Number((runJson?.subagent_stats as { spawned?: unknown } | undefined)?.spawned ?? 0);
     state.phase1.subagents = { spawned: Number.isFinite(spawned) ? spawned : 0, transcripts: kept.subagents };
   }
-  writeJson(p.agentState, state);
   // The verifier's runner starts from this workspace: its own repository, phase 1's reports, the tests.
   const tar = spawnSync('tar', ['--exclude=./node_modules', '-cf', p.workspaceTar, '-C', p.ws, '.'], { encoding: 'utf8' });
   if (tar.status !== 0) throw new Error(`cannot pack the workspace: ${tar.stderr}`);
+  state.finished_at = new Date().toISOString();
+  writeJson(p.agentState, state);
   console.log(`Phase 1: exit ${state.phase1.exit_code}, verdict ${state.phase1.verdict}, $${state.phase1.cost_usd}, ${changes.tests.length} new test file(s), ${changes.others.length} other change(s)`);
 }
 
@@ -311,6 +317,7 @@ function checkShopMatchesBundle(pristine: string): void {
 }
 
 function score(ticketName: string, trial: number): void {
+  const startedAt = new Date().toISOString();
   const p = trialPaths(ticketName, trial);
   const ticket = loadTicket(ticketName);
   const agent = readJson<AgentState>(p.agentState);
@@ -326,6 +333,7 @@ function score(ticketName: string, trial: number): void {
   const state: ScoreState = {
     schema_version: 1, ticket: ticketName, kind: ticket.kind, bugs: ticket.bugs, variants: { bugs: {} }, implementations: {},
     isolation: { scoring_sandbox: sandboxMode(), findings, ...(agent ? { bundle_verified: agent.bundle_verified } : {}) },
+    started_at: startedAt, finished_at: startedAt,
   };
   if (!agent) state.error = 'the agent runner sent nothing back';
   const generated = join(p.scoreDir, 'generated');
@@ -380,6 +388,7 @@ function score(ticketName: string, trial: number): void {
   writeJson(join(p.verifyInput, 'verify.json'), runVerifier
     ? { run: true, implementations: ['impl-1', 'impl-2'] }
     : { run: false, reason: 'phase 1 did not produce ready tests, or the ticket has no reference implementation' });
+  state.finished_at = new Date().toISOString();
   writeJson(p.score, state);
   writeJson(join(p.scoreDir, 'variants.json'), state.variants);
   if (findings.length) console.log(`Warning: ${findings.length} trace(s) of the corpus in what the agent's runner sent back: ${findings.map((f) => `${f.path} (${f.reason})`).join('; ')}`);
@@ -389,6 +398,7 @@ function score(ticketName: string, trial: number): void {
 // ---------------------------------------------------------------- verifier runner
 
 function verify(ticket: string, trial: number): void {
+  const startedAt = new Date().toISOString();
   const p = trialPaths(ticket, trial);
   const input = readJson<{ run: boolean; reason?: string; implementations?: string[] }>(join(p.verifyInput, 'verify.json'));
   const agent = readJson<AgentState>(p.agentState);
@@ -413,7 +423,7 @@ function verify(ticket: string, trial: number): void {
   writeFileSync(reasons, `${agent.criteria.map((id) => `${id}: automated evaluation approval, not a human review`).join('\n')}\n`);
   const approve = spawnSync('node', [join(KIT, 'qa/scenario-review.ts'), 'approve-review', ticket, p.spec, 'eval-harness', reasons], { cwd: p.ws, encoding: 'utf8' });
   if (approve.status !== 0) throw new Error(`scripted approval failed: ${approve.stderr}`);
-  const state: VerifyState = { runs: {} };
+  const state: VerifyState = { runs: {}, started_at: startedAt };
   for (const impl of implementations) {
     // Each implementation applies on top of the previous one: the second is the first with one bug.
     const diff = join(tmpdir(), `eval-${process.pid}-${randomBytes(4).toString('hex')}.diff`);
@@ -421,6 +431,7 @@ function verify(ticket: string, trial: number): void {
     try { applyDiff(p.ws, diff); } finally { rmSync(diff, { force: true }); }
     state.runs[impl.name] = runPhase(ticket, p.ws, p.spec, p.verifyOut, 2, `phase2-${impl.name}`);
   }
+  state.finished_at = new Date().toISOString();
   writeJson(p.verify, state);
   console.log(`Phase 2: ${Object.entries(state.runs).map(([name, r]) => `${name} exit ${r.exit_code}`).join(', ')}`);
 }
@@ -450,14 +461,22 @@ function finish(ticket: string, trial: number): TrialRecord {
   const bugImpl = bugName ? scored?.implementations[bugName] : undefined;
   const gold = goldName ? verified?.runs[goldName] : undefined;
   const bug = bugName ? verified?.runs[bugName] : undefined;
+  // Each runner's own working time. The trial ends when its last runner did, not when it is assembled:
+  // between runners, a trial waits for the other trials' jobs of the same stage.
+  const window = (w: { started_at?: string; finished_at?: string } | null | undefined) =>
+    w?.started_at && w.finished_at ? { started_at: w.started_at, finished_at: w.finished_at } : undefined;
+  const runners = Object.fromEntries(Object.entries({ agent: window(agent), score: window(scored), verify: window(verified) })
+    .filter(([, w]) => w)) as NonNullable<TrialRecord['runners']>;
+  const ends = Object.values(runners).map((w) => w.finished_at).sort();
   const record: TrialRecord = {
     schema_version: 2,
     ticket,
     trial,
     kind: meta.kind,
     criteria: agent?.criteria ?? [],
-    started_at: agent?.started_at ?? new Date().toISOString(),
-    finished_at: new Date().toISOString(),
+    started_at: agent?.started_at ?? scored?.started_at ?? new Date().toISOString(),
+    finished_at: ends.at(-1) ?? new Date().toISOString(),
+    runners,
     phase1: scored?.dry_run?.phase1 ?? agent?.phase1 ?? failedPhase1(agent ? 'phase 1 did not run' : 'the agent runner sent nothing back'),
     changed_non_test_files: agent?.changed_non_test_files ?? [],
     sandbox_placeholders: agent?.sandbox_placeholders ?? [],

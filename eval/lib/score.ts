@@ -79,7 +79,13 @@ export interface TrialRecord {
   variants: { base?: VariantResult; gold?: VariantResult; bugs: Record<string, VariantResult> };
   phase2: { gold?: AgentRun; bug?: AgentRun & { id: string } } | null;
   isolation?: Isolation;
+  /**
+   * Schema 2: when each runner worked on the trial, from its first step to its last (installs and
+   * the wait for the other trials' jobs left out). started_at and finished_at then bound them all.
+   */
+  runners?: Partial<Record<RunnerName, { started_at: string; finished_at: string }>>;
 }
+export type RunnerName = 'agent' | 'score' | 'verify';
 
 const sumCounts = (counts: Record<string, number>[]) => {
   const total: Record<string, number> = {};
@@ -130,7 +136,13 @@ export interface TrialScore {
   cost_usd: number;
   phase1_duration_ms: number | null;
   phase1_turns: number | null;
+  /**
+   * Time the trial's steps ran. One runner per trial (schema 1): from start to finish. Separate runners
+   * (schema 2): the sum of each runner's working time, without the wait between them.
+   */
   wall_clock_ms: number | null;
+  /** Working time on each runner (schema 2); null for a trial run on one runner. */
+  runner_ms: Partial<Record<RunnerName, number>> | null;
   started_at: string;
   finished_at: string;
 }
@@ -195,7 +207,11 @@ export function scoreTrial(record: TrialRecord): TrialScore {
       cache_read: sum.cache_read + (r.tokens?.cache_read ?? 0), cache_creation: sum.cache_creation + (r.tokens?.cache_creation ?? 0),
     }), { input: 0, output: 0, cache_read: 0, cache_creation: 0 })
     : null;
-  const wall = Date.parse(record.finished_at) - Date.parse(record.started_at);
+  const spanOf = (w: { started_at: string; finished_at: string }) => Date.parse(w.finished_at) - Date.parse(w.started_at);
+  const runnerMs = record.runners && Object.keys(record.runners).length
+    ? Object.fromEntries(Object.entries(record.runners).map(([name, w]) => [name, spanOf(w)]).filter(([, ms]) => Number.isFinite(ms))) as Partial<Record<RunnerName, number>>
+    : null;
+  const wall = runnerMs ? Object.values(runnerMs).reduce((a, b) => a + b, 0) : Date.parse(record.finished_at) - Date.parse(record.started_at);
 
   return {
     ticket: record.ticket,
@@ -235,6 +251,7 @@ export function scoreTrial(record: TrialRecord): TrialScore {
     phase1_duration_ms: record.phase1.duration_ms,
     phase1_turns: record.phase1.num_turns,
     wall_clock_ms: Number.isFinite(wall) ? wall : null,
+    runner_ms: runnerMs,
     started_at: record.started_at,
     finished_at: record.finished_at,
   };

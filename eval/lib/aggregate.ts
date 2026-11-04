@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from '
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { scoreTrial, tokensFromModelUsage } from './score.ts';
-import type { TrialRecord, TrialScore, VerifierOutcome } from './score.ts';
+import type { RunnerName, TrialRecord, TrialScore, VerifierOutcome } from './score.ts';
 import { clusteredStandardError, passAtK, passHatK, percentile, wilson } from './stats.ts';
 import { toolHealth } from './transcript.ts';
 import type { Proportion } from './stats.ts';
@@ -33,8 +33,14 @@ export interface Report {
     first_start: string | null;
     last_finish: string | null;
     span_ms: number | null;
+    /**
+     * The trials' working time divided by the span: how many trial steps ran at once on average.
+     * Working time leaves out each runner's installs and, with separate runners, the wait between them.
+     */
     effective_parallelism: number | null;
   };
+  /** Working time per runner, in seconds, over the trials run on separate runners (n of them). */
+  runner_time_s: Record<RunnerName, { n: number; total: number; p50: number | null; p95: number | null }>;
   metrics: Record<string, Metric>;
   reliability: { k: number; pass_at_1: number | null; pass_at_k: number | null; pass_hat_k: number | null };
   cost_usd: { total: number; mean_per_trial: number | null; p50: number | null; p95: number | null };
@@ -127,6 +133,10 @@ export function aggregate(scores: TrialScore[]): Report {
   const finishes = scores.map((s) => Date.parse(s.finished_at)).filter(Number.isFinite);
   const span = starts.length && finishes.length ? Math.max(...finishes) - Math.min(...starts) : null;
   const busy = scores.reduce((sum, s) => sum + (s.wall_clock_ms ?? 0), 0);
+  const runnerTime = (name: RunnerName) => {
+    const values = scores.flatMap((s) => (s.runner_ms?.[name] === undefined ? [] : [s.runner_ms[name] / 1000]));
+    return { n: values.length, total: round(values.reduce((a, b) => a + b, 0), 1) ?? 0, p50: round(percentile(values, 50), 1), p95: round(percentile(values, 95), 1) };
+  };
   const costs = scores.map((s) => s.cost_usd);
   const durations = scores.flatMap((s) => (s.phase1_duration_ms === null ? [] : [s.phase1_duration_ms / 1000]));
   const turns = scores.flatMap((s) => (s.phase1_turns === null ? [] : [s.phase1_turns]));
@@ -187,6 +197,7 @@ export function aggregate(scores: TrialScore[]): Report {
       n: withTokens.length, input: tokenSum('input'), output: tokenSum('output'), cache_read: tokenSum('cache_read'), cache_creation: tokenSum('cache_creation'),
       mean_total_per_trial: withTokens.length ? Math.round(withTokens.reduce((a, t) => a + t.input + t.output + t.cache_read + t.cache_creation, 0) / withTokens.length) : null,
     },
+    runner_time_s: { agent: runnerTime('agent'), score: runnerTime('score'), verify: runnerTime('verify') },
     phase1_duration_s: { n: durations.length, p50: round(percentile(durations, 50), 1), p95: round(percentile(durations, 95), 1), max: durations.length ? round(Math.max(...durations), 1) : null },
     phase1_turns: { n: turns.length, p50: round(percentile(turns, 50), 1), p95: round(percentile(turns, 95), 1) },
     guard_blocks: {
@@ -238,6 +249,13 @@ function guardLine(g: Report['guard_blocks']): string {
   return `**Guard hook:** ${g.total} refused tool call(s) in ${g.trials} phase 1 session(s), ${g.trials_with_blocks} of them with at least one${reasons ? ` (${reasons})` : ''}.`
     + (g.trials_missing_subagent_transcripts ? ` In ${g.trials_missing_subagent_transcripts} trial(s), a subagent's transcript was not found: their count is a lower bound.` : '')
     + ' A refusal is the guard doing its job; the count shows how often the agent tried something outside its rules.';
+}
+
+/** Working time per runner, when the trials ran on separate runners. */
+function runnerLine(t: Report['runner_time_s']): string {
+  const parts = (['agent', 'score', 'verify'] as const).filter((name) => t[name].n)
+    .map((name) => `${name} ${t[name].n} run(s), p50 ${t[name].p50} s, p95 ${t[name].p95} s, ${t[name].total} s in all`);
+  return parts.length ? ` Working time by runner: ${parts.join('; ')}.` : '';
 }
 
 const counts = (byName: Record<string, number>) => Object.entries(byName).sort((a, b) => b[1] - a[1]).map(([name, n]) => `${name} ${n}`).join(', ');
@@ -298,7 +316,8 @@ export function toMarkdown(report: Report): string {
     '',
     `**Phase 1 duration** (${report.phase1_duration_s.n} runs): p50 ${report.phase1_duration_s.p50 ?? 'n/a'} s, p95 ${report.phase1_duration_s.p95 ?? 'n/a'} s, max ${report.phase1_duration_s.max ?? 'n/a'} s. Turns (${report.phase1_turns.n} runs): p50 ${report.phase1_turns.p50 ?? 'n/a'}, p95 ${report.phase1_turns.p95 ?? 'n/a'}.`,
     '',
-    `**Load:** campaign span ${c.span_ms === null ? 'n/a' : `${(c.span_ms / 60000).toFixed(1)} min`}, effective parallelism ${c.effective_parallelism ?? 'n/a'}.`,
+    `**Load:** campaign span ${c.span_ms === null ? 'n/a' : `${(c.span_ms / 60000).toFixed(1)} min`}, effective parallelism ${c.effective_parallelism ?? 'n/a'} (the trials' working time over the span; installs left out).`
+      + runnerLine(report.runner_time_s),
     '',
     '| Ticket | Kind | Trials | Successes | pass^k | Valid RED | Fail-to-pass | Bugs detected | Trials with false positives | Mean cost |',
     '|---|---|---|---|---|---|---|---|---|---|',

@@ -149,7 +149,9 @@ Computed by `eval/lib/score.ts` (one trial) and `eval/lib/aggregate.ts` (the cam
 - **Clustered standard error.** The trials of one ticket are correlated, so the report also gives the standard error clustered by ticket: `sqrt(sum over tickets of (sum of residuals)^2) / N`.
 - **Reliability.** pass@k is the chance that at least one of k trials succeeds; pass^k is the chance that all k succeed. Both use the unbiased estimators `1 - C(n-c, k)/C(n, k)` and `C(c, k)/C(n, k)` per ticket, averaged over tickets, with k equal to the number of trials per ticket.
 - **Cost, duration and turns** are reported as total, p50 and p95. The cost is the one the Claude CLI reports. Durations and turns are given with the number of runs they cover.
-- **Load.** Effective parallelism is the sum of trial durations divided by the campaign's span.
+- **Load.** Effective parallelism is the trials' working time divided by the campaign's span, from the first trial's start to the last one's end. A trial's working time leaves out the installs of each runner.
+  - With separate runners, it is the sum of the time each runner worked on the trial; the wait between runners is left out. A scoring job waits until every agent job is done, so counting a trial from its start to its end would count other trials' jobs as its own work.
+  - The report also gives each runner's working time: p50, p95 and total.
 
 ## Run it
 
