@@ -304,5 +304,24 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 2.3829
+  },
+  {
+    "id": "gh-41825778379",
+    "label": "follow-up of smoke run 32, run 33",
+    "role": "campaign",
+    "started_at": "2026-11-04T12:02:02Z",
+    "commit": "a2ded8c",
+    "agent": "43cb10d883b4",
+    "writer_prompt": "b736198",
+    "scoring": "original at a2ded8c",
+    "tickets": 2,
+    "trials": 6,
+    "agent_errors": 0,
+    "successes": 3,
+    "bugs_detected": "9/12",
+    "trials_with_false_positives": 0,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 0.8142
   }
 ]

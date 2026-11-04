@@ -82,6 +82,11 @@ QA eval run 41822486138 (run 32) ran with `tickets: smoke` and `trials: adaptive
   It is the same agent as the baseline, so these are differences between two measurements of one agent, which the decision neither confirms nor rules out. It asks for a rerun of EVAL-1 and EVAL-8 with 3 trials. `enough_trials` passed: EVAL-14 and EVAL-15 ran 2 trials each, but they are not critical and their outcome did not change.
 - **Rotation:** EVAL-14 and EVAL-15 ran, so the next selection takes EVAL-16 and EVAL-2.
 - **Backtest:** unchanged.
+- **Follow-up, run 33:** EVAL-1 and EVAL-8 again, 3 trials each, in the history as "follow-up of smoke run 32, run 33".
+  - EVAL-8 passed 3/3. EVAL-1 failed 3/3, with `discount-includes-shipping` missed each time.
+  - Validated with run 32 as one candidate, the decision stays review: EVAL-1 at 1/3 → 1/8, `discount-includes-shipping` at 2/3 → 1/8, `bar-hidden-on-phones` at 3/3 → 7/8.
+  - It first asked for yet another rerun of both tickets. Since then, a ticket gets one follow-up, and the next step is a human review.
+  - That review is [2026-11-04-eval-1-ac-1.md](2026-11-04-eval-1-ac-1.md): the misses test a cart where shipping is free, on which the bug cannot show.
 - **Run 31**, the same campaign launched first, is not in the history:
   - the API credit ran out halfway, so 12 of its 24 trials and every verifier run ended with an API error;
   - GitHub never started 4 of its scoring jobs, and their trials were assembled without scores. That is why the history now records such a trial as a `scoring_error`, left out of comparisons like an agent error.
