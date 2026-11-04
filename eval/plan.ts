@@ -3,8 +3,8 @@
 // specs go into the agent bundle, for GITHUB_OUTPUT.
 // Inputs come from the environment: TICKETS ("all", "smoke" for a selection from the history made by
 // eval/smoke.ts, whose reasons go to the run's summary, or keys separated by spaces or commas),
-// TRIALS (1-10, or "adaptive": each ticket's trials from eval/trials-policy.json, see eval/trials.ts),
-// TRIALS (1-10) and MAX_PARALLEL (1-20). RECHECK lists earlier QA eval run ids, separated by spaces
+// TRIALS (1-10, or "adaptive": each ticket's trials from eval/trials-policy.json, see eval/trials.ts)
+// and MAX_PARALLEL (1-20). RECHECK lists earlier QA eval run ids, separated by spaces
 // or commas, to aggregate again with the current code instead of running trials.
 import { appendFileSync } from 'node:fs';
 import { listTickets, loadTicket } from './lib/workspace.ts';
@@ -21,13 +21,16 @@ function integer(name: string, min: number, max: number): number {
   return Number(raw);
 }
 
+// TRIALS=adaptive: each ticket gets the trials of eval/trials-policy.json, fixed from the history now.
+const adaptive = (process.env.TRIALS ?? '').trim() === 'adaptive';
+const trials = adaptive ? 0 : integer('TRIALS', 1, 10);
 const requested = (process.env.TICKETS ?? 'all').trim();
 let tickets: string[];
 if (requested === 'smoke') {
   const { policy, critical, campaigns } = smokeInputs();
   const selection = selectSmoke(campaigns, currentCorpus(), policy, critical, new Date().toISOString());
   tickets = selection.tickets.map((p) => p.ticket);
-  const report = selectionMarkdown(selection, policy);
+  const report = selectionMarkdown(selection, policy, adaptive ? 'with the trials of the adaptive allocation' : `${trials} trial(s) each`);
   console.error(report);
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${report}\n`);
 } else {
@@ -37,8 +40,6 @@ for (const ticket of tickets) {
   if (!/^[A-Z][A-Z0-9]*-\d+$/.test(ticket)) { console.error(`Invalid ticket key: ${ticket}`); process.exit(1); }
   try { loadTicket(ticket); } catch { console.error(`Unknown eval ticket: ${ticket}`); process.exit(1); }
 }
-// TRIALS=adaptive: each ticket gets the trials of eval/trials-policy.json, fixed from the history now.
-const adaptive = (process.env.TRIALS ?? '').trim() === 'adaptive';
 const trialsOf = new Map<string, number>();
 if (adaptive) {
   const { allocation, markdown } = adaptiveAllocation(tickets.join(' '));
@@ -46,7 +47,6 @@ if (adaptive) {
   console.error(markdown);
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${markdown}\n`);
 }
-const trials = adaptive ? 0 : integer('TRIALS', 1, 10);
 const maxParallel = integer('MAX_PARALLEL', 1, 20);
 const include = tickets.flatMap((ticket) => Array.from({ length: adaptive ? trialsOf.get(ticket)! : trials }, (_, i) => ({ ticket, trial: i + 1 })));
 if (!include.length || include.length > 256) { console.error(`The matrix must hold 1 to 256 trials, got ${include.length}`); process.exit(1); }

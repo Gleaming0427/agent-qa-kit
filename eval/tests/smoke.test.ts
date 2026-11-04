@@ -144,7 +144,15 @@ test('the QA eval planner turns "smoke" into the selection, with its reasons in 
     assert.equal(tickets.length, policy.size);
     assert.ok(tickets.includes('EVAL-9') && tickets.includes('EVAL-10'));
     assert.match(run.stdout, new RegExp(`include=.*"ticket":"${tickets[0]}","trial":3`));
-    assert.match(readFileSync(summary, 'utf8'), /^# Smoke selection: /);
+    assert.match(readFileSync(summary, 'utf8'), /^# Smoke selection: [^\n]*\n\n\d+ ticket\(s\) under eval\/smoke-policy\.json, 3 trial\(s\) each\./);
+    // With adaptive trials, the summary does not claim the policy's trials.
+    const adaptiveSummary = join(work, 'adaptive.md');
+    const adaptive = spawnSync(process.execPath, [join(KIT, 'eval/plan.ts')], {
+      encoding: 'utf8', env: { ...process.env, TICKETS: 'smoke', TRIALS: 'adaptive', MAX_PARALLEL: '6', RECHECK: '', GITHUB_STEP_SUMMARY: adaptiveSummary },
+    });
+    assert.equal(adaptive.status, 0, adaptive.stderr);
+    assert.match(readFileSync(adaptiveSummary, 'utf8'), /ticket\(s\) under eval\/smoke-policy\.json, with the trials of the adaptive allocation\./);
+    assert.doesNotMatch(readFileSync(adaptiveSummary, 'utf8'), /trial\(s\) each/);
     const cli = spawnSync(process.execPath, [join(KIT, 'eval/smoke.ts'), 'tickets'], { encoding: 'utf8' });
     assert.equal(cli.stdout.trim(), tickets.join(' '));
   } finally {

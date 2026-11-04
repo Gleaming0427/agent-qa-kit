@@ -255,11 +255,12 @@ export function backtest(campaigns: Campaign[], policy: SmokePolicy, critical: C
 
 // ---------------------------------------------------------------- reports
 
-export function selectionMarkdown(s: Selection, policy: SmokePolicy): string {
+// trials: what the run gives each ticket, when it is not the policy's trials (QA eval's trials input).
+export function selectionMarkdown(s: Selection, policy: SmokePolicy, trials = `${policy.trials} trial(s) each`): string {
   return [
     `# Smoke selection: ${s.tickets.map((p) => p.ticket).join(' ')}`,
     '',
-    `${s.tickets.length} ticket(s), ${policy.trials} trial(s) each, under eval/smoke-policy.json. Inputs digest \`${s.inputs_digest.slice(0, 12)}\`: the same history, corpus and policy give the same selection.`,
+    `${s.tickets.length} ticket(s) under eval/smoke-policy.json, ${trials}. Inputs digest \`${s.inputs_digest.slice(0, 12)}\`: the same history, corpus and policy give the same selection.`,
     '',
     '| Ticket | Kind | Picked as | Why |',
     '|---|---|---|---|',
