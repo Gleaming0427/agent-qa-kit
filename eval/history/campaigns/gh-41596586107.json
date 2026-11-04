@@ -43,6 +43,7 @@
     "tickets": [
       "EVAL-11"
     ],
+    "selection": null,
     "trials": 1,
     "trials_per_ticket": 1,
     "verify": true,

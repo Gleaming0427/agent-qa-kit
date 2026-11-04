@@ -101,7 +101,11 @@ export interface Campaign {
   source: { kind: 'github-actions'; repository: string; run_id: number; run_number: number | null; branch: string | null; started_at: string | null; url: string };
   agent: AgentVersion;
   environment: Environment;
-  config: { tickets: string[]; trials: number; trials_per_ticket: number | null; verify: boolean | null; dry_run: boolean; inferred: string[] };
+  /**
+   * selection: how the run chose its tickets, from its "tickets" input: every ticket ("all"), a smoke
+   * selection from the history ("smoke"), or a list; null when the inputs were not recorded.
+   */
+  config: { tickets: string[]; selection: 'all' | 'smoke' | 'list' | null; trials: number; trials_per_ticket: number | null; verify: boolean | null; dry_run: boolean; inferred: string[] };
   scoring: Scoring;
   provenance: { file: string; sha256: string; artifact: { id: number; name: string; digest: string } | null; doc: string | null };
   notes: string[];
@@ -264,6 +268,11 @@ export interface CampaignInput {
   notes: string[];
 }
 
+const selectionOf = (tickets: string | undefined): Campaign['config']['selection'] => {
+  const t = tickets?.trim();
+  return t === undefined ? null : t === 'all' || t === '' ? 'all' : t === 'smoke' ? 'smoke' : 'list';
+};
+
 /** A campaign from the trial scores of a report (the "trials" of eval-report.json or of a recheck). */
 export function buildCampaign(scores: TrialScore[], input: CampaignInput, versions: { agent: AgentVersion; environment: Environment; scorer: string }): Campaign {
   let observations = scores.map(observation).sort((a, b) => byTicket(a.ticket, b.ticket) || a.trial - b.trial);
@@ -308,7 +317,7 @@ export function buildCampaign(scores: TrialScore[], input: CampaignInput, versio
     },
     agent: versions.agent,
     environment: versions.environment,
-    config: { tickets, trials: observations.length, trials_per_ticket: trialsPerTicket, verify, dry_run: dryRun, inferred },
+    config: { tickets, selection: selectionOf(known.tickets), trials: observations.length, trials_per_ticket: trialsPerTicket, verify, dry_run: dryRun, inferred },
     scoring: { kind: input.scoring.kind, commit: input.scoring.commit, scorer: versions.scorer, run_id: input.scoring.run_id, corrections },
     provenance: input.provenance,
     notes: input.notes,

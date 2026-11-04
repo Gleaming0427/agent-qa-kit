@@ -31,13 +31,20 @@ test('the history is rebuilt from its sources, byte for byte, with no model call
 });
 
 test('the history holds the 13 rechecked campaigns and the campaigns run since, with no error', () => {
-  assert.equal(committed.length, 14);
-  assert.equal(committed.reduce((n, c) => n + c.observations.length, 0), 274);
+  assert.equal(committed.length, sources.campaigns.length);
+  const sourceTrials = sources.campaigns.reduce((n, e) => n + (JSON.parse(readFileSync(join(HISTORY, e.source.file), 'utf8')) as { trials: unknown[] }).trials.length, 0);
+  assert.equal(committed.reduce((n, c) => n + c.observations.length, 0), sourceTrials);
   assert.deepEqual(checkHistory(committed).filter((p) => p.level === 'error'), []);
+  const rechecked = committed.filter((c) => c.scoring.kind === 'recomputed');
+  assert.equal(rechecked.length, 13);
+  assert.equal(rechecked.reduce((n, c) => n + c.observations.length, 0), 272);
   for (const c of committed) {
-    assert.equal(c.scoring.kind, c.label === 'D clean, split runners' ? 'original' : 'recomputed', c.label);
+    // A campaign run since is scored by its own run, and records how it chose its tickets.
+    if (c.scoring.kind === 'original') assert.equal(c.scoring.run_id, c.source.run_id, c.label);
+    assert.equal(c.config.selection === null, c.scoring.kind === 'recomputed', c.label);
     assert.ok(c.provenance.sha256 && c.provenance.artifact?.digest.startsWith('sha256:'), c.id);
   }
+  assert.equal(byLabel('smoke, run 30').config.selection, 'smoke');
   // A campaign run since records its inputs and is complete.
   const split = byLabel('D clean, split runners');
   assert.deepEqual(split.config.inferred, []);
@@ -60,7 +67,7 @@ test('build refuses to delete a campaign file that has no source', () => {
 
 test('the tokens are known for every trial a model answered', () => {
   const all = committed.flatMap((c) => c.observations.map((o) => ({ label: c.label, o })));
-  assert.equal(all.filter(({ o }) => o.tokens).length, 256);
+  assert.equal(all.filter(({ o }) => o.tokens).length, all.length - 18);
   // The 18 without: B's regression check, stopped by the spend limit before any model answered.
   const without = all.filter(({ o }) => !o.tokens);
   assert.deepEqual([...new Set(without.map(({ label }) => label))], ['B, regression check']);
@@ -167,7 +174,10 @@ const input = (over: Partial<CampaignInput> = {}): CampaignInput => ({
 test('a campaign records the workflow inputs it was given, and infers the others', () => {
   const scores = [scoreTrial(record(1)), scoreTrial(record(2))];
   const given = buildCampaign(scores, input({ inputs: { trials: '2', verify: false, dry_run: false } }), versions);
-  assert.deepEqual(given.config, { tickets: ['EVAL-1'], trials: 2, trials_per_ticket: 2, verify: false, dry_run: false, inferred: [] });
+  assert.deepEqual(given.config, { tickets: ['EVAL-1'], selection: null, trials: 2, trials_per_ticket: 2, verify: false, dry_run: false, inferred: [] });
+  assert.equal(buildCampaign(scores, input({ inputs: { tickets: 'smoke' } }), versions).config.selection, 'smoke');
+  assert.equal(buildCampaign(scores, input({ inputs: { tickets: 'EVAL-1 EVAL-2' } }), versions).config.selection, 'list');
+  assert.equal(buildCampaign(scores, input({ inputs: { tickets: 'all' } }), versions).config.selection, 'all');
   assert.equal(given.observations[0].tokens?.cache_read, 3);
   assert.equal(given.observations[0].isolation_findings, 0);
   assert.deepEqual(given.missing, { guard_blocks: 2, corpus_check: 2, models: 2 });

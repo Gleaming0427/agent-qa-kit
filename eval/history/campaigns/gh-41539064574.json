@@ -53,6 +53,7 @@
       "EVAL-15",
       "EVAL-16"
     ],
+    "selection": null,
     "trials": 18,
     "trials_per_ticket": 3,
     "verify": true,

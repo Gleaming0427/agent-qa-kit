@@ -272,7 +272,7 @@ node eval/smoke.ts select      # the next smoke run, with its reasons
 node eval/smoke.ts backtest    # what smoke runs would have caught in the history, and at what cost
 ```
 
-The backtest replays the history. For each version, it makes the selection from the history before that version, then replays the smoke run with the version's own trials on the selected tickets. It compares the result with what the version's full run found against the previous version: tickets worse, tickets regressed (from every trial passing to every trial failing), tickets better. It also gives the cost of each. The policy's values are hypotheses to check this way; see [results/2026-11-04-smoke-backtest.md](results/2026-11-04-smoke-backtest.md).
+The backtest replays the history. For each version, it makes the selection from the history before that version, then replays the smoke run with the version's own trials on the selected tickets. It compares the result with what the version's full run found against the previous version: tickets worse, tickets regressed (from every trial passing to every trial failing), tickets better. It also gives the cost of each. A version's full run leaves out its smoke runs (`config.selection` in the history): a smoke run is a chosen subset. The policy's values are hypotheses to check this way; see [results/2026-11-04-smoke-backtest.md](results/2026-11-04-smoke-backtest.md).
 
 ## Release validation
 

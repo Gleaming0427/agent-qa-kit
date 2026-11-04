@@ -45,6 +45,7 @@
       "EVAL-1",
       "EVAL-11"
     ],
+    "selection": "list",
     "trials": 2,
     "trials_per_ticket": 1,
     "verify": true,

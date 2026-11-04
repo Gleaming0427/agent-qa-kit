@@ -26,7 +26,7 @@ node eval/history.ts rows C                 # one JSON line per trial and bug, f
 | `source` | The GitHub Actions run: repository, run id and number, branch, start. |
 | `agent` | The agent's version at the campaign's commit: the writer's and the verifier's prompts (git blobs), models and efforts; the hooks (git tree), the settings, a digest of `qa/` without the kit's own tests, and the Claude Code version. `id` is a digest of all of them: the same id means the same agent. |
 | `environment` | The task's version: the git tree of each ticket's corpus folder, of the shop, and a digest of the harness that built the variants and ran the tests (`eval/trial.ts`, `workspace.ts`, `sandbox.ts`). |
-| `config` | Tickets, trials, trials per ticket, verifier on or off, dry run. A report made before this history does not record the workflow's inputs: those values are inferred from the trials and listed in `inferred`. |
+| `config` | Tickets, how they were chosen (`selection`: `all`, `smoke`, a `list`, or `null` when the inputs were not recorded), trials, trials per ticket, verifier on or off, dry run. A report made before this history does not record the workflow's inputs: those values are inferred from the trials and listed in `inferred`. |
 | `scoring` | `original` (the campaign's own report) or `recomputed` (its trial records scored again later), the commit and a digest of the scoring code (`score.ts`, `aggregate.ts`, `transcript.ts`), and the corrections applied. |
 | `provenance` | The source file, its sha256, the artifact and its digest, and the document in `results/`. |
 | `notes` | What the documents say about the campaign that the data does not show. |

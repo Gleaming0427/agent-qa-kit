@@ -34,6 +34,27 @@ For each change:
 
 The policy's size went from 5, the first hypothesis, to 6: on this history, the sixth ticket catches one more worse ticket, and the seventh catches none.
 
+## The first smoke run
+
+QA eval run 41793345183 (run 30) ran with `tickets: smoke` on 4 November: the agent of D clean, 3 trials each, on the six tickets above. It is in the history as "smoke, run 30".
+
+| Ticket | Picked as | D clean (before) | Smoke run |
+|---|---|---|---|
+| EVAL-9 | critical | 3/3 | 3/3 |
+| EVAL-10 | critical | 3/3 | 3/3 |
+| EVAL-1 | kind, regressed, unstable | 1/3 | 3/3 |
+| EVAL-8 | regressed, unstable | 2/3 | 3/3 |
+| EVAL-12 | rotation | 3/3 | 3/3 |
+| EVAL-13 | rotation | 3/3 | 3/3 |
+
+- **Results:**
+  - 18 of 18 trials succeeded, and 27 of 27 bugs were detected, with no false positive;
+  - the verifier was right in 15 of 15 runs on the reference and on the bug;
+  - $1.89 in all, $0.105 per trial.
+- **Release decision** against D clean, under the rules at the run's commit: accepted. It is the same agent as the baseline, so this says that the smoke run found no problem, not that a new version can be released.
+- **Rotation:** EVAL-12 and EVAL-13 ran, so the next selection takes EVAL-14 and EVAL-15 in their place. The four other tickets stay: the critical ones, and EVAL-1 and EVAL-8 for their earlier regressions.
+- **Backtest:** unchanged, since a version's full run leaves out its smoke runs.
+
 ## Limits
 
 - 4 changes of version and 4 tickets that got worse, each by one or two trials of three: these are differences the same agent also shows between two campaigns (see [2026-11-04-paired-comparisons.md](2026-11-04-paired-comparisons.md)). The backtest measures how well the selection follows them, not how well it catches a real regression, which the history has none of.

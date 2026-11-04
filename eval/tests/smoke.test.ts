@@ -10,7 +10,9 @@ import { loadCampaigns } from '../lib/history.ts';
 import type { Campaign, Observation } from '../lib/history.ts';
 import { KIT } from '../lib/workspace.ts';
 
-const campaigns = loadCampaigns(join(KIT, 'eval/history/campaigns'));
+const everything = loadCampaigns(join(KIT, 'eval/history/campaigns'));
+// The history as eval/results/2026-11-04-smoke-backtest.md read it, before the first smoke run.
+const campaigns = everything.filter((c) => (c.source.started_at ?? '') < '2026-11-04T07:00:00Z');
 const policy = JSON.parse(readFileSync(join(KIT, 'eval/smoke-policy.json'), 'utf8')) as SmokePolicy;
 const critical = (JSON.parse(readFileSync(join(KIT, 'eval/compare-policy.json'), 'utf8')) as { critical: Critical }).critical;
 const latest = campaigns.find((c) => c.label === 'D, clean regression check')!;
@@ -47,6 +49,17 @@ test('every critical ticket and every kind is in every selection, each pick with
     ['EVAL-9', 'critical'], ['EVAL-10', 'critical'], ['EVAL-1', 'kind'], ['EVAL-8', 'regressed'], ['EVAL-12', 'rotation'], ['EVAL-13', 'rotation'],
   ]);
   assert.ok(s.tickets.find((p) => p.ticket === 'EVAL-8')!.reasons.some((r) => r.startsWith('regressed from D to D, clean: 3/3 → 2/3')));
+});
+
+test('the first real smoke run moved the rotation on', () => {
+  const before = select().tickets.map((p) => p.ticket);
+  const after = select(everything).tickets;
+  assert.deepEqual(before, ['EVAL-9', 'EVAL-10', 'EVAL-1', 'EVAL-8', 'EVAL-12', 'EVAL-13']);
+  // EVAL-12 and EVAL-13 ran in smoke run 30: the rotation now takes the next ones.
+  assert.deepEqual(after.map((p) => p.ticket), ['EVAL-9', 'EVAL-10', 'EVAL-1', 'EVAL-8', 'EVAL-14', 'EVAL-15']);
+  assert.deepEqual(after.filter((p) => p.because === 'rotation').map((p) => p.ticket), ['EVAL-14', 'EVAL-15']);
+  // A smoke run is not a full run: the backtest leaves it out of its version's full run.
+  assert.deepEqual(backtest(everything, policy, critical), backtest(campaigns, policy, critical));
 });
 
 test('a ticket whose corpus changed comes first after the critical ones', () => {

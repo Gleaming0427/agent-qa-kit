@@ -13,7 +13,7 @@
 //   5. if slots remain, more of the same rotation.
 // backtest() replays the history: for each version, the selection the history before it gives, what
 // its full run found against the previous version, how much of it the smoke run would have caught,
-// and what each would have cost.
+// and what each would have cost. A version's full run leaves out its smoke runs (config.selection).
 import { createHash } from 'node:crypto';
 import { classify } from './compare.ts';
 import type { Campaign, Observation } from './history.ts';
@@ -213,7 +213,9 @@ export function backtest(campaigns: Campaign[], policy: SmokePolicy, critical: C
   const versions = versionsOf(campaigns);
   const steps: BacktestStep[] = [];
   for (let k = 1; k < versions.length; k++) {
-    const v = versions[k];
+    // A smoke run is a chosen subset: the version's full run is everything else it ran.
+    const v = { ...versions[k], campaigns: versions[k].campaigns.filter((c) => c.config.selection !== 'smoke') };
+    if (!v.campaigns.length) continue;
     const before = campaigns.filter((c) => c.role === 'campaign' && startOf(c) < v.start);
     const trees = new Map<string, CorpusTicket>();
     for (const c of v.campaigns) {
