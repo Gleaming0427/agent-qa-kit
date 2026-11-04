@@ -217,7 +217,7 @@ node eval/compare.ts --a C --a "C, regression check" --b "D, clean" --b "D, clea
 - **Sides.** A side is one agent version. It can pool several of its campaigns, such as a campaign and its regression check, as long as each ticket's corpus is the same in all of them; a side that mixes agents is refused.
 - **Comparability.** The comparison follows `compat`:
   - it is blocked by a different scorer, a different application or a control run;
-  - it leaves out a ticket whose corpus changed, a ticket that only one side has, and trials with an agent error.
+  - it leaves out a ticket whose corpus changed, a ticket that only one side has, and trials with an agent error or a scoring error (a scoring runner that sent nothing back).
 - **Measurements.** Each version's rates over the comparable tickets, with 95% Wilson intervals:
   - trial success, bug detection, trials without a false positive, policy;
   - cost, duration and tokens, the cost compared ticket by ticket.
@@ -234,7 +234,7 @@ node eval/compare.ts --a C --a "C, regression check" --b "D, clean" --b "D, clea
     - a blocked comparison;
     - fewer than 6 comparable tickets or 3 trials per ticket;
     - a reference that saw the corpus;
-    - more than 10% agent errors;
+    - more than 10% of trials lost to agent or scoring errors;
     - any other regression;
     - an unstable unit that got worse;
     - a significant worsening in a sign test;
@@ -344,7 +344,7 @@ On the history, see [results/2026-11-04-trials.md](results/2026-11-04-trials.md)
 - **Sample size.** Sixteen tickets on one small application is a pilot: intervals are wide, and results do not transfer to another codebase without its own corpus.
 - **Authorship.** The bugs and reference implementations are written by hand. They are realistic but not representative of every defect, and they were written by the same authors as the kit. Mutation testing of the generated unit tests (for example StrykerJS with its Vitest runner) would add an independent, automatic measure.
 - **Scripted approval.** The approval before phase 2 is scripted. It measures phase 2, not the value of a human review.
-- **Sources of failure.** Phase 1 runs inside the sandbox on a GitHub-hosted runner. An infrastructure failure counts as an agent error, so read the logs before concluding.
+- **Sources of failure.** Phase 1 runs inside the sandbox on a GitHub-hosted runner. An infrastructure failure counts as an agent error, so read the logs before concluding. In the report, a trial whose scoring runner sent nothing back counts its bugs as not detected; the history records it as a scoring error, and comparisons leave it out.
 - **A public corpus.** The corpus is in this repository, so it is public. The isolation keeps it off the agent's runner, and the agent's sandbox allows no network, so the agent cannot fetch it either. A model trained on public code after the corpus was published might still have seen it. A private corpus would need its own repository, read only by the scoring runner.
 - **The verifier sees an implementation.** Phase 2 verifies the reference and a bug, so the verifier's runner holds their code as the workspace's source. It never holds the hidden tests, the ticket metadata or the names of the implementations.
 

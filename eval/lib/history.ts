@@ -63,8 +63,12 @@ export interface Observation {
   trial: number;
   started_at: string;
   finished_at: string;
-  /** agent_error: the agent or the API failed (spend limit, credit, crash); it measures the infrastructure, not the agent. */
-  status: 'ok' | 'agent_error';
+  /**
+   * agent_error: the agent or the API failed (spend limit, credit, crash). scoring_error: the agent ran
+   * on its own runner, and the scoring runner sent nothing back, so its tests were never run against the
+   * variants. Both measure the infrastructure, not the agent, and every comparison leaves them out.
+   */
+  status: 'ok' | 'agent_error' | 'scoring_error';
   models: string[];
   success: boolean;
   red_valid: boolean;
@@ -207,6 +211,12 @@ export const CORRECTIONS: Record<string, { reason: string; doc: string; apply: (
 const fingerprintOf = (s: Pick<TrialScore, 'ticket' | 'trial' | 'started_at' | 'finished_at' | 'cost_usd'>) =>
   sha256([s.ticket, s.trial, s.started_at, s.finished_at, s.cost_usd].join('|'));
 
+/**
+ * A trial of the split runners whose scoring runner sent nothing back: its bugs read as not detected only
+ * because nothing ran them. Trials run before the split have no runners and are never flagged.
+ */
+const scoringLost = (s: Pick<TrialScore, 'runner_ms'>) => Boolean(s.runner_ms) && s.runner_ms!.agent !== undefined && s.runner_ms!.score === undefined;
+
 export function observation(s: TrialScore): Observation {
   const corpusChecked = s.corpus_exposures !== null && s.corpus_exposures !== undefined;
   return {
@@ -216,7 +226,7 @@ export function observation(s: TrialScore): Observation {
     trial: s.trial,
     started_at: s.started_at,
     finished_at: s.finished_at,
-    status: s.agent_error ? 'agent_error' : 'ok',
+    status: s.agent_error ? 'agent_error' : scoringLost(s) ? 'scoring_error' : 'ok',
     models: [...s.models].sort(),
     success: s.success,
     red_valid: s.red_valid,
@@ -369,6 +379,8 @@ export function checkHistory(campaigns: Campaign[]): HistoryProblem[] {
     if (c.config.inferred.length) problems.push({ level: 'warning', campaign: c.id, message: `workflow inputs not recorded, inferred from the trials: ${c.config.inferred.join(', ')}` });
     const errors = c.observations.filter((o) => o.status === 'agent_error').length;
     if (errors) problems.push({ level: 'warning', campaign: c.id, message: `${errors} trial(s) with an agent or API error: they measure the infrastructure` });
+    const unscored = c.observations.filter((o) => o.status === 'scoring_error').length;
+    if (unscored) problems.push({ level: 'warning', campaign: c.id, message: `${unscored} trial(s) whose scoring runner sent nothing back: they measure the infrastructure` });
   }
   for (const [id, n] of ids) if (n > 1) problems.push({ level: 'error', campaign: id, message: `campaign imported ${n} times` });
   return problems;
@@ -392,7 +404,7 @@ export interface Compatibility {
  *             a different application under test;
  *   excluded  a ticket in one campaign only, or whose corpus changed;
  *   warning   a different harness, Claude Code version, number of trials, verifier setting or
- *             served model; a sight of the corpus; trials lost to agent or API errors; corrections.
+ *             served model; a sight of the corpus; trials lost to agent or API errors, or to a scoring runner; corrections.
  */
 export function compatibility(a: Campaign, b: Campaign): Compatibility {
   const blocking: string[] = [];
@@ -418,6 +430,8 @@ export function compatibility(a: Campaign, b: Campaign): Compatibility {
     if (exposed) warnings.push(`${c.label}: ${exposed} trial(s) saw the corpus (names or content)`);
     const errors = c.observations.filter((o) => o.status === 'agent_error' && comparable.includes(o.ticket)).length;
     if (errors) warnings.push(`${c.label}: ${errors} trial(s) lost to agent or API errors are left out`);
+    const unscored = c.observations.filter((o) => o.status === 'scoring_error' && comparable.includes(o.ticket)).length;
+    if (unscored) warnings.push(`${c.label}: ${unscored} trial(s) whose scoring runner sent nothing back are left out`);
     for (const fix of c.scoring.corrections) warnings.push(`${c.label}: correction "${fix.id}" changed ${fix.trials} trial(s)`);
   }
   const agentChanges: string[] = [];

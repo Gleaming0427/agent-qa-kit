@@ -51,7 +51,9 @@ export interface SideSummary {
   campaigns: string[];
   agent: string;
   trials: number;
+  /** Trials lost to the infrastructure: agent or API errors, and the scoring errors among them. */
   agent_errors: number;
+  scoring_errors: number;
   success: Proportion;
   bug_detection: Proportion;
   no_false_positive: Proportion;
@@ -131,6 +133,7 @@ function summary(side: Side, tickets: string[]): SideSummary {
     agent: agents.join(', '),
     trials: all.length,
     agent_errors: all.length - ok.length,
+    scoring_errors: all.filter((o) => o.status === 'scoring_error').length,
     success: wilson(inScope.filter((o) => o.success).length, inScope.length),
     bug_detection: wilson(bugs.filter((b) => b.detected).length, bugs.length),
     no_false_positive: wilson(withTests.filter((o) => o.false_positives === 0).length, withTests.length),
@@ -176,7 +179,7 @@ export function compare(sideA: Side, sideB: Side, policy: Policy, policyText: st
   for (const ticket of new Set([...ta.keys(), ...tb.keys()])) {
     if (excluded.has(ticket)) continue;
     if (!ta.has(ticket) || !tb.has(ticket)) excluded.set(ticket, `only in ${ta.has(ticket) ? sideA.label : sideB.label}`);
-    else if (!ta.get(ticket)!.observations.length || !tb.get(ticket)!.observations.length) excluded.set(ticket, 'no trial without an agent error on one side');
+    else if (!ta.get(ticket)!.observations.length || !tb.get(ticket)!.observations.length) excluded.set(ticket, 'no trial without an agent or scoring error on one side');
   }
   const comparable = blocking.size ? [] : [...ta.keys()].filter((t) => tb.has(t) && !excluded.has(t)).sort(byTicket);
   const isCritical = (ticket: string, kind: string) => policy.critical.kinds.includes(kind) || policy.critical.tickets.includes(ticket);
@@ -263,7 +266,9 @@ export function compare(sideA: Side, sideB: Side, policy: Policy, policyText: st
   rule('b_isolation', !sb.isolation_flagged_trials, `${sb.isolation_flagged_trials} trial(s) of ${sideB.label} sent back a trace of the corpus`);
   rule('a_corpus_exposure', !sa.corpus_exposed_trials, `${sa.corpus_exposed_trials} trial(s) of ${sideA.label} saw the corpus`);
   const errorRate = sb.trials ? sb.agent_errors / sb.trials : 0;
-  rule('b_agent_errors', errorRate <= (policy.rules.b_agent_errors.max_rate ?? 1), `${sb.agent_errors} of ${sb.trials} trial(s) of ${sideB.label} ended with an agent or API error`);
+  rule('b_agent_errors', errorRate <= (policy.rules.b_agent_errors.max_rate ?? 1), sb.scoring_errors
+    ? `${sb.agent_errors} of ${sb.trials} trial(s) of ${sideB.label} were lost to the infrastructure: ${sb.agent_errors - sb.scoring_errors} to an agent or API error, ${sb.scoring_errors} to a scoring runner that sent nothing back`
+    : `${sb.agent_errors} of ${sb.trials} trial(s) of ${sideB.label} ended with an agent or API error`);
   const units = [...ticketChanges.map((t) => ({ name: t.ticket, ...t })), ...bugChanges.map((x) => ({ name: `${x.ticket} bug ${x.bug}`, ...x }))];
   const regressed = units.filter((u) => u.category === 'regressed');
   const criticalConfirmed = regressed.filter((u) => u.critical && confirmed(u));
@@ -334,7 +339,8 @@ export function toMarkdown(c: Comparison, policy: Policy): string {
     `| Trials without a false positive | ${prop(a.no_false_positive)} | ${prop(b.no_false_positive)} |`,
     `| Policy respected (all trials) | ${prop(a.policy_ok)} | ${prop(b.policy_ok)} |`,
     `| Trials per ticket (minimum) | ${a.min_trials_per_ticket ?? 'n/a'} | ${b.min_trials_per_ticket ?? 'n/a'} |`,
-    `| Agent or API errors (all trials) | ${a.agent_errors}/${a.trials} | ${b.agent_errors}/${b.trials} |`,
+    `| Agent or API errors (all trials) | ${a.agent_errors - a.scoring_errors}/${a.trials} | ${b.agent_errors - b.scoring_errors}/${b.trials} |`,
+    ...(a.scoring_errors || b.scoring_errors ? [`| Scoring runner sent nothing back (all trials) | ${a.scoring_errors}/${a.trials} | ${b.scoring_errors}/${b.trials} |`] : []),
     `| Trials that saw the corpus | ${a.corpus_exposed_trials} | ${b.corpus_exposed_trials} |`,
     `| Mean cost per trial (by ticket) | ${c.measurements.cost.a === null ? 'n/a' : `$${c.measurements.cost.a.toFixed(4)}`} | ${c.measurements.cost.b === null ? 'n/a' : `$${c.measurements.cost.b.toFixed(4)}`} (${c.measurements.cost.relative_change === null ? 'n/a' : `${c.measurements.cost.relative_change >= 0 ? '+' : ''}${(c.measurements.cost.relative_change * 100).toFixed(1)}%`}) |`,
     `| Phase 1 duration, p50 | ${a.duration_p50_s ?? 'n/a'} s | ${b.duration_p50_s ?? 'n/a'} s |`,

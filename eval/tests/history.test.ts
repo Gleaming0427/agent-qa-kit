@@ -9,6 +9,8 @@ import type { AgentVersion, Campaign, CampaignInput, Environment } from '../lib/
 import { scoreTrial } from '../lib/score.ts';
 import type { AgentRun, TrialRecord, TrialScore } from '../lib/score.ts';
 import { KIT } from '../lib/workspace.ts';
+import { compare } from '../lib/compare.ts';
+import type { Policy } from '../lib/compare.ts';
 
 const HISTORY = join(KIT, 'eval/history');
 const sources = JSON.parse(readFileSync(join(HISTORY, 'sources.json'), 'utf8')) as { campaigns: { run_id: number; commit: string; scoring: { commit: string }; corrections: string[]; source: { file: string } }[] };
@@ -190,6 +192,28 @@ test('a campaign records the workflow inputs it was given, and infers the others
   assert.equal(rows.length, 2);
   assert.equal(rows[0].bug, 'b1');
   assert.equal(rows[0].tokens, 10);
+});
+
+test('a trial whose scoring runner sent nothing back is a scoring error, left out of comparisons', () => {
+  // Run 31: GitHub never created four scoring jobs, and their trials were assembled without scores.
+  const window = (m: number) => ({ started_at: `2026-11-04T10:0${m}:00.000Z`, finished_at: `2026-11-04T10:0${m}:30.000Z` });
+  const split = (trial: number, scored: boolean) => record(trial, scored
+    ? { runners: { agent: window(trial), score: window(trial + 1) } }
+    : { runners: { agent: window(trial) }, variants: { bugs: {} }, isolation: undefined });
+  const c = buildCampaign([scoreTrial(split(1, true)), scoreTrial(split(2, false))], input({ inputs: { trials: '2', verify: false, dry_run: false } }), versions);
+  assert.deepEqual(c.observations.map((o) => o.status), ['ok', 'scoring_error']);
+  assert.equal(c.observations[1].bugs[0].detected, false, 'nothing ran its tests against the bug');
+  assert.ok(checkHistory([c]).some((p) => p.message === '1 trial(s) whose scoring runner sent nothing back: they measure the infrastructure'));
+  // A trial run before the split has no runners: it is never flagged.
+  assert.equal(buildCampaign([scoreTrial(record(1, { variants: { bugs: {} }, isolation: undefined }))], input(), versions).observations[0].status, 'ok');
+  // The comparison leaves it out, counts it apart from agent errors, and says so.
+  const reference = buildCampaign([scoreTrial(split(1, true)), scoreTrial(split(2, true))], input({ run_id: 8, provenance: { file: 'g', sha256: 'i', artifact: null, doc: null }, inputs: { trials: '2', verify: false, dry_run: false } }), versions);
+  assert.ok(compatibility(reference, c).warnings.includes('test: 1 trial(s) whose scoring runner sent nothing back are left out'));
+  const policy = JSON.parse(readFileSync(join(KIT, 'eval/compare-policy.json'), 'utf8')) as Policy;
+  const result = compare({ label: 'ref', campaigns: [reference] }, { label: 'new', campaigns: [c] }, policy, JSON.stringify(policy));
+  assert.equal(result.b.scoring_errors, 1);
+  assert.equal(result.measurements.tickets[0].b.trials, 1);
+  assert.ok(result.decision.reasons.some((r) => r.rule === 'b_agent_errors' && r.message === '1 of 2 trial(s) of new were lost to the infrastructure: 0 to an agent or API error, 1 to a scoring runner that sent nothing back'));
 });
 
 test('from-report turns the report job\'s output into a campaign file', { skip: !hasCommit(KIT, 'HEAD') && 'needs a git checkout' }, () => {

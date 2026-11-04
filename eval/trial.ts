@@ -497,6 +497,8 @@ function finish(ticket: string, trial: number): TrialRecord {
     return label ? [roles[label] + first.slice(label.length), ...rest].join('/') : name;
   });
   writeJson(join(p.trial, 'trial.json'), record);
+  // Its bugs would read as not detected: the history records it as a scoring error, left out of comparisons.
+  if (runners.agent && !runners.score) console.error(`::warning::${ticket} trial ${trial}: the scoring runner sent nothing back; the history records a scoring error`);
   const s = scoreTrial(record);
   console.log(JSON.stringify({ ticket: s.ticket, trial: s.trial, success: s.success, red_valid: s.red_valid, f2p: `${s.f2p.filter((u) => u.ok).length}/${s.f2p.length}`, bugs: s.bugs, false_positives: s.false_positives.length, policy_ok: s.policy_ok, verifier: s.verifier, cost_usd: s.cost_usd, tokens: s.tokens, isolation_findings: s.isolation_findings }));
   return record;

@@ -35,7 +35,7 @@ node eval/history.ts rows C                 # one JSON line per trial and bug, f
 
 An **observation** holds:
 - `key` (`<TICKET>#<TRIAL>`), the ticket, its kind, the trial number and its start and finish;
-- `status`: `ok`, or `agent_error` when the agent or the API failed. A spend limit, for instance, measures the infrastructure, not the agent;
+- `status`: `ok`; `agent_error` when the agent or the API failed; `scoring_error` when the agent ran on its own runner and the scoring runner sent nothing back, so its bugs read as not detected only because no test ran against them. A spend limit or a job GitHub never started measures the infrastructure, not the agent;
 - the served models;
 - success, valid RED, policy, whether tests were written, invented tests on the ambiguous ticket;
 - the number of false positives and flaky tests, fail-to-pass;
