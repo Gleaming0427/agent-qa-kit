@@ -11,6 +11,8 @@
 // which tickets can be compared, what blocks a comparison, and what differs between the agents.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Kind, Tokens, TrialScore, VerifierOutcome } from './score.ts';
 
 export const SCHEMA = 'agent-qa-kit/eval-history-campaign';
@@ -421,4 +423,17 @@ export function flatten(c: Campaign): Record<string, string | number | boolean |
     tokens: o.tokens ? o.tokens.input + o.tokens.output + o.tokens.cache_read + o.tokens.cache_creation : null,
     corpus_exposed: o.corpus_exposed, started_at: o.started_at,
   })));
+}
+
+/** The campaign files of a folder, by file name. */
+export function loadCampaigns(dir: string): Campaign[] {
+  return existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.json')).sort()
+    .map((f) => JSON.parse(readFileSync(join(dir, f), 'utf8')) as Campaign) : [];
+}
+
+/** A campaign by id (gh-<run id>), run id or label; an unknown or ambiguous key is an error that lists the campaigns. */
+export function findCampaign(campaigns: Campaign[], key: string): Campaign {
+  const found = campaigns.filter((c) => c.id === key || c.id === `gh-${key}` || c.label === key);
+  if (found.length !== 1) throw new Error(`${found.length ? 'several' : 'no'} campaign named "${key}"; campaigns: ${campaigns.map((c) => `${c.id} (${c.label})`).join(', ')}`);
+  return found[0];
 }

@@ -94,7 +94,7 @@ The agent's commands run in a sandbox without network access, and never see the 
 - whether the agents stayed within their rules, including on an ambiguous ticket and on a ticket that hides an instruction;
 - the verifier's accuracy, pass^k, cost and duration.
 
-The agent of a trial never shares a runner with the corpus: it gets a bundle with the kit, the shop and the ticket's spec only, and its tests are scored on another runner, in a sandbox without network or secrets. Every campaign is kept in a versioned history (`eval/history`) that says which campaigns can be compared, and on which tickets.
+The agent of a trial never shares a runner with the corpus: it gets a bundle with the kit, the shop and the ticket's spec only, and its tests are scored on another runner, in a sandbox without network or secrets. Every campaign is kept in a versioned history (`eval/history`) that says which campaigns can be compared, and on which tickets. `node eval/compare.ts` compares two versions ticket by ticket and bug by bug, with paired tests across tickets, and gives a decision (accepted, review or rejected) under the rules of `eval/compare-policy.json`.
 
 Run **QA eval** from the Actions tab, or check the corpus locally with `node eval/validate-corpus.ts`. See [eval/README.md](eval/README.md) for the method, the definitions and the limits.
 

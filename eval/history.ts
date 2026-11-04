@@ -21,7 +21,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { KIT } from './lib/workspace.ts';
-import { agentVersion, buildCampaign, checkHistory, compatibility, environment, flatten, hasCommit, scorerDigest, sha256 } from './lib/history.ts';
+import { agentVersion, buildCampaign, checkHistory, compatibility, environment, findCampaign, flatten, hasCommit, loadCampaigns, scorerDigest, sha256 } from './lib/history.ts';
 import type { Campaign, CampaignInput } from './lib/history.ts';
 import type { TrialScore } from './lib/score.ts';
 
@@ -46,8 +46,7 @@ interface SourceEntry {
 }
 
 const json = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`;
-const readCampaigns = (dir = CAMPAIGNS): Campaign[] => (existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.json')).sort()
-  .map((f) => JSON.parse(readFileSync(join(dir, f), 'utf8')) as Campaign) : []);
+const readCampaigns = (dir = CAMPAIGNS): Campaign[] => loadCampaigns(dir);
 
 function campaignFor(entry: SourceEntry, repository: string, report: { trials?: TrialScore[] }, raw: Buffer, inputs?: CampaignInput['inputs']): Campaign {
   const scores = report.trials;
@@ -84,11 +83,7 @@ function indexOf(campaigns: Campaign[]) {
   });
 }
 
-function find(campaigns: Campaign[], key: string): Campaign {
-  const found = campaigns.filter((c) => c.id === key || c.id === `gh-${key}` || c.label === key);
-  if (found.length !== 1) throw new Error(`${found.length ? 'several' : 'no'} campaign named ${key}; ids: ${campaigns.map((c) => `${c.id} (${c.label})`).join(', ')}`);
-  return found[0];
-}
+const find = findCampaign;
 
 const [command, ...args] = process.argv.slice(2);
 

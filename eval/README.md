@@ -205,6 +205,45 @@ The split costs runner time: each trial installs the shop and its browser on thr
   - It also lists what changed in the agent.
 - **New campaigns:** add the run's `eval-report.json` to `history/sources` and an entry to `sources.json`, then run `build`. The report job's `eval-history.json` is a preview of the result.
 
+## Comparing two versions
+
+`node eval/compare.ts` compares a reference version A with a new version B from the campaigns of the history, with no model call:
+
+```bash
+node eval/compare.ts --a C --a "C, regression check" --b "D, clean" --b "D, clean regression check" --label-a C --label-b "D clean"
+```
+
+- **Sides.** A side is one agent version. It can pool several of its campaigns, such as a campaign and its regression check, as long as each ticket's corpus is the same in all of them; a side that mixes agents is refused.
+- **Comparability.** The comparison follows `compat`:
+  - it is blocked by a different scorer, a different application or a control run;
+  - it leaves out a ticket whose corpus changed, a ticket that only one side has, and trials with an agent error.
+- **Measurements.** Each version's rates over the comparable tickets, with 95% Wilson intervals:
+  - trial success, bug detection, trials without a false positive, policy;
+  - cost, duration and tokens, the cost compared ticket by ticket.
+- **Changes**, ticket by ticket (trial success) and bug by bug (detection). A unit is stable on a side when all its trials agree. Stable on both sides, it is "pass in both", "fail in both", "improved" (fail → pass) or "regressed" (pass → fail). Otherwise it is "unstable", with the direction of the rates.
+- **Statistics.** The unit is the ticket: the trials and the bugs of a ticket are not independent, so they are never counted as separate observations.
+  - An exact two-sided sign test runs on the tickets whose rate changed, once for trial success and once for bug detection (each ticket's detection rate over its bugs and trials). Ties are left out.
+  - The exact McNemar test (the binomial test on the discordant tickets) is given only when every ticket has a stable outcome on both sides.
+  - The report says when too few tickets changed for any result to reach the alpha level: with fewer than 6, none can.
+  - A test that finds no difference is never read as equivalence.
+  - The two tests are not corrected for multiple testing.
+- **Decision.** The rules of `eval/compare-policy.json` turn the comparison into accepted, review or rejected. Each rule has its threshold and its reason, and the comparison records the policy's sha256.
+  - **Rejected:** the new version changed a file other than tests, saw the corpus, or sent back a trace of it. Also a confirmed regression on a critical ticket (adversarial or ambiguous) or on one of its bugs: every reference trial passed, every new trial failed, with at least 3 trials each.
+  - **Review:**
+    - a blocked comparison;
+    - fewer than 6 comparable tickets or 3 trials per ticket;
+    - a reference that saw the corpus;
+    - more than 10% agent errors;
+    - any other regression;
+    - an unstable unit that got worse;
+    - a significant worsening in a sign test;
+    - a cost increase above 30%.
+  - **Accepted:** every rule passed.
+  - No rule decides on a p-value alone. The exit code gives the verdict: 0 accepted, 1 review, 2 rejected.
+- **Output.** The Markdown report (standard output, or `--md`) and a JSON file (`--json`) keep the measurements, the analysis and the decision apart.
+
+With 3 trials per ticket, outcomes are often unstable: the same agent measured twice (the two pilots) has 4 unstable tickets out of 10. A "review" for an unstable unit that got worse is therefore common, and asks for a look at the transcripts or a rerun of that ticket, not for a conclusion. See [results/2026-11-04-paired-comparisons.md](results/2026-11-04-paired-comparisons.md).
+
 ## Limits
 
 - **Sample size.** Sixteen tickets on one small application is a pilot: intervals are wide, and results do not transfer to another codebase without its own corpus.
