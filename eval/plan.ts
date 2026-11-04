@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 // Validates the inputs of the "QA eval" workflow and prints the trial matrix, and the tickets whose
 // specs go into the agent bundle, for GITHUB_OUTPUT.
-// Inputs come from the environment: TICKETS ("all" or keys separated by spaces or commas),
+// Inputs come from the environment: TICKETS ("all", "smoke" for a selection from the history made by
+// eval/smoke.ts, whose reasons go to the run's summary, or keys separated by spaces or commas),
 // TRIALS (1-10) and MAX_PARALLEL (1-20). RECHECK lists earlier QA eval run ids, separated by spaces
 // or commas, to aggregate again with the current code instead of running trials.
+import { appendFileSync } from 'node:fs';
 import { listTickets, loadTicket } from './lib/workspace.ts';
+import { selectionMarkdown, selectSmoke } from './lib/smoke.ts';
+import { currentCorpus, smokeInputs } from './smoke.ts';
 
 function integer(name: string, min: number, max: number): number {
   const raw = (process.env[name] ?? '').trim();
@@ -16,7 +20,17 @@ function integer(name: string, min: number, max: number): number {
 }
 
 const requested = (process.env.TICKETS ?? 'all').trim();
-const tickets = requested === 'all' || requested === '' ? listTickets() : [...new Set(requested.split(/[\s,]+/).filter(Boolean))];
+let tickets: string[];
+if (requested === 'smoke') {
+  const { policy, critical, campaigns } = smokeInputs();
+  const selection = selectSmoke(campaigns, currentCorpus(), policy, critical, new Date().toISOString());
+  tickets = selection.tickets.map((p) => p.ticket);
+  const report = selectionMarkdown(selection, policy);
+  console.error(report);
+  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${report}\n`);
+} else {
+  tickets = requested === 'all' || requested === '' ? listTickets() : [...new Set(requested.split(/[\s,]+/).filter(Boolean))];
+}
 for (const ticket of tickets) {
   if (!/^[A-Z][A-Z0-9]*-\d+$/.test(ticket)) { console.error(`Invalid ticket key: ${ticket}`); process.exit(1); }
   try { loadTicket(ticket); } catch { console.error(`Unknown eval ticket: ${ticket}`); process.exit(1); }

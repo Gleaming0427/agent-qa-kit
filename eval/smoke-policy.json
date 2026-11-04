@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "about": "How a smoke evaluation picks its tickets from the history (eval/smoke.ts). These values are starting hypotheses: node eval/smoke.ts backtest replays the history to measure what a smoke run would have caught, and at what cost, against the full runs. The critical tickets are those of eval/compare-policy.json.",
+  "size": 6,
+  "trials": 3,
+  "rotation_slots": 1,
+  "regression_lookback": 3,
+  "full_every_days": 14,
+  "why": {
+    "size": "6 tickets after each change of a prompt, about a third of the corpus. The backtest of 4 November 2026 (eval/results/2026-11-04-smoke-backtest.md) caught 1/4, 2/4, 3/4 and 3/4 of the tickets that got worse with 4, 5, 6 and 7 tickets, at 22%, 28%, 34% and 40% of the cost of the full runs. The evidence is thin: 4 tickets got worse, by one or two trials of three, and no ticket regressed from every trial passing to every trial failing.",
+    "trials": "The same 3 trials per ticket as a full run, so that an unstable ticket can show it, and a smoke run's tickets compare with the full runs'.",
+    "critical": "Every critical ticket, in every smoke run: a regression there rejects a version.",
+    "kinds": "At least one ticket of each kind, so that no kind of ticket goes unmeasured.",
+    "new": "A ticket never run with its current corpus has no history to trust: it comes first after the critical ones.",
+    "regressed": "A ticket whose success rate fell between two consecutive versions, in the last regression_lookback changes of version, is where a change is most likely to break again.",
+    "unstable": "A ticket whose trials disagreed in the latest version that ran it can turn either way.",
+    "rotation_slots": "At least one slot goes to the ticket that has gone longest without a run, whatever its signals: every ticket comes back, within as many smoke runs as there are tickets outside the critical ones, as long as each smoke run is added to the history.",
+    "full_every_days": "A full run of every ticket at least every 14 days, and before a release or a change of model, catches what the smoke runs miss."
+  }
+}

@@ -172,7 +172,7 @@ In GitHub Actions, **QA eval** (Actions tab → Run workflow):
 
 | Input | Meaning |
 |---|---|
-| `tickets` | `all` or a list such as `EVAL-1 EVAL-5`. |
+| `tickets` | `all`, a list such as `EVAL-1 EVAL-5`, or `smoke`: a selection from the history (see Smoke evaluations), with its reasons in the run's summary. |
 | `trials` | Trials per ticket, 1 to 10. |
 | `max_parallel` | Trials running at the same time, 1 to 20. |
 | `verify` | Also run phase 2. |
@@ -243,6 +243,35 @@ node eval/compare.ts --a C --a "C, regression check" --b "D, clean" --b "D, clea
 - **Output.** The Markdown report (standard output, or `--md`) and a JSON file (`--json`) keep the measurements, the analysis and the decision apart.
 
 With 3 trials per ticket, outcomes are often unstable: the same agent measured twice (the two pilots) has 4 unstable tickets out of 10. A "review" for an unstable unit that got worse is therefore common, and asks for a look at the transcripts or a rerun of that ticket, not for a conclusion. See [results/2026-11-04-paired-comparisons.md](results/2026-11-04-paired-comparisons.md).
+
+## Smoke evaluations
+
+A full run (16 tickets × 3 trials) after every change of a prompt costs more than most changes need. A random subset can miss the ticket that breaks. `node eval/smoke.ts` picks a few tickets from the history instead, with no model call. The selection is reproducible: the same history, corpus and policy (`eval/smoke-policy.json`) give the same tickets, in the same order, with the same reasons and the same inputs digest.
+
+| Evaluation | When | Tickets |
+|---|---|---|
+| Smoke | after each change of a prompt | `tickets: smoke` in QA eval: 6 tickets × 3 trials |
+| Full | before a release, or a change of model or of Claude Code | `tickets: all`, 3 trials or more |
+| Periodic | every 14 days at least: `node eval/smoke.ts select` says when one is due | `tickets: all` |
+
+A ticket's signals count only the trials run with its current corpus. The selection takes, in order:
+1. **The critical tickets**, the critical kinds and tickets of `eval/compare-policy.json`, so that the critical categories are always covered.
+2. **One ticket of each kind** not covered yet.
+3. **Risky tickets**, longest without a run first within each group:
+   - never run with their current corpus;
+   - regressed: the success rate fell between two consecutive versions, in the last 3 changes of version;
+   - unstable: the trials disagreed in the latest version that ran them.
+4. **Rotation:** at least one slot goes to the ticket that has gone longest without a run, whatever its signals.
+5. **More rotation**, if slots remain.
+
+Each picked ticket comes with its reasons. Each ticket left out comes with its last run and how many smoke runs the rotation needs to reach it. This needs one condition: each smoke run must be added to the history, since the history is the memory of the rotation. Then every ticket comes back within as many smoke runs as there are tickets outside the critical ones; `eval/tests/smoke.test.ts` checks this on simulated runs.
+
+```bash
+node eval/smoke.ts select      # the next smoke run, with its reasons
+node eval/smoke.ts backtest    # what smoke runs would have caught in the history, and at what cost
+```
+
+The backtest replays the history. For each version, it makes the selection from the history before that version, then replays the smoke run with the version's own trials on the selected tickets. It compares the result with what the version's full run found against the previous version: tickets worse, tickets regressed (from every trial passing to every trial failing), tickets better. It also gives the cost of each. The policy's values are hypotheses to check this way; see [results/2026-11-04-smoke-backtest.md](results/2026-11-04-smoke-backtest.md).
 
 ## Limits
 

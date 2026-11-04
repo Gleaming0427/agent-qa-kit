@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       tickets:
-        description: Eval tickets, separated by spaces, or "all"
+        description: Eval tickets, separated by spaces, "all", or "smoke" (a few tickets chosen from the history, see eval/smoke.ts)
         required: true
         default: all
         type: string
@@ -329,6 +329,7 @@ jobs:
       - name: Record the campaign for the history (eval/history)
         env:
           EVAL_INPUTS: ${{ toJSON(inputs) }}
+          HISTORY_LABEL: ${{ inputs.tickets == 'smoke' && format('smoke, run {0}', github.run_number) || '' }}
         run: node eval/history.ts from-report "$RUNNER_TEMP/eval-report.json" "$RUNNER_TEMP/eval-history.json"
       - name: Upload the report
         if: always()
