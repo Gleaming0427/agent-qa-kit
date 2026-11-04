@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-03T10:00:00.336Z",
+  "generated_at": "2026-11-04T06:23:27.654Z",
   "campaign": {
     "trials": 1,
     "tickets": 1,
@@ -141,6 +141,34 @@
     "p50": 0.165,
     "p95": 0.165
   },
+  "tokens": {
+    "n": 1,
+    "input": 36,
+    "output": 6553,
+    "cache_read": 407804,
+    "cache_creation": 72134,
+    "mean_total_per_trial": 486527
+  },
+  "runner_time_s": {
+    "agent": {
+      "n": 0,
+      "total": 0,
+      "p50": null,
+      "p95": null
+    },
+    "score": {
+      "n": 0,
+      "total": 0,
+      "p50": null,
+      "p95": null
+    },
+    "verify": {
+      "n": 0,
+      "total": 0,
+      "p50": null,
+      "p95": null
+    }
+  },
   "phase1_duration_s": {
     "n": 1,
     "p50": 50,
@@ -186,7 +214,10 @@
     "models": {
       "claude-haiku-5-5": 1,
       "claude-sonnet-5-5": 1
-    }
+    },
+    "split_runner_trials": 0,
+    "scoring_sandbox": {},
+    "isolation_flagged_trials": []
   },
   "tickets": [
     {
@@ -239,6 +270,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 36,
+        "output": 6553,
+        "cache_read": 407804,
+        "cache_creation": 72134
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -287,6 +326,7 @@
       "phase1_duration_ms": 50031,
       "phase1_turns": 15,
       "wall_clock_ms": 143305,
+      "runner_ms": null,
       "started_at": "2026-11-03T07:29:44.218Z",
       "finished_at": "2026-11-03T07:32:07.523Z"
     }

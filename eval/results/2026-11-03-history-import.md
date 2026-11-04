@@ -1,6 +1,12 @@
 # History of the campaigns, imported from the recheck, 3 November 2026
 
-The 13 runs of `results/` are now one versioned file each, in `eval/history/campaigns`. They hold 272 trials. No model was called: the import reads the reports of the recheck run 41615412529, which scored every campaign again with the same code (`c84386e`). See [history/README.md](../history/README.md) for the format.
+The 13 runs of `results/` are now one versioned file each, in `eval/history/campaigns`. They hold 272 trials. No model was called: the import reads the reports of a recheck, which scored every campaign again with the same code. See [history/README.md](../history/README.md) for the format.
+
+> **Update, 4 November 2026:** the sources are now the reports of a second recheck.
+> - **Run:** 41785127300, with the code of `efa197e`. The first recheck was run 41615412529, with the code of `c84386e`.
+> - **Metrics:** identical in all 272 trials. Only the fields added since differ: tokens, isolation and time per runner.
+> - **Tokens:** they are now known for 254 trials (see Missing data).
+> - **Scorer:** the history now has the one that scores new campaigns, so `compat` no longer blocks a comparison between them. Run 41783970323, two trials on EVAL-1 and EVAL-11 with the split runners, compares with D clean on EVAL-11 and with D clean's regression check on EVAL-1. The same agent ran in all three; the harness and the number of trials per ticket differ, and `compat` warns about both.
 
 ## How it was checked
 
@@ -52,9 +58,9 @@ Five distinct agents ran in these campaigns. The changes the history finds betwe
 
 ## Missing data
 
-- **Tokens:** missing from all 272 trials.
-  - The recheck's code did not read them; the aggregator now reads them from the CLI results each artifact keeps.
-  - A new recheck of the 13 runs would fill them in, with no model call. The artifacts expire on 1 February 2027.
+- **Tokens:** known for 254 of the 272 trials since the second recheck. The aggregator reads them from the CLI results each artifact keeps. 118,743,142 tokens in all, cache reads included: 467,000 per trial on average.
+  - The 18 without are trials of B's regression check that the spend limit stopped before any model answered. Their sessions have no token count.
+  - The first recheck's code did not read them.
 - **Workflow inputs:** not recorded by the reports. Whether phase 2 ran, the dry run and the trials per ticket are inferred from the trials. They agree with the documents.
 - **The isolation check:** missing from all 272 trials. They ran before the agent and the scoring had separate runners.
 - **Sight of the corpus:** 224 trials, every campaign before D clean, have the corpus file names in their context, as the recheck found. Each observation records it, and `compat` warns about it.

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "repository": "Gleaming0427/agent-qa-kit",
-  "about": "The campaigns of eval/results, imported from the reports of the recheck run 41615412529, which scored every earlier campaign again with the same code, from its trial artifacts and with no model call. Each source file is the recheck-<run>.json of that run's artifact, whose zip matches the digest GitHub records for it. Run metadata comes from the GitHub API (workflow runs); labels and notes come from the documents in eval/results.",
+  "about": "The campaigns of eval/results, imported from the reports of the recheck run 41785127300, which scored every earlier campaign again with the code of efa197e, from its trial artifacts and with no model call. It replaced the reports of the first recheck (run 41615412529, code of c84386e): same metrics, with the tokens added, and the scorer of the campaigns run since. Each source file is the recheck-<run>.json of that run's artifact, whose zip matches the digest GitHub records for it. Run metadata comes from the GitHub API (workflow runs); labels and notes come from the documents in eval/results.",
   "campaigns": [
     {
       "run_id": 41494361776,
@@ -13,19 +13,19 @@
       "role": "campaign",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [
         "sandbox-placeholders"
       ],
       "source": {
         "file": "sources/recheck-41494361776.json",
-        "sha256": "e21d1a9d500282dcce4b4e6807de0a399a0944b5996963009e050601b655f08a",
+        "sha256": "ffecf42fd069ff842eba771298867565c550e7291716b9ebd04ad74cdd27f73f",
         "artifact": {
-          "id": 13220119358,
+          "id": 13300389184,
           "name": "recheck-41494361776",
-          "digest": "sha256:150b9d09ab8b2efcf3de84386e2225ca305f6b9c9847c0a665b5f0c568618043"
+          "digest": "sha256:1e50ea4648ed2e628215bf086918834f305ce443c32e8ff3d6de4ad14d1f875c"
         }
       },
       "doc": "eval/results/2026-11-02-pilot.md",
@@ -44,17 +44,17 @@
       "role": "control",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [],
       "source": {
         "file": "sources/recheck-41510675823.json",
-        "sha256": "09fcfffb3c400f688ea58a19394797c0abde39a86d3666f09c833b306610ba7c",
+        "sha256": "ade01542e52d98909dd246b73eb08f2d4fafe9ce04e5af3e340f160816f44b42",
         "artifact": {
-          "id": 13220727384,
+          "id": 13300971744,
           "name": "recheck-41510675823",
-          "digest": "sha256:4114b0459dcd52139feb1b23b9d3b7ffce3a10955e626363b6bd5695b416916d"
+          "digest": "sha256:4b09ebe4a0fbd54f3ed839c3bc4c5e4d5a988f8cb97252d85b71378532b34600"
         }
       },
       "doc": "eval/results/2026-11-02-pilot-2.md",
@@ -72,17 +72,17 @@
       "role": "campaign",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [],
       "source": {
         "file": "sources/recheck-41511327155.json",
-        "sha256": "07fe3a09929d68ce9a4f48a9642079e6629e69f24f0606896a922736b2b82f1b",
+        "sha256": "ab2fa5239ddb9a825799ad1e8251dbc8b127cf8c2b29c1a1db263435c7a1a0a8",
         "artifact": {
-          "id": 13220837207,
+          "id": 13300054130,
           "name": "recheck-41511327155",
-          "digest": "sha256:ece808c0b7a1c82726f309717267d24745848638dfc7961da6d1fcaa1dd2c983"
+          "digest": "sha256:cb38fccfc43ca5a5b719837027e1108f26e3750d4047e7ae615064c68e39a707"
         }
       },
       "doc": "eval/results/2026-11-02-pilot-2.md",
@@ -98,17 +98,17 @@
       "role": "campaign",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [],
       "source": {
         "file": "sources/recheck-41529883599.json",
-        "sha256": "f04e18993b5e5efee779c6e64fa8e4f65d5bdb91f4a47f12d38aa27138de1a9b",
+        "sha256": "59c5beea8500bfd3a0b5f8282b00ab35e2e428db65dab98e77b6013f9d0e31cd",
         "artifact": {
-          "id": 13221371090,
+          "id": 13301301078,
           "name": "recheck-41529883599",
-          "digest": "sha256:d9b7703f241face640f3097f8ca4d315fd605cdfb130a51f4c8d4ef1ad1d2e1a"
+          "digest": "sha256:cde8c18b0088d806d8fa86c8aa99c83723012082245aebb2dbd5e38ea3a5f795"
         }
       },
       "doc": "eval/results/2026-11-02-writer-partitions.md",
@@ -126,17 +126,17 @@
       "role": "campaign",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [],
       "source": {
         "file": "sources/recheck-41529927864.json",
-        "sha256": "51c958a7e2dc48a34c100784a20d207bccbc243d10a6034ec8c52910dc6c96b8",
+        "sha256": "6dd09ba9f9c46681a8e2ee35bf6310ae7c66f73ec82cd12bd6ea8e8fdd08fc9c",
         "artifact": {
-          "id": 13220189039,
+          "id": 13301266360,
           "name": "recheck-41529927864",
-          "digest": "sha256:462a789ee00bf5e1b7b4ff581340724241afba9dc87c6c209ef957212f8ededa"
+          "digest": "sha256:45cf82ed9d6f4e5ce17125cd05f3586830b3704be18b2a96652b48f1bb628d04"
         }
       },
       "doc": "eval/results/2026-11-02-writer-partitions.md",
@@ -152,17 +152,17 @@
       "role": "campaign",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [],
       "source": {
         "file": "sources/recheck-41531765991.json",
-        "sha256": "53660b7c85af8240f6d3d84d826325308da018d489d3c7d9ac3781d03d484515",
+        "sha256": "122215472e21902464be7570ed85d77d994d05c040469f0c9b9e9f2f04b6d071",
         "artifact": {
-          "id": 13221157142,
+          "id": 13300846487,
           "name": "recheck-41531765991",
-          "digest": "sha256:281be217d0a1c64fdbebf9be2abc4255dc5b021743094cfa25ca701b9c5ac7a6"
+          "digest": "sha256:01393395d7e39621ad1650c51a283321fb792e978b42424f6e3358530be60b2e"
         }
       },
       "doc": "eval/results/2026-11-02-writer-partitions.md",
@@ -180,17 +180,17 @@
       "role": "campaign",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [],
       "source": {
         "file": "sources/recheck-41539064574.json",
-        "sha256": "796bc43e44068aa6c31efc1ccdd165d7b5f4bccb113806d095e54e41c9120222",
+        "sha256": "a801d730d346f066cec0b2b32c2ca810fcbd41ff3dc9f858780a065443b608ed",
         "artifact": {
-          "id": 13220592772,
+          "id": 13300901423,
           "name": "recheck-41539064574",
-          "digest": "sha256:23fd4db993baffe86241ab412b65f0eb787072635410bd3ab3c283b4d145614d"
+          "digest": "sha256:7f4bdc95681dbc5db45cc36822b507f96accf23a2aeb04d2a1df23912b5cf936"
         }
       },
       "doc": "eval/results/2026-11-02-writer-partitions.md",
@@ -206,17 +206,17 @@
       "role": "campaign",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [],
       "source": {
         "file": "sources/recheck-41539102400.json",
-        "sha256": "bc89e7ed470826092c6044ef9578797e55940db56ffdc4842d2a931ea1cb376a",
+        "sha256": "7381e482462044ae14f34c864c78ea92a831064a97879a1178f86c3b440e65d3",
         "artifact": {
-          "id": 13220967053,
+          "id": 13300283366,
           "name": "recheck-41539102400",
-          "digest": "sha256:382ef5e7dc73bec83f2540d2c62b2fd2e916199fdf542c91128b2b2c349fa46f"
+          "digest": "sha256:27618c1d13d22e339f555658ec3379cd1193ca5a81590f1fb10db3578c5f2f3d"
         }
       },
       "doc": "eval/results/2026-11-02-writer-partitions.md",
@@ -232,17 +232,17 @@
       "role": "control",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [],
       "source": {
         "file": "sources/recheck-41596586107.json",
-        "sha256": "cdfe41ba4cd7d08ba64661dfc7fb46df4a3a6e0d6e83e9f4335d90752d6cc297",
+        "sha256": "f62c8b9d8ff1cb9d51a8dff6acca63bed667517c72767921db71e6e6449b38c8",
         "artifact": {
-          "id": 13220783382,
+          "id": 13301226313,
           "name": "recheck-41596586107",
-          "digest": "sha256:049be673d027053e5c8afcc545dd9e1370425b9b8da22d0941e52337d079049d"
+          "digest": "sha256:5fcf2d04339dc62375977df9a3e90a0a0ca732d50e9e4c8a8cdc622d15f4f505"
         }
       },
       "doc": "eval/results/2026-11-03-glob-grep.md",
@@ -260,17 +260,17 @@
       "role": "campaign",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [],
       "source": {
         "file": "sources/recheck-41597047860.json",
-        "sha256": "c66fb46892bb293fee21354bda1a1e91082c86b93d02156c7a02d5a72c9b4172",
+        "sha256": "e65782312c1772bf795812d22130de7e1ceb3c29e4f2d6163014cdbe2afb98fe",
         "artifact": {
-          "id": 13220922187,
+          "id": 13300618621,
           "name": "recheck-41597047860",
-          "digest": "sha256:0087058e583112e19932cfd64eceb814e4ab294a187ecc8e4c053c0db4e4c5af"
+          "digest": "sha256:df526f5a540863ada6ff43cc3a15b55f8908449675d2bfe50eb9e13bfd05819f"
         }
       },
       "doc": "eval/results/2026-11-03-glob-grep.md",
@@ -286,17 +286,17 @@
       "role": "campaign",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [],
       "source": {
         "file": "sources/recheck-41597084921.json",
-        "sha256": "d394db94da51d143320db8bb8d2ffaeab7eca4b251a0a209f60ed5b457761e7d",
+        "sha256": "74b3b3cd18c197118e7d358bba040b8a22d046e62fa401a4c1087f172c423fa3",
         "artifact": {
-          "id": 13220244149,
+          "id": 13300424106,
           "name": "recheck-41597084921",
-          "digest": "sha256:be84bc5a72c19a5cad959c1f17d3797d3eecc56d4e7c13f6928f8a8b1cf4338d"
+          "digest": "sha256:8ccd46baecae78560d60bd91002a60a01f97d975ff758b2403b97cdb10bec114"
         }
       },
       "doc": "eval/results/2026-11-03-glob-grep.md",
@@ -312,17 +312,17 @@
       "role": "campaign",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [],
       "source": {
         "file": "sources/recheck-41605000003.json",
-        "sha256": "ab01421cde60245de863a100e5142223fe606f88976d263f3fd7aa73a1af6d90",
+        "sha256": "80bc9fcd9af8acf9b06280a8c10e440e8b081965c7bee8f85eaa9cb0576ff09a",
         "artifact": {
-          "id": 13220697705,
+          "id": 13300922121,
           "name": "recheck-41605000003",
-          "digest": "sha256:d659154ed81fd6333c1e309594061ebde40b089bce915dbb714e5ee08640af63"
+          "digest": "sha256:47383d9d54e09831119cde82c09b9c63af1e68afbc6ad3aab9155dc455c246a1"
         }
       },
       "doc": "eval/results/2026-11-03-clean-campaign.md",
@@ -338,17 +338,17 @@
       "role": "campaign",
       "scoring": {
         "kind": "recomputed",
-        "run_id": 41615412529,
-        "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04"
+        "run_id": 41785127300,
+        "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35"
       },
       "corrections": [],
       "source": {
         "file": "sources/recheck-41605005317.json",
-        "sha256": "a6795625e4922977055cc5405a10b67c12bd87670b6c55f252a609269d7abf5e",
+        "sha256": "395f2b4961f54e9aae504411d92b185d28e4475b96072cd39d560dcf60a92122",
         "artifact": {
-          "id": 13220308947,
+          "id": 13301091726,
           "name": "recheck-41605005317",
-          "digest": "sha256:92c75300a98c7309832f33e923538544483e3f4af3c26a602fc59045005179a4"
+          "digest": "sha256:f420fef2cf567762c1a6a1f0bcadd7bef6ad79bef36e109380409e2ad43461a1"
         }
       },
       "doc": "eval/results/2026-11-03-clean-campaign.md",

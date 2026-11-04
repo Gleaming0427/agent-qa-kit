@@ -40,6 +40,15 @@ test('the imported history holds the 13 rechecked campaigns, with no error', () 
   }
 });
 
+test('the tokens are known for every trial a model answered', () => {
+  const all = committed.flatMap((c) => c.observations.map((o) => ({ label: c.label, o })));
+  assert.equal(all.filter(({ o }) => o.tokens).length, 254);
+  // The 18 without: B's regression check, stopped by the spend limit before any model answered.
+  const without = all.filter(({ o }) => !o.tokens);
+  assert.deepEqual([...new Set(without.map(({ label }) => label))], ['B, regression check']);
+  assert.ok(without.every(({ o }) => o.status === 'agent_error' && o.models.length === 0));
+});
+
 test('each campaign keeps the metrics of its source report, corrections aside', () => {
   for (const entry of sources.campaigns) {
     const report = JSON.parse(readFileSync(join(HISTORY, entry.source.file), 'utf8')) as { metrics: Record<string, { successes: number; n: number }>; trials: TrialScore[] };
@@ -112,7 +121,7 @@ test('duplicates and inconsistencies are errors; missing data is reported', () =
   const twice = copy({ id: 'gh-2', provenance: { ...d.provenance, sha256: 'y' }, observations: [d.observations[0], d.observations[0]].map((o, i) => ({ ...o, fingerprint: `f${i}` })) });
   assert.ok(problems([twice]).includes(`duplicate observation ${d.observations[0].key}`));
   assert.ok(problems([twice]).includes('2 observations for 18 trials'));
-  assert.ok(checkHistory([d]).some((p) => p.level === 'warning' && p.message.startsWith('missing data: tokens 18/18')));
+  assert.ok(checkHistory([d]).some((p) => p.level === 'warning' && p.message === 'missing data: isolation_check 18/18'));
 });
 
 // A small campaign built from scores, as the report job does.

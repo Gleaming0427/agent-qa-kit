@@ -195,7 +195,7 @@ The split costs runner time: each trial installs the shop and its browser on thr
   - the task's environment: each ticket's corpus, the shop, and the harness that ran the variants;
   - the scoring: its code, and whether the scores are the campaign's own or recomputed later;
   - the corrections applied, and the source file with its sha256.
-- **The 13 campaigns of `results/`** come from the recheck run 41615412529, which scored them all again with the same code. Their sources are in `history/sources`.
+- **The 13 campaigns of `results/`** come from the recheck run 41785127300, which scored them all again with the code of `efa197e`, the code that scores new campaigns. Their sources are in `history/sources`.
   - The zip of each source matches the digest GitHub records for its artifact.
   - The pilot's report needed the correction its document describes; see [results/2026-11-03-history-import.md](results/2026-11-03-history-import.md).
 - **`node eval/history.ts compat <a> <b>`** says on which tickets two campaigns can be compared:

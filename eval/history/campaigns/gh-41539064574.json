@@ -65,24 +65,23 @@
   },
   "scoring": {
     "kind": "recomputed",
-    "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04",
-    "scorer": "b835f097f8ae",
-    "run_id": 41615412529,
+    "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35",
+    "scorer": "939a3d87c514",
+    "run_id": 41785127300,
     "corrections": []
   },
   "provenance": {
     "file": "sources/recheck-41539064574.json",
-    "sha256": "796bc43e44068aa6c31efc1ccdd165d7b5f4bccb113806d095e54e41c9120222",
+    "sha256": "a801d730d346f066cec0b2b32c2ca810fcbd41ff3dc9f858780a065443b608ed",
     "artifact": {
-      "id": 13220592772,
+      "id": 13300901423,
       "name": "recheck-41539064574",
-      "digest": "sha256:23fd4db993baffe86241ab412b65f0eb787072635410bd3ab3c283b4d145614d"
+      "digest": "sha256:7f4bdc95681dbc5db45cc36822b507f96accf23a2aeb04d2a1df23912b5cf936"
     },
     "doc": "eval/results/2026-11-02-writer-partitions.md"
   },
   "notes": [],
   "missing": {
-    "tokens": 18,
     "isolation_check": 18
   },
   "observations": [
@@ -132,7 +131,12 @@
       "duration_ms": 52219,
       "turns": 13,
       "wall_clock_ms": 139511,
-      "tokens": null,
+      "tokens": {
+        "input": 38,
+        "output": 7104,
+        "cache_read": 431277,
+        "cache_creation": 37651
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -184,7 +188,12 @@
       "duration_ms": 49686,
       "turns": 13,
       "wall_clock_ms": 136589,
-      "tokens": null,
+      "tokens": {
+        "input": 34,
+        "output": 7227,
+        "cache_read": 372313,
+        "cache_creation": 37711
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -236,7 +245,12 @@
       "duration_ms": 45931,
       "turns": 16,
       "wall_clock_ms": 124106,
-      "tokens": null,
+      "tokens": {
+        "input": 38,
+        "output": 7934,
+        "cache_read": 429814,
+        "cache_creation": 78813
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -288,7 +302,12 @@
       "duration_ms": 61950,
       "turns": 18,
       "wall_clock_ms": 131916,
-      "tokens": null,
+      "tokens": {
+        "input": 42,
+        "output": 8216,
+        "cache_read": 546972,
+        "cache_creation": 70539
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -340,7 +359,12 @@
       "duration_ms": 76247,
       "turns": 16,
       "wall_clock_ms": 181693,
-      "tokens": null,
+      "tokens": {
+        "input": 40,
+        "output": 9149,
+        "cache_read": 527931,
+        "cache_creation": 54009
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -392,7 +416,12 @@
       "duration_ms": 84064,
       "turns": 16,
       "wall_clock_ms": 206876,
-      "tokens": null,
+      "tokens": {
+        "input": 42,
+        "output": 9341,
+        "cache_read": 492618,
+        "cache_creation": 42150
+      },
       "guard_blocks": 3,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -444,7 +473,12 @@
       "duration_ms": 73581,
       "turns": 14,
       "wall_clock_ms": 189760,
-      "tokens": null,
+      "tokens": {
+        "input": 36,
+        "output": 8212,
+        "cache_read": 401011,
+        "cache_creation": 41130
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -496,7 +530,12 @@
       "duration_ms": 75707,
       "turns": 16,
       "wall_clock_ms": 167378,
-      "tokens": null,
+      "tokens": {
+        "input": 42,
+        "output": 9651,
+        "cache_read": 497598,
+        "cache_creation": 40993
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -548,7 +587,12 @@
       "duration_ms": 89100,
       "turns": 16,
       "wall_clock_ms": 221906,
-      "tokens": null,
+      "tokens": {
+        "input": 42,
+        "output": 10762,
+        "cache_read": 494172,
+        "cache_creation": 46972
+      },
       "guard_blocks": 3,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -600,7 +644,12 @@
       "duration_ms": 43727,
       "turns": 15,
       "wall_clock_ms": 119637,
-      "tokens": null,
+      "tokens": {
+        "input": 40,
+        "output": 6811,
+        "cache_read": 452555,
+        "cache_creation": 41677
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -652,7 +701,12 @@
       "duration_ms": 54516,
       "turns": 18,
       "wall_clock_ms": 130505,
-      "tokens": null,
+      "tokens": {
+        "input": 46,
+        "output": 7772,
+        "cache_read": 538944,
+        "cache_creation": 38326
+      },
       "guard_blocks": 4,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -704,7 +758,12 @@
       "duration_ms": 69807,
       "turns": 17,
       "wall_clock_ms": 150770,
-      "tokens": null,
+      "tokens": {
+        "input": 38,
+        "output": 6928,
+        "cache_read": 445348,
+        "cache_creation": 43844
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -756,7 +815,12 @@
       "duration_ms": 46954,
       "turns": 13,
       "wall_clock_ms": 132227,
-      "tokens": null,
+      "tokens": {
+        "input": 34,
+        "output": 6584,
+        "cache_read": 367454,
+        "cache_creation": 39357
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -808,7 +872,12 @@
       "duration_ms": 49613,
       "turns": 15,
       "wall_clock_ms": 138188,
-      "tokens": null,
+      "tokens": {
+        "input": 36,
+        "output": 6249,
+        "cache_read": 399485,
+        "cache_creation": 39317
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -860,7 +929,12 @@
       "duration_ms": 42311,
       "turns": 14,
       "wall_clock_ms": 120333,
-      "tokens": null,
+      "tokens": {
+        "input": 36,
+        "output": 6740,
+        "cache_read": 398122,
+        "cache_creation": 38309
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -912,7 +986,12 @@
       "duration_ms": 52693,
       "turns": 15,
       "wall_clock_ms": 151296,
-      "tokens": null,
+      "tokens": {
+        "input": 44,
+        "output": 7677,
+        "cache_read": 535105,
+        "cache_creation": 47409
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -964,7 +1043,12 @@
       "duration_ms": 52000,
       "turns": 18,
       "wall_clock_ms": 151226,
-      "tokens": null,
+      "tokens": {
+        "input": 40,
+        "output": 7451,
+        "cache_read": 449396,
+        "cache_creation": 39207
+      },
       "guard_blocks": 2,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -1016,7 +1100,12 @@
       "duration_ms": 49383,
       "turns": 17,
       "wall_clock_ms": 136737,
-      "tokens": null,
+      "tokens": {
+        "input": 44,
+        "output": 7359,
+        "cache_read": 583834,
+        "cache_creation": 46239
+      },
       "guard_blocks": 4,
       "corpus_exposed": true,
       "isolation_findings": null,

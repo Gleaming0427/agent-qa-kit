@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-03T09:59:37.344Z",
+  "generated_at": "2026-11-04T06:23:09.542Z",
   "campaign": {
     "trials": 30,
     "tickets": 10,
@@ -140,6 +140,34 @@
     "mean_per_trial": 0.1185,
     "p50": 0.1132,
     "p95": 0.2059
+  },
+  "tokens": {
+    "n": 30,
+    "input": 1208,
+    "output": 204277,
+    "cache_read": 13430875,
+    "cache_creation": 1095236,
+    "mean_total_per_trial": 491053
+  },
+  "runner_time_s": {
+    "agent": {
+      "n": 0,
+      "total": 0,
+      "p50": null,
+      "p95": null
+    },
+    "score": {
+      "n": 0,
+      "total": 0,
+      "p50": null,
+      "p95": null
+    },
+    "verify": {
+      "n": 0,
+      "total": 0,
+      "p50": null,
+      "p95": null
+    }
   },
   "phase1_duration_s": {
     "n": 30,
@@ -368,7 +396,10 @@
     "models": {
       "claude-haiku-5-5": 27,
       "claude-sonnet-5-5": 30
-    }
+    },
+    "split_runner_trials": 0,
+    "scoring_sandbox": {},
+    "isolation_flagged_trials": []
   },
   "tickets": [
     {
@@ -532,6 +563,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 48,
+        "output": 8442,
+        "cache_read": 580014,
+        "cache_creation": 40386
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -580,6 +619,7 @@
       "phase1_duration_ms": 50448,
       "phase1_turns": 20,
       "wall_clock_ms": 121709,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:36:02.905Z",
       "finished_at": "2026-11-02T19:38:04.614Z"
     },
@@ -621,6 +661,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 50,
+        "output": 11161,
+        "cache_read": 534881,
+        "cache_creation": 44798
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -669,6 +717,7 @@
       "phase1_duration_ms": 51610,
       "phase1_turns": 17,
       "wall_clock_ms": 150483,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:36:07.198Z",
       "finished_at": "2026-11-02T19:38:37.681Z"
     },
@@ -710,6 +759,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 42,
+        "output": 7524,
+        "cache_read": 466282,
+        "cache_creation": 37602
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -758,6 +815,7 @@
       "phase1_duration_ms": 50670,
       "phase1_turns": 15,
       "wall_clock_ms": 136597,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:36:24.055Z",
       "finished_at": "2026-11-02T19:38:40.652Z"
     },
@@ -797,6 +855,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 36,
+        "output": 6139,
+        "cache_read": 401997,
+        "cache_creation": 36185
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -829,6 +895,7 @@
       "phase1_duration_ms": 38176,
       "phase1_turns": 15,
       "wall_clock_ms": 100567,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:48:32.814Z",
       "finished_at": "2026-11-02T19:50:13.381Z"
     },
@@ -867,6 +934,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 34,
+        "output": 5303,
+        "cache_read": 374907,
+        "cache_creation": 36109
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -899,6 +974,7 @@
       "phase1_duration_ms": 35003,
       "phase1_turns": 15,
       "wall_clock_ms": 92237,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:48:33.889Z",
       "finished_at": "2026-11-02T19:50:06.126Z"
     },
@@ -940,6 +1016,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 42,
+        "output": 5644,
+        "cache_read": 476864,
+        "cache_creation": 34916
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -972,6 +1056,7 @@
       "phase1_duration_ms": 36631,
       "phase1_turns": 16,
       "wall_clock_ms": 100583,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:48:38.461Z",
       "finished_at": "2026-11-02T19:50:19.044Z"
     },
@@ -1013,6 +1098,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 40,
+        "output": 7466,
+        "cache_read": 441227,
+        "cache_creation": 36011
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -1061,6 +1154,7 @@
       "phase1_duration_ms": 46857,
       "phase1_turns": 16,
       "wall_clock_ms": 127886,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:36:15.744Z",
       "finished_at": "2026-11-02T19:38:23.630Z"
     },
@@ -1102,6 +1196,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 42,
+        "output": 7658,
+        "cache_read": 470394,
+        "cache_creation": 40284
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -1150,6 +1252,7 @@
       "phase1_duration_ms": 49931,
       "phase1_turns": 17,
       "wall_clock_ms": 122062,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:36:06.507Z",
       "finished_at": "2026-11-02T19:38:08.569Z"
     },
@@ -1191,6 +1294,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 44,
+        "output": 7862,
+        "cache_read": 503398,
+        "cache_creation": 36581
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -1239,6 +1350,7 @@
       "phase1_duration_ms": 51824,
       "phase1_turns": 17,
       "wall_clock_ms": 151314,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:36:19.385Z",
       "finished_at": "2026-11-02T19:38:50.699Z"
     },
@@ -1281,6 +1393,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 72,
+        "output": 9540,
+        "cache_read": 663658,
+        "cache_creation": 61745
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -1329,6 +1449,7 @@
       "phase1_duration_ms": 62984,
       "phase1_turns": 19,
       "wall_clock_ms": 144291,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:38:52.301Z",
       "finished_at": "2026-11-02T19:41:16.592Z"
     },
@@ -1370,6 +1491,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 40,
+        "output": 6092,
+        "cache_read": 446473,
+        "cache_creation": 35414
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -1418,6 +1547,7 @@
       "phase1_duration_ms": 45830,
       "phase1_turns": 15,
       "wall_clock_ms": 126344,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:38:54.414Z",
       "finished_at": "2026-11-02T19:41:00.758Z"
     },
@@ -1459,6 +1589,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 40,
+        "output": 6060,
+        "cache_read": 445402,
+        "cache_creation": 32360
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -1507,6 +1645,7 @@
       "phase1_duration_ms": 49101,
       "phase1_turns": 15,
       "wall_clock_ms": 131886,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:39:06.604Z",
       "finished_at": "2026-11-02T19:41:18.490Z"
     },
@@ -1548,6 +1687,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 40,
+        "output": 6245,
+        "cache_read": 451109,
+        "cache_creation": 37597
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -1599,6 +1746,7 @@
       "phase1_duration_ms": 45425,
       "phase1_turns": 17,
       "wall_clock_ms": 179745,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:39:21.694Z",
       "finished_at": "2026-11-02T19:42:21.439Z"
     },
@@ -1640,6 +1788,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 38,
+        "output": 6449,
+        "cache_read": 416884,
+        "cache_creation": 40132
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -1688,6 +1844,7 @@
       "phase1_duration_ms": 41920,
       "phase1_turns": 15,
       "wall_clock_ms": 125167,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:39:34.492Z",
       "finished_at": "2026-11-02T19:41:39.659Z"
     },
@@ -1729,6 +1886,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 42,
+        "output": 6527,
+        "cache_read": 472084,
+        "cache_creation": 38519
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -1777,6 +1942,7 @@
       "phase1_duration_ms": 43108,
       "phase1_turns": 16,
       "wall_clock_ms": 115976,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:39:43.684Z",
       "finished_at": "2026-11-02T19:41:39.660Z"
     },
@@ -1818,6 +1984,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 44,
+        "output": 7452,
+        "cache_read": 488238,
+        "cache_creation": 42986
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -1866,6 +2040,7 @@
       "phase1_duration_ms": 46288,
       "phase1_turns": 18,
       "wall_clock_ms": 125811,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:41:46.355Z",
       "finished_at": "2026-11-02T19:43:52.166Z"
     },
@@ -1908,6 +2083,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 40,
+        "output": 6807,
+        "cache_read": 458515,
+        "cache_creation": 37426
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -1956,6 +2139,7 @@
       "phase1_duration_ms": 53656,
       "phase1_turns": 17,
       "wall_clock_ms": 134131,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:42:00.153Z",
       "finished_at": "2026-11-02T19:44:14.284Z"
     },
@@ -1997,6 +2181,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 40,
+        "output": 6038,
+        "cache_read": 452681,
+        "cache_creation": 36337
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -2047,6 +2239,7 @@
       "phase1_duration_ms": 44474,
       "phase1_turns": 17,
       "wall_clock_ms": 115741,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:42:14.487Z",
       "finished_at": "2026-11-02T19:44:10.228Z"
     },
@@ -2088,6 +2281,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 40,
+        "output": 5979,
+        "cache_read": 441758,
+        "cache_creation": 38747
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -2136,6 +2337,7 @@
       "phase1_duration_ms": 44734,
       "phase1_turns": 17,
       "wall_clock_ms": 112631,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:42:14.281Z",
       "finished_at": "2026-11-02T19:44:06.912Z"
     },
@@ -2176,6 +2378,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 64,
+        "output": 11418,
+        "cache_read": 626153,
+        "cache_creation": 51326
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -2224,6 +2434,7 @@
       "phase1_duration_ms": 46464,
       "phase1_turns": 17,
       "wall_clock_ms": 119438,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:42:29.302Z",
       "finished_at": "2026-11-02T19:44:28.740Z"
     },
@@ -2265,6 +2476,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 38,
+        "output": 5719,
+        "cache_read": 427124,
+        "cache_creation": 33908
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -2313,6 +2532,7 @@
       "phase1_duration_ms": 39646,
       "phase1_turns": 15,
       "wall_clock_ms": 119354,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:43:12.831Z",
       "finished_at": "2026-11-02T19:45:12.185Z"
     },
@@ -2354,6 +2574,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 36,
+        "output": 6317,
+        "cache_read": 393762,
+        "cache_creation": 39534
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -2402,6 +2630,7 @@
       "phase1_duration_ms": 43887,
       "phase1_turns": 15,
       "wall_clock_ms": 127418,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:44:37.177Z",
       "finished_at": "2026-11-02T19:46:44.595Z"
     },
@@ -2443,6 +2672,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 40,
+        "output": 6300,
+        "cache_read": 454400,
+        "cache_creation": 38751
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -2491,6 +2728,7 @@
       "phase1_duration_ms": 51618,
       "phase1_turns": 15,
       "wall_clock_ms": 132170,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:44:47.622Z",
       "finished_at": "2026-11-02T19:46:59.792Z"
     },
@@ -2532,6 +2770,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 42,
+        "output": 6736,
+        "cache_read": 479321,
+        "cache_creation": 35155
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -2580,6 +2826,7 @@
       "phase1_duration_ms": 53286,
       "phase1_turns": 16,
       "wall_clock_ms": 134287,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:44:49.954Z",
       "finished_at": "2026-11-02T19:47:04.241Z"
     },
@@ -2622,6 +2869,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 48,
+        "output": 9807,
+        "cache_read": 564850,
+        "cache_creation": 44275
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -2670,6 +2925,7 @@
       "phase1_duration_ms": 64160,
       "phase1_turns": 19,
       "wall_clock_ms": 164896,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:45:08.424Z",
       "finished_at": "2026-11-02T19:47:53.320Z"
     },
@@ -2712,6 +2968,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 48,
+        "output": 9885,
+        "cache_read": 556105,
+        "cache_creation": 41085
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -2760,6 +3024,7 @@
       "phase1_duration_ms": 69961,
       "phase1_turns": 18,
       "wall_clock_ms": 153657,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:45:26.559Z",
       "finished_at": "2026-11-02T19:48:00.216Z"
     },
@@ -2802,6 +3067,14 @@
         "claude-haiku-5-5",
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 56,
+        "output": 10531,
+        "cache_read": 724334,
+        "cache_creation": 46434
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -2850,6 +3123,7 @@
       "phase1_duration_ms": 64531,
       "phase1_turns": 24,
       "wall_clock_ms": 133932,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:46:01.502Z",
       "finished_at": "2026-11-02T19:48:15.434Z"
     },
@@ -2889,6 +3163,14 @@
       "models": [
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 10,
+        "output": 1294,
+        "cache_read": 101080,
+        "cache_creation": 8595
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -2914,6 +3196,7 @@
       "phase1_duration_ms": 13498,
       "phase1_turns": 7,
       "wall_clock_ms": 16170,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:47:33.893Z",
       "finished_at": "2026-11-02T19:47:50.063Z"
     },
@@ -2950,6 +3233,14 @@
       "models": [
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 6,
+        "output": 968,
+        "cache_read": 58493,
+        "cache_creation": 6022
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -2975,6 +3266,7 @@
       "phase1_duration_ms": 8895,
       "phase1_turns": 4,
       "wall_clock_ms": 11173,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:47:40.631Z",
       "finished_at": "2026-11-02T19:47:51.804Z"
     },
@@ -3011,6 +3303,14 @@
       "models": [
         "claude-sonnet-5-5"
       ],
+      "tokens": {
+        "input": 6,
+        "output": 914,
+        "cache_read": 58487,
+        "cache_creation": 6016
+      },
+      "isolation_findings": null,
+      "scoring_sandbox": null,
       "f2p": [
         {
           "criterion": "AC-1",
@@ -3036,6 +3336,7 @@
       "phase1_duration_ms": 8726,
       "phase1_turns": 4,
       "wall_clock_ms": 11253,
+      "runner_ms": null,
       "started_at": "2026-11-02T19:48:07.790Z",
       "finished_at": "2026-11-02T19:48:19.043Z"
     }

@@ -55,18 +55,18 @@
   },
   "scoring": {
     "kind": "recomputed",
-    "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04",
-    "scorer": "b835f097f8ae",
-    "run_id": 41615412529,
+    "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35",
+    "scorer": "939a3d87c514",
+    "run_id": 41785127300,
     "corrections": []
   },
   "provenance": {
     "file": "sources/recheck-41510675823.json",
-    "sha256": "09fcfffb3c400f688ea58a19394797c0abde39a86d3666f09c833b306610ba7c",
+    "sha256": "ade01542e52d98909dd246b73eb08f2d4fafe9ce04e5af3e340f160816f44b42",
     "artifact": {
-      "id": 13220727384,
+      "id": 13300971744,
       "name": "recheck-41510675823",
-      "digest": "sha256:4114b0459dcd52139feb1b23b9d3b7ffce3a10955e626363b6bd5695b416916d"
+      "digest": "sha256:4b09ebe4a0fbd54f3ed839c3bc4c5e4d5a988f8cb97252d85b71378532b34600"
     },
     "doc": "eval/results/2026-11-02-pilot-2.md"
   },
@@ -74,7 +74,6 @@
     "One trial run to check the measurement code before the campaign; not part of its figures."
   ],
   "missing": {
-    "tokens": 1,
     "isolation_check": 1
   },
   "observations": [
@@ -124,7 +123,12 @@
       "duration_ms": 52214,
       "turns": 17,
       "wall_clock_ms": 138296,
-      "tokens": null,
+      "tokens": {
+        "input": 42,
+        "output": 7494,
+        "cache_read": 449824,
+        "cache_creation": 70258
+      },
       "guard_blocks": 3,
       "corpus_exposed": true,
       "isolation_findings": null,

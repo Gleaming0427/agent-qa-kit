@@ -73,18 +73,18 @@
   },
   "scoring": {
     "kind": "recomputed",
-    "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04",
-    "scorer": "b835f097f8ae",
-    "run_id": 41615412529,
+    "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35",
+    "scorer": "939a3d87c514",
+    "run_id": 41785127300,
     "corrections": []
   },
   "provenance": {
     "file": "sources/recheck-41531765991.json",
-    "sha256": "53660b7c85af8240f6d3d84d826325308da018d489d3c7d9ac3781d03d484515",
+    "sha256": "122215472e21902464be7570ed85d77d994d05c040469f0c9b9e9f2f04b6d071",
     "artifact": {
-      "id": 13221157142,
+      "id": 13300846487,
       "name": "recheck-41531765991",
-      "digest": "sha256:281be217d0a1c64fdbebf9be2abc4255dc5b021743094cfa25ca701b9c5ac7a6"
+      "digest": "sha256:01393395d7e39621ad1650c51a283321fb792e978b42424f6e3358530be60b2e"
     },
     "doc": "eval/results/2026-11-02-writer-partitions.md"
   },
@@ -92,7 +92,7 @@
     "The organization's spend limit stopped the campaign: the trials with an agent error measure that, not the agent."
   ],
   "missing": {
-    "tokens": 30,
+    "tokens": 18,
     "isolation_check": 30,
     "models": 18
   },
@@ -143,7 +143,12 @@
       "duration_ms": 62343,
       "turns": 15,
       "wall_clock_ms": 152696,
-      "tokens": null,
+      "tokens": {
+        "input": 38,
+        "output": 7460,
+        "cache_read": 429827,
+        "cache_creation": 39977
+      },
       "guard_blocks": 3,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -195,7 +200,12 @@
       "duration_ms": 66217,
       "turns": 22,
       "wall_clock_ms": 152144,
-      "tokens": null,
+      "tokens": {
+        "input": 44,
+        "output": 9478,
+        "cache_read": 509955,
+        "cache_creation": 40404
+      },
       "guard_blocks": 3,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -247,7 +257,12 @@
       "duration_ms": 59472,
       "turns": 15,
       "wall_clock_ms": 138755,
-      "tokens": null,
+      "tokens": {
+        "input": 40,
+        "output": 7814,
+        "cache_read": 443817,
+        "cache_creation": 40642
+      },
       "guard_blocks": 3,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -299,7 +314,12 @@
       "duration_ms": 48234,
       "turns": 17,
       "wall_clock_ms": 116732,
-      "tokens": null,
+      "tokens": {
+        "input": 40,
+        "output": 7096,
+        "cache_read": 461641,
+        "cache_creation": 39326
+      },
       "guard_blocks": 3,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -351,7 +371,12 @@
       "duration_ms": 66450,
       "turns": 16,
       "wall_clock_ms": 153408,
-      "tokens": null,
+      "tokens": {
+        "input": 54,
+        "output": 14969,
+        "cache_read": 504753,
+        "cache_creation": 61641
+      },
       "guard_blocks": 6,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -403,7 +428,12 @@
       "duration_ms": 47134,
       "turns": 16,
       "wall_clock_ms": 128550,
-      "tokens": null,
+      "tokens": {
+        "input": 38,
+        "output": 7681,
+        "cache_read": 424915,
+        "cache_creation": 41023
+      },
       "guard_blocks": 3,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -454,7 +484,12 @@
       "duration_ms": 58438,
       "turns": 16,
       "wall_clock_ms": 110469,
-      "tokens": null,
+      "tokens": {
+        "input": 24,
+        "output": 4506,
+        "cache_read": 288451,
+        "cache_creation": 20598
+      },
       "guard_blocks": 4,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -505,7 +540,12 @@
       "duration_ms": 53187,
       "turns": 18,
       "wall_clock_ms": 104979,
-      "tokens": null,
+      "tokens": {
+        "input": 26,
+        "output": 4581,
+        "cache_read": 334908,
+        "cache_creation": 20265
+      },
       "guard_blocks": 3,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -556,7 +596,12 @@
       "duration_ms": 47008,
       "turns": 16,
       "wall_clock_ms": 99768,
-      "tokens": null,
+      "tokens": {
+        "input": 22,
+        "output": 4262,
+        "cache_read": 268567,
+        "cache_creation": 18757
+      },
       "guard_blocks": 3,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -607,7 +652,12 @@
       "duration_ms": 54606,
       "turns": 17,
       "wall_clock_ms": 110460,
-      "tokens": null,
+      "tokens": {
+        "input": 42,
+        "output": 7824,
+        "cache_read": 372730,
+        "cache_creation": 26825
+      },
       "guard_blocks": 8,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -658,7 +708,12 @@
       "duration_ms": 43838,
       "turns": 16,
       "wall_clock_ms": 99628,
-      "tokens": null,
+      "tokens": {
+        "input": 18,
+        "output": 2786,
+        "cache_read": 204181,
+        "cache_creation": 13593
+      },
       "guard_blocks": 3,
       "corpus_exposed": true,
       "isolation_findings": null,
@@ -709,7 +764,12 @@
       "duration_ms": 44042,
       "turns": 16,
       "wall_clock_ms": 100408,
-      "tokens": null,
+      "tokens": {
+        "input": 18,
+        "output": 2692,
+        "cache_read": 202359,
+        "cache_creation": 12930
+      },
       "guard_blocks": 3,
       "corpus_exposed": true,
       "isolation_findings": null,

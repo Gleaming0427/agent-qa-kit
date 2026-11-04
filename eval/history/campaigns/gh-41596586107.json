@@ -55,18 +55,18 @@
   },
   "scoring": {
     "kind": "recomputed",
-    "commit": "c84386e691b4fae43ab288a40579ad4a1d8acc04",
-    "scorer": "b835f097f8ae",
-    "run_id": 41615412529,
+    "commit": "efa197ec3d498b747a0dc73d59aa4fc8f8ec2e35",
+    "scorer": "939a3d87c514",
+    "run_id": 41785127300,
     "corrections": []
   },
   "provenance": {
     "file": "sources/recheck-41596586107.json",
-    "sha256": "cdfe41ba4cd7d08ba64661dfc7fb46df4a3a6e0d6e83e9f4335d90752d6cc297",
+    "sha256": "f62c8b9d8ff1cb9d51a8dff6acca63bed667517c72767921db71e6e6449b38c8",
     "artifact": {
-      "id": 13220783382,
+      "id": 13301226313,
       "name": "recheck-41596586107",
-      "digest": "sha256:049be673d027053e5c8afcc545dd9e1370425b9b8da22d0941e52337d079049d"
+      "digest": "sha256:5fcf2d04339dc62375977df9a3e90a0a0ca732d50e9e4c8a8cdc622d15f4f505"
     },
     "doc": "eval/results/2026-11-03-glob-grep.md"
   },
@@ -74,7 +74,6 @@
     "One trial run before the campaign; not part of its figures."
   ],
   "missing": {
-    "tokens": 1,
     "isolation_check": 1
   },
   "observations": [
@@ -124,7 +123,12 @@
       "duration_ms": 50031,
       "turns": 15,
       "wall_clock_ms": 143305,
-      "tokens": null,
+      "tokens": {
+        "input": 36,
+        "output": 6553,
+        "cache_read": 407804,
+        "cache_creation": 72134
+      },
       "guard_blocks": 1,
       "corpus_exposed": true,
       "isolation_findings": null,

@@ -50,7 +50,7 @@ An **observation** holds:
 
 - **A comparison needs the same scorer.**
   - Campaigns scored by different code are blocked: recheck both runs with the same code first.
-  - The 13 imported campaigns were all scored by the recheck run 41615412529.
+  - The 13 imported campaigns were all scored by the recheck run 41785127300, with the code of `efa197e`. A campaign scored by later code needs a new recheck of these runs, with no model call, before it is compared with them.
 - **A ticket compares only with the same corpus.** When its folder changed, the ticket is left out, and the others can still be compared.
 - **Corrections are explicit.**
   - A correction is listed in `sources.json` and defined in `CORRECTIONS` (`eval/lib/history.ts`), with its reason and the document that found it.
