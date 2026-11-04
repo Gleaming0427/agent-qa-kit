@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 9a7b33b..cfc5889 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -12,7 +12,7 @@ export function App() {
+   const computeSubtotal = import.meta.env.VITE_DEMO_BUG === '1' ? subtotalBuggy : subtotal;
+   const sub = computeSubtotal(lines);
+   // Gift wrap costs the same for every unit, and does not count toward free shipping.
+-  const units = lines.reduce((count, line) => count + line.quantity, 0);
++  const units = lines.length;
+   const wrapCents = wrap ? units * GIFT_WRAP_CENTS : 0;
+   const ship = shipping(sub);
+ 

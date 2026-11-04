@@ -34,15 +34,19 @@ Sixteen tickets on the demo shop (`examples/shop`), in `eval/tickets/<TICKET>/`:
 | EVAL-14 | feature | "Empty cart" button | shown on an empty cart; removes only the first line |
 | EVAL-15 | feature | Product search, ignoring case | case-sensitive; no "No products found" message |
 | EVAL-16 | feature | Amount on each cart line | shows the unit price; drops trailing zeros |
+| EVAL-17 | feature | Gift wrap, €1.00 per unit, not counted toward free shipping | charged per line; counted toward free shipping; total kept after unchecking |
 
 EVAL-11 to EVAL-16 were written after the two pilot campaigns (`results/`), before any agent ran on them. They measure a change to the writer on tickets it was not tuned on.
+
+EVAL-17 was written after reading why the agent misses EVAL-1's shipping bug ([results/2026-11-04-eval-1-ac-1.md](results/2026-11-04-eval-1-ac-1.md)). It has the same shape in another setting: a criterion states a base (per unit) and an explicit interaction (not counted toward free shipping), and a single case of the interaction misses the wrong base. It tests a change to the writer's prompt on a ticket that change was not tuned on.
 
 Several of their bugs need a specific case to be seen:
 - a line other than the first;
 - a quantity above 1;
 - exactly 3 units;
 - a mixed cart;
-- a different letter case.
+- a different letter case;
+- a cart just under the free shipping threshold.
 
 Others are caught by any test of their criterion.
 

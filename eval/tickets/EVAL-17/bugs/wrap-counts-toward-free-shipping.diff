@@ -1,0 +1,13 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 9a7b33b..c6e0cad 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -14,7 +14,7 @@ export function App() {
+   // Gift wrap costs the same for every unit, and does not count toward free shipping.
+   const units = lines.reduce((count, line) => count + line.quantity, 0);
+   const wrapCents = wrap ? units * GIFT_WRAP_CENTS : 0;
+-  const ship = shipping(sub);
++  const ship = shipping(sub + wrapCents);
+ 
+   const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
+   const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));
