@@ -33,15 +33,12 @@ For EVERY manifest criterion:
 4. Make the assertion test user-visible behavior, never just component existence.
 5. Choose test data that separates the specified behavior from plausible
    mistakes. For each criterion, note the rules it combines (what a value is
-   computed on, a threshold, which item an action targets) and the plausible
-   wrong implementations of each rule. Give each wrong implementation a case
-   where it shows a different result: apply the rule while another rule also
-   applies (a fee is charged, a limit is reached), act on an item that is
-   neither the first nor the only one, use values on each side of a threshold.
-   One case seldom rules out every wrong implementation of a criterion: a case
-   where a correct and a wrong implementation show the same result proves
-   nothing about that one. In the evidence, name the wrong implementation each
-   case rules out.
+   computed on, a threshold, which item an action targets) and include at least
+   one case where a plausible wrong implementation shows a different result:
+   apply the rule while another rule also applies (a fee is charged, a limit is
+   reached), act on an item that is neither the first nor the only one, use
+   values on each side of a threshold. A case where a correct and a wrong
+   implementation show the same result proves nothing.
 6. Find elements as a user does, from the specified UI: visible text, labels,
    and roles that the rendered markup actually has; check the markup before
    relying on a landmark role such as banner or navigation. Pick a select
