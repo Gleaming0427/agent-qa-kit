@@ -31,7 +31,7 @@ export interface Critical { kinds: string[]; tickets: string[] }
 /** A ticket of the corpus as it is now: its kind and the git tree of its folder. */
 export interface CorpusTicket { ticket: string; kind: string; tree: string }
 
-interface Version { agent: string; label: string; start: string; campaigns: Campaign[] }
+export interface Version { agent: string; label: string; start: string; campaigns: Campaign[] }
 export interface VersionResult { agent: string; label: string; successes: number; trials: number }
 export interface TicketSignals {
   ticket: string;
@@ -60,7 +60,7 @@ export interface Selection {
 
 const byTicket = (a: string, b: string) => a.localeCompare(b, 'en', { numeric: true });
 const day = (iso: string | null) => (iso ? iso.slice(0, 10) : 'never');
-const startOf = (c: Campaign) => c.source.started_at ?? c.observations.map((o) => o.started_at).sort()[0] ?? '';
+export const startOf = (c: Campaign) => c.source.started_at ?? c.observations.map((o) => o.started_at).sort()[0] ?? '';
 
 /** The versions of the history, oldest first: one per agent, with the campaigns that ran it. */
 export function versionsOf(campaigns: Campaign[]): Version[] {
@@ -73,10 +73,10 @@ export function versionsOf(campaigns: Campaign[]): Version[] {
   return [...byAgent.values()].sort((a, b) => a.start.localeCompare(b.start) || a.agent.localeCompare(b.agent));
 }
 
-const okWithCorpus = (v: Version, ticket: string, tree: string): Observation[] =>
+export const okWithCorpus = (v: Version, ticket: string, tree: string): Observation[] =>
   v.campaigns.filter((c) => c.environment.corpus[ticket] === tree).flatMap((c) => c.observations.filter((o) => o.ticket === ticket && o.status === 'ok'));
 
-export function signals(campaigns: Campaign[], corpus: CorpusTicket[], policy: SmokePolicy, critical: Critical): TicketSignals[] {
+export function signals(campaigns: Campaign[], corpus: CorpusTicket[], policy: { regression_lookback: number }, critical: Critical): TicketSignals[] {
   const versions = versionsOf(campaigns);
   const firstCounted = Math.max(0, versions.length - policy.regression_lookback);
   return corpus.map((t) => {

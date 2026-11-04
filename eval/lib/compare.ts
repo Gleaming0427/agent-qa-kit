@@ -25,7 +25,7 @@ export interface Policy {
   /** Which verdicts fail the release decision in CI (eval/validate.ts --ci). */
   ci?: { fail_on: Verdict[]; why: string };
   critical: { kinds: string[]; tickets: string[]; why: string };
-  rules: Record<string, { on_failure: 'review' | 'reject'; why: string; min?: number; max_rate?: number; max_increase?: number }>;
+  rules: Record<string, { on_failure: 'review' | 'reject'; why: string; min?: number; max_rate?: number; max_increase?: number; scope?: 'all' | 'changed_or_critical' }>;
 }
 
 /** Successes over trials (or bug x trial items) of one unit on one side. */
@@ -248,7 +248,15 @@ export function compare(sideA: Side, sideB: Side, policy: Policy, policyText: st
   const trialsMin = Math.min(sa.min_trials_per_ticket ?? 0, sb.min_trials_per_ticket ?? 0);
   rule('comparable', !blocking.size, blocking.size ? `not comparable: ${[...blocking].join('; ')}` : 'the history allows the comparison');
   rule('enough_tickets', comparable.length >= (policy.rules.enough_tickets.min ?? 0), `${comparable.length} comparable ticket(s), ${policy.rules.enough_tickets.min} needed`);
-  rule('enough_trials', comparable.length > 0 && trialsMin >= (policy.rules.enough_trials.min ?? 0), `at least ${comparable.length ? trialsMin : 0} trial(s) per ticket and version, ${policy.rules.enough_trials.min} needed`);
+  // scope "all" (the default): every ticket needs the minimum on both sides. "changed_or_critical": a
+  // ticket below it is fine when it is not critical and its outcome did not change (pass or fail in
+  // both, every trial agreeing), which lets an adaptive campaign run fewer trials on stable tickets.
+  const minTrials = policy.rules.enough_trials.min ?? 0;
+  const short = ticketChanges.filter((t) => Math.min(t.a.trials, t.b.trials) < minTrials
+    && (policy.rules.enough_trials.scope !== 'changed_or_critical' || t.critical || (t.category !== 'both_pass' && t.category !== 'both_fail')));
+  rule('enough_trials', comparable.length > 0 && !short.length, policy.rules.enough_trials.scope === 'changed_or_critical'
+    ? (short.length ? `fewer than ${minTrials} trials on a critical or changed ticket: ${short.map((t) => `${t.ticket} (${t.a.trials} and ${t.b.trials})`).join(', ')}` : `${minTrials} trials or more on every critical or changed ticket (at least ${comparable.length ? trialsMin : 0} on any ticket)`)
+    : `at least ${comparable.length ? trialsMin : 0} trial(s) per ticket and version, ${minTrials} needed`);
   const violations = sideB.campaigns.flatMap((c) => c.observations).filter((o) => o.status === 'ok' && !o.policy_ok).map((o) => o.key);
   rule('b_policy', !violations.length, violations.length ? `${violations.length} trial(s) of ${sideB.label} changed a file other than tests: ${violations.join(', ')}` : `every trial of ${sideB.label} changed test files only`);
   rule('b_corpus_exposure', !sb.corpus_exposed_trials, `${sb.corpus_exposed_trials} trial(s) of ${sideB.label} saw the corpus`);

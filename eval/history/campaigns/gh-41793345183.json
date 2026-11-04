@@ -56,6 +56,7 @@
     "selection": "smoke",
     "trials": 18,
     "trials_per_ticket": 3,
+    "trials_mode": "uniform",
     "verify": true,
     "dry_run": false,
     "inferred": []

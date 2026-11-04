@@ -173,7 +173,7 @@ In GitHub Actions, **QA eval** (Actions tab → Run workflow):
 | Input | Meaning |
 |---|---|
 | `tickets` | `all`, a list such as `EVAL-1 EVAL-5`, or `smoke`: a selection from the history (see Smoke evaluations), with its reasons in the run's summary. |
-| `trials` | Trials per ticket, 1 to 10. |
+| `trials` | Trials per ticket, 1 to 10, or `adaptive`: each ticket's trials from `eval/trials-policy.json` (see Trials per ticket), with the allocation in the run's summary. |
 | `max_parallel` | Trials running at the same time, 1 to 20. |
 | `verify` | Also run phase 2. |
 | `dry_run` | No model call: the agent's runner writes nothing, and the scoring runner puts the hidden tests in place of the agent's and gives the ambiguous ticket its right answer, `blocked`, to check the harness end to end. A working harness succeeds on every ticket. |
@@ -303,6 +303,41 @@ node eval/validate.ts --candidate "D clean, split runners" --policy-current
   - or look at it.
 - **Output.** The decision goes to the run's summary, with annotations on the run page, and to the `release-decision` artifact (Markdown and JSON). The JSON holds the comparison, the next steps and where the rules came from.
 - **After a release**, make the released version the baseline, in a reviewed commit.
+
+## Trials per ticket
+
+More trials make each measurement more precise, and cost more. `node eval/trials.ts` measures, on the history and with no model call, what more or fewer trials change. It also allocates the trials of an adaptive campaign.
+
+```bash
+node eval/trials.ts retro       # what 1, 2 or 3 trials per ticket would have concluded at each change of version
+node eval/trials.ts backtest    # uniform 1, 2 and 3 trials against the adaptive allocation, with and without follow-up
+node eval/trials.ts allocate    # each ticket's trials for the next adaptive campaign, with the reasons
+```
+
+- **Exact replays.** A version ran n trials of a ticket. What k of them would have said is averaged over every order the n trials could have come in, which gives exact probabilities with no random draw.
+- **The conclusion replayed** is the one a release decision acts on: the ticket got worse, its success rate below the latest earlier version's. For each number of trials, the replay gives:
+  - the recall of the tickets worse in the full run;
+  - the false alarms;
+  - the stability of each ticket's conclusion;
+  - the rules that fail when the first k trials are compared;
+  - the width of the success interval;
+  - the cost.
+- **The adaptive allocation** (`trials: adaptive` in QA eval, `eval/trials-policy.json`) is fixed from the history before the campaign:
+  - critical tickets get 5 trials;
+  - risky ones also get 5: never run with their current corpus, regressed recently, or unstable in the latest version;
+  - stable ones get 2: every trial passed in the last two versions, over 6 trials or more;
+  - the others get 3.
+- **No early stopping.** The allocation never changes with the campaign's results, and no ticket stops early because its first trials look good. The only second stage is a follow-up:
+  - when the release decision asks for a rerun of a ticket whose trials disagree or look worse, it gets 3 more trials;
+  - the decision then pools all its trials.
+
+  The sign test's p-values are not exact for such a two-stage design, and no rule decides on them alone.
+- **The rule on the number of trials** (`enough_trials` in `eval/compare-policy.json`) has the scope `changed_or_critical`. A ticket with fewer than 3 trials is fine when it is not critical and its outcome did not change. A change on such a ticket asks for a rerun.
+
+On the history, see [results/2026-11-04-trials.md](results/2026-11-04-trials.md):
+- 2 uniform trials instead of 3 lose part of the recall and add false alarms;
+- the adaptive allocation costs less than 3 uniform trials only once most tickets are stable;
+- what 5 trials bring on risky tickets cannot be measured yet, since the history has 3 trials per ticket.
 
 ## Limits
 

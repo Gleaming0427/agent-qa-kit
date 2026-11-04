@@ -23,8 +23,9 @@
     },
     "enough_trials": {
       "min": 3,
+      "scope": "changed_or_critical",
       "on_failure": "review",
-      "why": "With fewer trials per ticket and version, an unstable outcome cannot be seen, and a change of outcome cannot be told from run-to-run variation: a regression cannot be confirmed."
+      "why": "With fewer trials per ticket and version, an unstable outcome cannot be seen, and a change of outcome cannot be told from run-to-run variation: a regression cannot be confirmed. A ticket with fewer trials whose outcome did not change, and that is not critical, does not need it: that is how an adaptive campaign (eval/trials-policy.json) saves trials on stable tickets, and why a change on such a ticket asks for a rerun."
     },
     "b_policy": {
       "on_failure": "reject",

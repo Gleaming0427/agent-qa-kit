@@ -174,7 +174,7 @@ const input = (over: Partial<CampaignInput> = {}): CampaignInput => ({
 test('a campaign records the workflow inputs it was given, and infers the others', () => {
   const scores = [scoreTrial(record(1)), scoreTrial(record(2))];
   const given = buildCampaign(scores, input({ inputs: { trials: '2', verify: false, dry_run: false } }), versions);
-  assert.deepEqual(given.config, { tickets: ['EVAL-1'], selection: null, trials: 2, trials_per_ticket: 2, verify: false, dry_run: false, inferred: [] });
+  assert.deepEqual(given.config, { tickets: ['EVAL-1'], selection: null, trials: 2, trials_per_ticket: 2, trials_mode: 'uniform', verify: false, dry_run: false, inferred: [] });
   assert.equal(buildCampaign(scores, input({ inputs: { tickets: 'smoke' } }), versions).config.selection, 'smoke');
   assert.equal(buildCampaign(scores, input({ inputs: { tickets: 'EVAL-1 EVAL-2' } }), versions).config.selection, 'list');
   assert.equal(buildCampaign(scores, input({ inputs: { tickets: 'all' } }), versions).config.selection, 'all');

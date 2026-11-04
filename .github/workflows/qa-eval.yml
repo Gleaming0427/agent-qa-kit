@@ -20,7 +20,7 @@ on:
         default: all
         type: string
       trials:
-        description: Trials per ticket (1-10)
+        description: Trials per ticket (1-10), or "adaptive" (each ticket's trials from eval/trials-policy.json)
         required: true
         default: '3'
         type: string

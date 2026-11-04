@@ -64,6 +64,7 @@
     "selection": null,
     "trials": 30,
     "trials_per_ticket": 3,
+    "trials_mode": null,
     "verify": true,
     "dry_run": false,
     "inferred": [

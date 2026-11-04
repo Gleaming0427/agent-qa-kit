@@ -48,6 +48,7 @@
     "selection": "list",
     "trials": 2,
     "trials_per_ticket": 1,
+    "trials_mode": "uniform",
     "verify": true,
     "dry_run": false,
     "inferred": []

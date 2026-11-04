@@ -105,7 +105,17 @@ export interface Campaign {
    * selection: how the run chose its tickets, from its "tickets" input: every ticket ("all"), a smoke
    * selection from the history ("smoke"), or a list; null when the inputs were not recorded.
    */
-  config: { tickets: string[]; selection: 'all' | 'smoke' | 'list' | null; trials: number; trials_per_ticket: number | null; verify: boolean | null; dry_run: boolean; inferred: string[] };
+  config: {
+    tickets: string[];
+    selection: 'all' | 'smoke' | 'list' | null;
+    trials: number;
+    trials_per_ticket: number | null;
+    /** uniform: the same trials for every ticket; adaptive: each its own (eval/trials-policy.json); null when not recorded. */
+    trials_mode: 'uniform' | 'adaptive' | null;
+    verify: boolean | null;
+    dry_run: boolean;
+    inferred: string[];
+  };
   scoring: Scoring;
   provenance: { file: string; sha256: string; artifact: { id: number; name: string; digest: string } | null; doc: string | null };
   notes: string[];
@@ -303,8 +313,11 @@ export function buildCampaign(scores: TrialScore[], input: CampaignInput, versio
   };
   const verify = infer('verify', known.verify, () => observations.some((o) => o.verifier.gold !== 'not_run' || o.verifier.bug !== 'not_run'));
   const dryRun = infer('dry_run', known.dry_run, () => observations.every((o) => o.cost_usd === 0));
-  const trialsPerTicket = infer('trials_per_ticket', known.trials === undefined ? undefined : Number(known.trials),
-    () => (perTicket.every((n) => n === perTicket[0]) ? perTicket[0] ?? null : null));
+  // An adaptive run gives each ticket its own number of trials: there is no single number to record.
+  const uniform = () => (perTicket.every((n) => n === perTicket[0]) ? perTicket[0] ?? null : null);
+  const trialsInput = known.trials === undefined ? undefined : String(known.trials).trim();
+  const trialsMode = trialsInput === undefined ? null : trialsInput === 'adaptive' ? 'adaptive' : 'uniform';
+  const trialsPerTicket = trialsMode === 'adaptive' ? uniform() : infer('trials_per_ticket', trialsInput === undefined ? undefined : Number(trialsInput), uniform);
   return {
     schema: SCHEMA,
     schema_version: SCHEMA_VERSION,
@@ -317,7 +330,7 @@ export function buildCampaign(scores: TrialScore[], input: CampaignInput, versio
     },
     agent: versions.agent,
     environment: versions.environment,
-    config: { tickets, selection: selectionOf(known.tickets), trials: observations.length, trials_per_ticket: trialsPerTicket, verify, dry_run: dryRun, inferred },
+    config: { tickets, selection: selectionOf(known.tickets), trials: observations.length, trials_per_ticket: trialsPerTicket, trials_mode: trialsMode, verify, dry_run: dryRun, inferred },
     scoring: { kind: input.scoring.kind, commit: input.scoring.commit, scorer: versions.scorer, run_id: input.scoring.run_id, corrections },
     provenance: input.provenance,
     notes: input.notes,
