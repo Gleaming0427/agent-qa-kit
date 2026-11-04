@@ -179,6 +179,7 @@ In GitHub Actions, **QA eval** (Actions tab → Run workflow):
 | `tickets` | `all`, a list such as `EVAL-1 EVAL-5`, or `smoke`: a selection from the history (see Smoke evaluations), with its reasons in the run's summary. |
 | `trials` | Trials per ticket, 1 to 10, or `adaptive`: each ticket's trials from `eval/trials-policy.json` (see Trials per ticket), with the allocation in the run's summary. |
 | `max_parallel` | Trials running at the same time, 1 to 20. |
+| `max_cost_usd` | The campaign does not start if its estimated cost is above this many dollars (default 5; empty for no cap). The plan prices each trial at its ticket's mean cost per trial in the history (`eval/lib/budget.ts`) and gives the estimate in the run's summary. A smoke run fits under the default; every ticket with 3 trials needs about 6. A dry run or a recheck costs nothing. Phase 1 makes about 95% of the cost, so `verify: false` saves little. |
 | `verify` | Also run phase 2. |
 | `dry_run` | No model call: the agent's runner writes nothing, and the scoring runner puts the hidden tests in place of the agent's and gives the ambiguous ticket its right answer, `blocked`, to check the harness end to end. A working harness succeeds on every ticket. |
 | `recheck` | Instead of running trials, earlier QA eval run ids, separated by spaces. Each run's trial artifacts are aggregated again with the current code, so new checks also cover old campaigns. Nothing from the artifacts is run. |

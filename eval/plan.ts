@@ -4,10 +4,14 @@
 // Inputs come from the environment: TICKETS ("all", "smoke" for a selection from the history made by
 // eval/smoke.ts, whose reasons go to the run's summary, or keys separated by spaces or commas),
 // TRIALS (1-10, or "adaptive": each ticket's trials from eval/trials-policy.json, see eval/trials.ts)
-// and MAX_PARALLEL (1-20). RECHECK lists earlier QA eval run ids, separated by spaces
-// or commas, to aggregate again with the current code instead of running trials.
+// and MAX_PARALLEL (1-20). MAX_COST_USD caps the campaign's estimated cost (eval/lib/budget.ts): empty
+// means no cap, and a dry run or a recheck costs nothing. RECHECK lists earlier QA eval run ids,
+// separated by spaces or commas, to aggregate again with the current code instead of running trials.
 import { appendFileSync } from 'node:fs';
-import { listTickets, loadTicket } from './lib/workspace.ts';
+import { join } from 'node:path';
+import { estimateCost, estimateMarkdown, parseCap } from './lib/budget.ts';
+import { loadCampaigns } from './lib/history.ts';
+import { KIT, listTickets, loadTicket } from './lib/workspace.ts';
 import { selectionMarkdown, selectSmoke } from './lib/smoke.ts';
 import { currentCorpus, smokeInputs } from './smoke.ts';
 import { adaptiveAllocation } from './trials.ts';
@@ -55,6 +59,19 @@ for (const run of recheck) {
   if (!/^\d{1,20}$/.test(run)) { console.error(`Invalid run id: ${run}`); process.exit(1); }
 }
 if (recheck.length > 32) { console.error(`At most 32 runs to recheck, got ${recheck.length}`); process.exit(1); }
+// The cost, before anything runs: a campaign whose estimate is above MAX_COST_USD does not start.
+if (!recheck.length && process.env.EVAL_DRY_RUN !== '1') {
+  let cap: number | null = null;
+  try { cap = parseCap(process.env.MAX_COST_USD); } catch (error) { console.error((error as Error).message); process.exit(1); }
+  const estimate = estimateCost(include, loadCampaigns(join(KIT, 'eval/history/campaigns')));
+  const report = estimateMarkdown(estimate, cap);
+  console.error(report);
+  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${report}\n`);
+  if (cap !== null && estimate.total_usd > cap) {
+    console.error(`The estimated cost, $${estimate.total_usd.toFixed(2)}, is above max_cost_usd ($${cap.toFixed(2)}): nothing was started. Run fewer tickets or trials (tickets: smoke, trials: adaptive), or raise max_cost_usd.`);
+    process.exit(1);
+  }
+}
 console.log(`include=${JSON.stringify(include)}`);
 console.log(`tickets=${tickets.join(' ')}`);
 console.log(`max_parallel=${maxParallel}`);

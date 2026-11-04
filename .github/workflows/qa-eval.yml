@@ -29,6 +29,11 @@ on:
         required: true
         default: '6'
         type: string
+      max_cost_usd:
+        description: Do not start if the estimated cost is above this many dollars (each trial at its ticket's mean cost in the history); empty for no cap. A smoke run fits in 5, every ticket with 3 trials needs about 6.
+        required: false
+        default: '5'
+        type: string
       verify:
         description: Also run phase 2 (the verifier) on the reference implementation and on one bug
         required: true
@@ -80,6 +85,7 @@ jobs:
           TICKETS: ${{ inputs.tickets }}
           TRIALS: ${{ inputs.trials }}
           MAX_PARALLEL: ${{ inputs.max_parallel }}
+          MAX_COST_USD: ${{ inputs.max_cost_usd }}
           RECHECK: ${{ inputs.recheck }}
         run: node eval/plan.ts >> "$GITHUB_OUTPUT"
       - name: Build the agent bundle, and check it holds no trace of the corpus
