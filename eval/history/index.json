@@ -361,5 +361,24 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 6.041
+  },
+  {
+    "id": "gh-41841751651",
+    "label": "follow-up of rule 5, run 36",
+    "role": "campaign",
+    "started_at": "2026-11-04T13:50:17Z",
+    "commit": "cf60d93",
+    "agent": "22e27357c839",
+    "writer_prompt": "6b05cc7",
+    "scoring": "original at cf60d93",
+    "tickets": 4,
+    "trials": 12,
+    "agent_errors": 7,
+    "successes": 5,
+    "bugs_detected": "10/10",
+    "trials_with_false_positives": 0,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 0.7311
   }
 ]

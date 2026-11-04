@@ -557,6 +557,40 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 41841751651,
+      "run_number": 36,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-04T13:50:17Z",
+      "commit": "cf60d9378519bdfa2b1f2b4c7e61907417edc1a9",
+      "label": "follow-up of rule 5, run 36",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41841751651,
+        "commit": "cf60d9378519bdfa2b1f2b4c7e61907417edc1a9"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41841751651.json",
+        "sha256": "429b9816117cc28f6cc0368cfc2a67004ecd395ab591460bbd93c90a4c88cabb",
+        "artifact": {
+          "id": 13328808897,
+          "name": "eval-report",
+          "digest": "sha256:9c15d97826c09195b85e1ca384864bd28b1f21fff6ed895c8ebc9e151d920e01"
+        }
+      },
+      "doc": "eval/results/2026-11-04-rule-5.md",
+      "notes": [
+        "The follow-up run 35's release decision asked for: EVAL-8, EVAL-11, EVAL-12 and EVAL-17, 3 trials each, same agent as run 35. The API credit ran out at 13:52 UTC: 7 of its 12 trials (EVAL-12 and EVAL-17 entirely, one of EVAL-8) and the verifier runs after that ended with an API error."
+      ],
+      "inputs": {
+        "tickets": "EVAL-8 EVAL-11 EVAL-12 EVAL-17",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }

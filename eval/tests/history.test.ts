@@ -69,11 +69,13 @@ test('build refuses to delete a campaign file that has no source', () => {
 
 test('the tokens are known for every trial a model answered', () => {
   const all = committed.flatMap((c) => c.observations.map((o) => ({ label: c.label, o })));
-  assert.equal(all.filter(({ o }) => o.tokens).length, all.length - 18);
-  // The 18 without: B's regression check, stopped by the spend limit before any model answered.
+  assert.ok(all.filter(({ o }) => o.models.length).every(({ o }) => o.tokens));
+  // The trials without: stopped before any model answered, by the spend limit (B's regression check, 18)
+  // or by the API credit (6 of run 36).
   const without = all.filter(({ o }) => !o.tokens);
-  assert.deepEqual([...new Set(without.map(({ label }) => label))], ['B, regression check']);
   assert.ok(without.every(({ o }) => o.status === 'agent_error' && o.models.length === 0));
+  assert.equal(without.filter(({ label }) => label === 'B, regression check').length, 18);
+  assert.equal(without.filter(({ label }) => label === 'follow-up of rule 5, run 36').length, 6);
 });
 
 test('each campaign keeps the metrics of its source report, corrections aside', () => {
