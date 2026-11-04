@@ -323,5 +323,24 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 0.8142
+  },
+  {
+    "id": "gh-41831491679",
+    "label": "D clean on EVAL-17, run 34",
+    "role": "campaign",
+    "started_at": "2026-11-04T12:41:46Z",
+    "commit": "f349676",
+    "agent": "43cb10d883b4",
+    "writer_prompt": "b736198",
+    "scoring": "original at f349676",
+    "tickets": 1,
+    "trials": 3,
+    "agent_errors": 0,
+    "successes": 3,
+    "bugs_detected": "9/9",
+    "trials_with_false_positives": 0,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 0.3955
   }
 ]

@@ -489,6 +489,40 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 41831491679,
+      "run_number": 34,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-04T12:41:46Z",
+      "commit": "f349676c43a6989e6b931947271c1a5577668497",
+      "label": "D clean on EVAL-17, run 34",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41831491679,
+        "commit": "f349676c43a6989e6b931947271c1a5577668497"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41831491679.json",
+        "sha256": "417bdc05c1e2fe1c49eacedddce5b5996a24ce359d942c7df2df56d41b95deb1",
+        "artifact": {
+          "id": 13322139606,
+          "name": "eval-report",
+          "digest": "sha256:91c3806630f0b7f41e55deabab8529b25cc89bbff93a7b1d9272e809afb8795c"
+        }
+      },
+      "doc": "eval/results/2026-11-04-eval-1-ac-1.md",
+      "notes": [
+        "The agent of D clean on EVAL-17, the ticket written after EVAL-1's misses, before the writer's prompt changed: the reference on EVAL-17 for the next version."
+      ],
+      "inputs": {
+        "tickets": "EVAL-17",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }
