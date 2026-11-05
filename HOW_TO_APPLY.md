@@ -201,9 +201,29 @@ AC-1: the Promo code field does not exist yet, so the test cannot fill it
 AC-2: the Promo code field does not exist yet, so no code can be applied
 ```
 
-Then merge it into `feat/TICKET-44`. To change a test, request changes, delete
-`qa/TICKET-44` and run the workflow again: a test edited by hand no longer
-matches its RED evidence.
+Then merge it into `feat/TICKET-44`. To change a test before it is approved,
+request changes, delete `qa/TICKET-44` and run the workflow again.
+
+**Amend an approved test.** An approved test can turn out to be wrong, for
+instance an expected total worked out by hand. The repair agent may not touch it,
+and QA verify refuses a test edited on the developer's branch. Amend it instead:
+
+1. fix the test on `qa/TICKET-44`: same test files, same titles;
+2. run Actions → **QA amend tests** with the ticket key and the reason, such as
+   "the expected total was €24.40; €19.50 + €4.90 + €4.00 is €28.40". No agent
+   runs. The job runs the ticket's tests on the application without the feature:
+   each one must still fail for the right reason. It logs who amended the tests
+   and why in `qa-reviews/TICKET-44/TICKET-44-amendments.json`, and opens a pull
+   request `qa/TICKET-44` → `feat/TICKET-44` that shows the amendment;
+3. a collaborator approves it, with one line per criterion as before. Merge it,
+   then update the developer's branch from `feat/TICKET-44`.
+
+QA verify then accepts the amended tests and lists each amendment in its summary.
+Adding or removing a test file is not an amendment: delete the branch and write
+the tests again. In a team, have someone other than the author approve the
+amendment. Locally, the same check is `node qa/scenario-review.ts amend
+TICKET-44 specs/TICKET-44.md <author> <reason file>`, after the ticket's unit and
+browser tests have run, followed by a new approval.
 
 **Develop and verify.** Work on `feat/TICKET-44`, or on any branch whose name or
 pull request title contains `TICKET-44`, and open a pull request into `main`.
