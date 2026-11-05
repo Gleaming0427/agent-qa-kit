@@ -80,10 +80,12 @@ After integration, run phase 1, review the generated tests and RED report, fill 
 
 ## Run the agents in CI
 
-Two GitHub workflows run the same steps without a developer machine:
+Two GitHub workflows run the same steps without a developer machine, and a third amends approved tests:
 
 1. **QA write tests**, started by hand from the Actions tab with a ticket key. The QA writer agent turns `specs/<ticket>.md` into tests, the kit checks that each one fails for the right reason, and the workflow opens a pull request from `qa/<ticket>` into `feat/<ticket>`. It lists every criterion with its failing tests. **Approving that pull request is the human review**: the approval gives one line per criterion, such as `AC-1: the button does not exist yet`. Merge it, then develop on `feat/<ticket>`.
 2. **QA verify**, on every pull request into `main`. When the branch or the title names a ticket with QA tests, it checks that a collaborator approved the latest version of those tests and that they have not changed since. It then runs the QA verifier agent and the full suite. Make it a required check, and a failure blocks the merge. A pull request without such a ticket passes at once and calls no model.
+
+When an approved test turns out to be wrong, **QA amend tests** takes the fix made on `qa/<ticket>` and the reason. It calls no model: it checks that the tests still fail for the right reason without the feature, logs the amendment, and opens a pull request to approve again.
 
 The agent's commands run in a sandbox without network access, and never see the API key. The full suite, which runs the pull request's code, has a step of its own without the key. To set it up, add an `ANTHROPIC_API_KEY` secret, allow Actions to create pull requests, and require the **QA verify** check: see [HOW_TO_APPLY.md](HOW_TO_APPLY.md#5-run-the-agents-in-ci). To try it on the demo, run **QA write tests** with `TICKET-44`, a promo code field that does not exist yet.
 
@@ -141,7 +143,7 @@ On failure, `qa/summary.ts` extracts short error excerpts and trace paths from t
 
 - **Smoke tests:** a few stable journeys. Update them only when a critical flow changes.
 - **Screenshots:** the baselines are made in CI. After an intended visual change, delete them and commit the new ones from the `screenshot-baselines` artifact.
-- **Ticket tests:** frozen while the ticket is developed. Delete the `qa/<TICKET>` branch once it is merged: they become ordinary tests. The review package in `qa-reviews/<TICKET>/` stays as a record of what was approved, and by whom.
+- **Ticket tests:** frozen while the ticket is developed. If an approved test turns out to be wrong, fix it on `qa/<TICKET>` and run **QA amend tests** with the reason. No agent runs: the job checks that the tests still fail for the right reason without the feature, logs who changed them and why, and opens a pull request to approve again ([HOW_TO_APPLY.md](HOW_TO_APPLY.md#5-run-the-agents-in-ci)). Delete the `qa/<TICKET>` branch once it is merged: they become ordinary tests. The review package in `qa-reviews/<TICKET>/` stays as a record of what was approved, by whom, and what was amended.
 - **Dependencies:** keep Playwright, Vitest and Vite up to date and check `npm audit`.
 
 ## Security

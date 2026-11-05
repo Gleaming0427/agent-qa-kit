@@ -51,6 +51,14 @@ case "${1:-}" in
         || fail "$ticket: the approval of #$number by $reviewer cannot be used. $(<"$ERR") Approve #$number again with one line per criterion, such as \"AC-1: why this failure shows the feature is missing\"."
       printf '%s\t%s\t%s\t%s\n' "$ticket" "$app" "$mfe" "$spec" >> "$LIST"
       echo "$ticket: tests approved by $reviewer in #$number, unchanged since."
+      # Approved tests changed by hand say so, with who changed them and why (qa/ci-amend-tests.sh).
+      amendments="$app/reports/$ticket-amendments.json"
+      if [[ -s "$amendments" ]]; then
+        log="$(jq -r 'length as $n | .[-1] | "\($n) amendment(s) of the approved tests, the latest by \(.author): \(.reason)"' "$amendments")"
+        echo "$ticket: $log"
+        echo "::notice title=QA verify::$(escape "$ticket: $log")"
+        echo "- **$ticket**: $log Approved by $reviewer in #$number." >> "$GITHUB_STEP_SUMMARY"
+      fi
     done
     count="$(wc -l < "$LIST" | tr -d ' ')"
     echo "count=$count" >> "$GITHUB_OUTPUT"

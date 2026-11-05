@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **Amending approved tests.** A wrong approved test had no clean way out: the repair agent may not touch it, and QA verify refuses a test edited on the developer's branch. Now:
+  - a person fixes it on `qa/<TICKET>`, then runs the new **QA amend tests** workflow with the reason;
+  - no agent runs: every test of the ticket must still fail for the right reason on the application without the feature;
+  - the amendment is logged with its author and reason in the review package, and the tests need a new approval;
+  - QA verify lists the amendments in its summary.
+
 ## v0.2.0, 4 November 2026
 
 Since v0.1.0 the kit has an evaluation framework that measures its QA agents, without letting them see what they are measured on. The agents' prompts are those of the "D clean" campaign, the release baseline (`eval/release-baseline.json`).
