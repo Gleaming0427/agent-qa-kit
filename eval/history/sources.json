@@ -659,6 +659,40 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 41998947384,
+      "run_number": 39,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-05T09:01:12Z",
+      "commit": "4af384d8bed53585551f80395bae3da89001cade",
+      "label": "follow-up of the coverage summary, run 39",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41998947384,
+        "commit": "4af384d8bed53585551f80395bae3da89001cade"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41998947384.json",
+        "sha256": "71f6929078eb468b3e61106b433091ff2aa26919f1b9c17e1c7a171f982e0783",
+        "artifact": {
+          "id": 13402750918,
+          "name": "eval-report",
+          "digest": "sha256:7028b9c832a975c92b5e7ded207e0e8f738014c95e78f2e10be4678266361901"
+        }
+      },
+      "doc": "eval/results/2026-11-05-coverage-summary.md",
+      "notes": [
+        "The follow-up the release decision of runs 37 and 38 asked for: EVAL-12, 3 trials, same agent."
+      ],
+      "inputs": {
+        "tickets": "EVAL-12",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }
