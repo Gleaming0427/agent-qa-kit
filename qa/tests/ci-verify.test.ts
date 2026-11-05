@@ -11,7 +11,7 @@ import { exportReview, prepareReview } from '../scenario-review.ts';
 // stand-in for the GitHub CLI: which approval counts, and on which tests.
 const kit = resolve(import.meta.dirname, '../..');
 const KIT_FILES = ['qa/ci-verify.sh', 'qa/check-scope.sh', 'qa/github-approval.ts', 'qa/scenario-review.ts',
-  'qa/criteria-manifest.ts', '.claude/hooks/strict-evidence.ts'];
+  'qa/criteria-manifest.ts', '.claude/hooks/strict-evidence.ts', '.claude/hooks/coverage.ts'];
 const TICKET = 'TICKET-43';
 const REASONS = 'Looks right.\n\nAC-1: the button does not exist yet, so the search cannot be cleared.';
 

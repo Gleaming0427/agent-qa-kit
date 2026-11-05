@@ -65,6 +65,14 @@ tests, end with a `blocked` verdict: put the error in `alerts` and ask in
 The launcher prepares a review packet after this phase. A human checks the
 assertions and RED failures before development continues; do not approve it.
 
+Also give the reviewer a "coverage" summary: reading test code shows what is
+wrong in it, not what is missing. For each criterion with written tests, list
+the cases the tests use: the data, the expected values with the arithmetic
+that gives each amount, and the wrong implementation the case rules out. Then
+list in "not_covered" the inputs or edges the tests leave out; there is always
+at least one. The validator recomputes every "a + b = c": a wrong expected
+amount makes a test fail on a correct implementation.
+
 End with JSON only:
 ```json
 {
@@ -72,6 +80,11 @@ End with JSON only:
   "criteria": [
     {"id":"AC-1","level":"mfe","status":"written","evidence":"[TICKET-42][AC-1] MFE test"},
     {"id":"AC-1","level":"shell","status":"written","evidence":"[TICKET-42][AC-1] shell test"}
+  ],
+  "coverage": [
+    {"id":"AC-1",
+     "cases":[{"data":"2 notebooks at €4.50 and 1 pen set at €6.00","expect":"subtotal 2 × 4.50 + 6.00 = 15.00","rules_out":"a subtotal that ignores quantities (10.50)"}],
+     "not_covered":["an empty cart","a product removed after being added"]}
   ],
   "flaky_tests": [], "spec_questions": [], "alerts": []
 }

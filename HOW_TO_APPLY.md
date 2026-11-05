@@ -193,8 +193,12 @@ area (`shop`) and the application folder. The job:
    request `qa/TICKET-44` → `feat/TICKET-44`.
 
 **Review.** The pull request lists each criterion with its failing tests and
-their error excerpts; the test files are in its diff. Approve it with a review
-comment that has one line per criterion:
+their error excerpts; the test files are in its diff. Under each criterion, the
+writer's coverage summary gives the cases its tests use, the wrong
+implementation each one rules out, and what they do not cover. Read that last
+list first: a case the ticket needs and the tests miss does not show in the test
+code. The kit has already recomputed every expected amount written as
+`a + b = c`. Approve it with a review comment that has one line per criterion:
 
 ```text
 AC-1: the Promo code field does not exist yet, so the test cannot fill it
