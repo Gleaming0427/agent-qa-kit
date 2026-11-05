@@ -32,6 +32,15 @@ export interface Approval {
 }
 interface ReviewArgs { root: string; ticket: string; specPath: string }
 export interface ReviewContext { ticket: string; mfe: string; spec: string }
+/** A person changed approved tests: who, why, which files, and the review request before and after. */
+export interface Amendment {
+  at: string;
+  author: string;
+  reason: string;
+  files: { path: string; before: string; after: string }[];
+  previous_request_sha256: string;
+  request_sha256: string;
+}
 
 const digest = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 const readJson = <T>(path: string): T => JSON.parse(readFileSync(path, 'utf8')) as T;
@@ -146,10 +155,65 @@ export function prepareReview({ root, ticket, specPath }: ReviewArgs): ReviewReq
   return request;
 }
 
+const amendmentsPath = (root: string, ticket: string) => reportPath(root, ticket, 'amendments');
+export function readAmendments(root: string, ticket: string): Amendment[] {
+  const path = amendmentsPath(resolve(root), ticket);
+  return existsSync(path) ? readJson<Amendment[]>(path) : [];
+}
+// Amended tests are reviewed as a whole again: the log must end with the request being approved.
+function checkAmendmentLog(root: string, ticket: string) {
+  const last = readAmendments(root, ticket).at(-1);
+  if (last && last.request_sha256 !== fileDigest(reportPath(root, ticket, 'review-request'))) {
+    throw new Error('The amendment log does not match the review request: run the amend command again.');
+  }
+}
+
+/**
+ * A person corrects approved tests that turned out to be wrong, with a reason. The same test files,
+ * the same criteria: each one must still fail for the right reason on the application without the
+ * feature, as at the first review. The amendment is logged and the tests need a new approval.
+ */
+export function amendReview({ root, ticket, specPath, author, reason }: ReviewArgs & { author: string; reason: string }): Amendment {
+  root = resolve(root); checkTicket(ticket);
+  author = author.trim(); reason = reason.trim().replace(/\s+/g, ' ');
+  if (!author) throw new Error('An amendment needs its author.');
+  if (reason.length < 20) throw new Error('Say why the approved tests were wrong, in 20 characters or more: the reason is logged.');
+  const requestFile = reportPath(root, ticket, 'review-request');
+  if (!existsSync(requestFile)) throw new Error(`No reviewed tests for ${ticket}: an amendment changes tests that were approved.`);
+  const previous = readJson<ReviewRequest>(requestFile);
+  const previousDigest = fileDigest(requestFile);
+  const files = previous.tests.flatMap(({ path, sha256 }) => {
+    const absolute = resolve(root, path);
+    if (!existsSync(absolute)) throw new Error(`${path} was reviewed and is gone: removing a test file needs a new QA writing cycle.`);
+    const after = fileDigest(absolute);
+    return after === sha256 ? [] : [{ path, before: sha256, after }];
+  });
+  if (!files.length) throw new Error('No reviewed test changed: there is nothing to amend.');
+  // A refused amendment leaves the review as it was.
+  const touched = ['red-vitest', 'red-playwright', 'review-request', 'review-decision.template', 'approved', 'verify-attempts']
+    .map((suffix) => reportPath(root, ticket, suffix));
+  const saved = touched.map((path) => (existsSync(path) ? readFileSync(path) : null));
+  try {
+    const request = prepareReview({ root, ticket, specPath });
+    if (JSON.stringify(request.tests.map((t) => t.path)) !== JSON.stringify(previous.tests.map((t) => t.path))) {
+      throw new Error('An amendment changes reviewed test files only: adding or removing one needs a new QA writing cycle.');
+    }
+  } catch (error) {
+    touched.forEach((path, i) => (saved[i] === null ? rmSync(path, { force: true }) : writeFileSync(path, saved[i]!)));
+    throw error;
+  }
+  const amendment: Amendment = {
+    at: new Date().toISOString(), author, reason, files, previous_request_sha256: previousDigest, request_sha256: fileDigest(requestFile),
+  };
+  writeFileSync(amendmentsPath(root, ticket), `${JSON.stringify([...readAmendments(root, ticket), amendment], null, 2)}\n`);
+  return amendment;
+}
+
 export function approveReview({ root, ticket, specPath }: ReviewArgs): Approval {
   root = resolve(root); checkTicket(ticket);
   const request = readJson<ReviewRequest>(reportPath(root, ticket, 'review-request'));
   checkCurrentFiles(root, ticket, resolve(specPath), request);
+  checkAmendmentLog(root, ticket);
   const decision = readJson<ReviewDecision>(reportPath(root, ticket, 'review-decision'));
   const reviewer = String(decision.reviewer ?? '').trim();
   if (!reviewer) throw new Error('Reviewer name is required.');
@@ -172,6 +236,7 @@ export function verifyReview({ root, ticket, specPath }: ReviewArgs): Approval {
   const request = readJson<ReviewRequest>(requestFile);
   const approval = readJson<Approval>(reportPath(root, ticket, 'approved'));
   checkCurrentFiles(root, ticket, resolve(specPath), request);
+  checkAmendmentLog(root, ticket);
   if (approval.schema_version !== 1 || approval.ticket !== ticket || approval.request_sha256 !== fileDigest(requestFile)) {
     throw new Error('Scenario approval does not match the current review request.');
   }
@@ -208,6 +273,8 @@ export function exportReview({ root, ticket, specPath, mfe }: ReviewArgs & { mfe
   const dir = packageDir(root, ticket);
   mkdirSync(dir, { recursive: true });
   for (const name of PACKAGE_FILES) copyFileSync(reportPath(root, ticket, name), join(dir, `${ticket}-${name}.json`));
+  // The amendment log travels with the package, once there is one.
+  if (existsSync(amendmentsPath(root, ticket))) copyFileSync(amendmentsPath(root, ticket), join(dir, `${ticket}-amendments.json`));
   const context: ReviewContext = { ticket, mfe, spec: relative(root, resolve(specPath)) };
   writeFileSync(join(dir, 'context.json'), `${JSON.stringify(context, null, 2)}\n`);
   return dir;
@@ -218,6 +285,8 @@ export function importReview({ root, ticket }: { root: string; ticket: string })
   const dir = packageDir(root, ticket);
   mkdirSync(resolve(root, 'reports'), { recursive: true });
   for (const name of PACKAGE_FILES) copyFileSync(join(dir, `${ticket}-${name}.json`), reportPath(root, ticket, name));
+  const log = join(dir, `${ticket}-amendments.json`);
+  if (existsSync(log)) copyFileSync(log, amendmentsPath(root, ticket)); else rmSync(amendmentsPath(root, ticket), { force: true });
   const context = readJson<ReviewContext>(join(dir, 'context.json'));
   if (context.ticket !== ticket) throw new Error('Review package belongs to another ticket.');
   return context;
@@ -226,14 +295,21 @@ export function importReview({ root, ticket }: { root: string; ticket: string })
 /** Pull request text: what to check, the RED evidence, and how to approve. */
 export function reviewMarkdown({ root, ticket }: { root: string; ticket: string }): string {
   const request = readJson<ReviewRequest>(reportPath(resolve(root), ticket, 'review-request'));
+  const amendments = readAmendments(root, ticket);
   const plain = (text: string) => text.replace(/`/g, "'");
   const sections = request.criteria.map(({ id, description, failures }) => [
     `### ${id}: ${plain(description)}`,
     ...failures.map((f) => `- **${f.level === 'mfe' ? 'Unit' : 'Browser'} test** \`${plain(f.title)}\`\n  > ${plain(f.message).slice(0, 300)}`),
   ].join('\n'));
+  const log = amendments.length ? [[
+    '### Amendments',
+    'Approved tests were changed by hand. Check that each change fixes the test, not the bar: the tests must still say what the ticket asks.',
+    ...amendments.map((a) => `- ${a.at.slice(0, 10)}, by ${plain(a.author)}: ${plain(a.reason)}\n  Changed: ${a.files.map((f) => `\`${plain(f.path)}\``).join(', ')}`),
+  ].join('\n')] : [];
   return [
-    `## QA tests for ${ticket}`,
+    amendments.length ? `## Amended QA tests for ${ticket}` : `## QA tests for ${ticket}`,
     'The QA writer turned each acceptance criterion into a unit test and a browser test. They fail on purpose: the feature does not exist yet.',
+    ...log,
     'Before approving, check for each criterion that the assertions test what the ticket asks for, and that the failure below comes from the missing feature, not from a broken test or environment.',
     ...sections,
     '### How to approve',
@@ -260,14 +336,19 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   try {
     const [command, ticket, specPath, ...rest] = process.argv.slice(2);
     const root = process.cwd();
-    const needsSpec = ['prepare', 'approve', 'verify', 'reserve', 'export', 'approve-review'].includes(command);
+    const needsSpec = ['prepare', 'approve', 'verify', 'reserve', 'export', 'approve-review', 'amend'].includes(command);
     if (!['import', 'pr-body'].includes(command) && !needsSpec || !ticket || needsSpec && !specPath) {
       throw new Error('Usage: node qa/scenario-review.ts <prepare|approve|verify|reserve> TICKET SPEC\n'
         + '       node qa/scenario-review.ts export TICKET SPEC MFE | import TICKET | pr-body TICKET\n'
-        + '       node qa/scenario-review.ts approve-review TICKET SPEC REVIEWER REVIEW_TEXT_FILE');
+        + '       node qa/scenario-review.ts approve-review TICKET SPEC REVIEWER REVIEW_TEXT_FILE\n'
+        + '       node qa/scenario-review.ts amend TICKET SPEC AUTHOR REASON_FILE');
     }
     const args = { root, ticket, specPath };
-    if (command === 'export') {
+    if (command === 'amend') {
+      if (!rest[0] || !rest[1]) throw new Error('amend needs AUTHOR and REASON_FILE');
+      const amendment = amendReview({ ...args, author: rest[0], reason: readFileSync(rest[1], 'utf8') });
+      console.log(`Amendment of ${ticket} by ${amendment.author} logged: ${amendment.files.map((f) => f.path).join(', ')}. The tests need a new approval.`);
+    } else if (command === 'export') {
       console.log(`Review package: ${relative(root, exportReview({ ...args, mfe: rest[0] ?? '' }))}`);
     } else if (command === 'import') {
       console.log(JSON.stringify(importReview({ root, ticket })));

@@ -201,9 +201,29 @@ AC-1: the Promo code field does not exist yet, so the test cannot fill it
 AC-2: the Promo code field does not exist yet, so no code can be applied
 ```
 
-Then merge it into `feat/TICKET-44`. To change a test, request changes, delete
-`qa/TICKET-44` and run the workflow again: a test edited by hand no longer
-matches its RED evidence.
+Then merge it into `feat/TICKET-44`. To change a test before it is approved,
+request changes, delete `qa/TICKET-44` and run the workflow again.
+
+**Amend an approved test.** An approved test can turn out to be wrong, for
+instance an expected total worked out by hand. The repair agent may not touch it,
+and QA verify refuses a test edited on the developer's branch. Amend it instead:
+
+1. fix the test on `qa/TICKET-44`: same test files, same titles;
+2. run Actions → **QA amend tests** with the ticket key and the reason, such as
+   "the expected total was €24.40; €19.50 + €4.90 + €4.00 is €28.40". No agent
+   runs. The job runs the ticket's tests on the application without the feature:
+   each one must still fail for the right reason. It logs who amended the tests
+   and why in `qa-reviews/TICKET-44/TICKET-44-amendments.json`, and opens a pull
+   request `qa/TICKET-44` → `feat/TICKET-44` that shows the amendment;
+3. a collaborator approves it, with one line per criterion as before. Merge it,
+   then update the developer's branch from `feat/TICKET-44`.
+
+QA verify then accepts the amended tests and lists each amendment in its summary.
+Adding or removing a test file is not an amendment: delete the branch and write
+the tests again. In a team, have someone other than the author approve the
+amendment. Locally, the same check is `node qa/scenario-review.ts amend
+TICKET-44 specs/TICKET-44.md <author> <reason file>`, after the ticket's unit and
+browser tests have run, followed by a new approval.
 
 **Develop and verify.** Work on `feat/TICKET-44`, or on any branch whose name or
 pull request title contains `TICKET-44`, and open a pull request into `main`.
@@ -220,7 +240,27 @@ pull request title contains `TICKET-44`, and open a pull request into `main`.
    (`qa/full-suite.sh`) in a step without it.
 
 A failure blocks the merge. A pull request that names no such ticket passes at
-once, without a model call. If the QA pull request is approved after the
+once, without a model call.
+
+**Start in advisory mode.** Generated tests and the verifier's verdict should
+earn the right to block a merge. Set the repository variable `QA_VERIFY_MODE` to
+`advisory` (Settings → Secrets and variables → Actions → Variables): QA verify
+then runs every check, reports each failure as a warning that says it would have
+blocked, and passes. The **QA branch rules** check still keeps the approved tests
+frozen. In both modes, each run uploads a `qa-verify-record` artifact: one line
+per ticket and step, with the pull request, the commit, the result and the
+version of the agents. After a few weeks, download them and run:
+
+```bash
+node qa/verify-record.ts --labels labels.json path/to/records
+```
+
+It lists every run that would have blocked, with an id. Label each one in
+`labels.json`, as `"false_block"` when the pull request was fine (a wrong test,
+a wrong verdict, a broken environment) or `"caught"` when the check found a real
+problem. It says the check is ready to block once it has seen 10 pull requests
+(`--min-prs`) with no false block and no failure left unlabeled. Then delete the
+variable, or set it to `blocking`, and make the check required. If the QA pull request is approved after the
 developer's pull request was opened, re-run the check. Each verification has a
 $0.20 budget ceiling, and a newer push cancels the run in progress.
 

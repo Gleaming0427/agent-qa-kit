@@ -3,6 +3,9 @@ name: QA verify
 # the tests must be the ones a collaborator approved, the QA verifier agent checks
 # every acceptance criterion, then the full suite runs. Make "QA verify" a
 # required check to block the merge when it fails. Other pull requests pass.
+# With the repository variable QA_VERIFY_MODE=advisory, failures are warnings
+# only, until the track record (qa-verify-record artifacts, qa/verify-record.ts)
+# shows the check can block.
 on:
   pull_request:
     branches: [main]
@@ -24,6 +27,12 @@ jobs:
       BASE_REF: ${{ github.base_ref }}
       HEAD_REF: ${{ github.head_ref }}
       PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      # Repository variable: "advisory" reports failures as warnings without blocking, to build a
+      # track record first; unset or "blocking" fails the check (see HOW_TO_APPLY.md).
+      QA_VERIFY_MODE: ${{ vars.QA_VERIFY_MODE || 'blocking' }}
+      QA_VERIFY_RECORD: ${{ github.workspace }}/qa-verify-record.jsonl
     steps:
       - uses: actions/checkout@v5
         with:
@@ -51,6 +60,13 @@ jobs:
       - name: Full suite, smoke journeys included
         if: steps.prepare.outputs.count != '0'
         run: bash qa/ci-verify.sh suite
+      - name: Upload the outcome of each check (the track record)
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: qa-verify-record
+          path: qa-verify-record.jsonl
+          if-no-files-found: ignore
       - name: Upload the QA reports (even on failure)
         if: always() && steps.prepare.outputs.count != '0'
         uses: actions/upload-artifact@v6

@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
-import { cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { buildManifest } from '../criteria-manifest.ts';
 import {
-  approveFromReview, approveReview, exportReview, importReview, prepareReview, reserveVerifyAttempt, reviewMarkdown, verifyReview,
+  amendReview, approveFromReview, approveReview, exportReview, importReview, prepareReview, readAmendments, reserveVerifyAttempt,
+  reviewMarkdown, verifyReview,
 } from '../scenario-review.ts';
 
 function fixture() {
@@ -132,5 +133,81 @@ test('review refuses a test path redirected to a secret file', () => {
     rmSync(f.testFile);
     symlinkSync(secret, f.testFile);
     assert.throws(() => prepareReview({ root: f.root, ticket: 'TICKET-42', specPath: f.specPath }), /resolves outside a test source/);
+  } finally { rmSync(f.root, { recursive: true, force: true }); }
+});
+
+test('a wrong approved test is amended with a logged reason, checked RED again, and approved again', () => {
+  const f = fixture();
+  const ci = mkdtempSync(join(tmpdir(), 'qa-scenario-amend-'));
+  try {
+    const args = { root: f.root, ticket: 'TICKET-42', specPath: f.specPath };
+    prepareReview(args);
+    approveFromReview({ ...args, reviewer: '@alice', text: 'AC-1: Alpha is missing when the search is in capitals.' });
+    const amend = (reason = 'The expected count was 2; the ticket lists one Alpha service.') => amendReview({ ...args, author: '@bob', reason });
+    assert.throws(() => amend(), /No reviewed test changed/);
+
+    // A person fixes the unit test, keeps its title, and runs the ticket's tests again: still RED.
+    writeFileSync(f.testFile, "test('[TICKET-42][AC-1] MFE search', () => { /* expects 1 */ });\n");
+    f.report.testResults[0].assertionResults[0].failureMessages = ['Expected 1 Alpha service, found 0'];
+    writeFileSync(join(f.root, 'reports/vitest.json'), JSON.stringify(f.report));
+    assert.throws(() => amend('wrong'), /20 characters or more/);
+    const amendment = amend();
+    assert.equal(amendment.author, '@bob');
+    assert.deepEqual(amendment.files.map((x) => x.path), ['src/Search.test.tsx']);
+    assert.notEqual(amendment.files[0].before, amendment.files[0].after);
+    // The approval of the old tests no longer counts: the amended ones need a new one.
+    assert.throws(() => verifyReview(args), /ENOENT|approved/);
+    const markdown = reviewMarkdown({ root: f.root, ticket: 'TICKET-42' });
+    assert.match(markdown, /^## Amended QA tests for TICKET-42/);
+    assert.match(markdown, /### Amendments[\s\S]*by @bob: The expected count was 2[\s\S]*Changed: `src\/Search\.test\.tsx`/);
+    assert.match(markdown, /Expected 1 Alpha service, found 0/);
+
+    // The log travels with the package, and CI approves the amended tests from a review.
+    exportReview({ ...args, mfe: 'services' });
+    for (const path of ['TICKET-42.md', 'e2e', 'src', 'qa-reviews']) cpSync(join(f.root, path), join(ci, path), { recursive: true });
+    const context = importReview({ root: ci, ticket: 'TICKET-42' });
+    assert.equal(readAmendments(ci, 'TICKET-42').length, 1);
+    const ciArgs = { root: ci, ticket: 'TICKET-42', specPath: join(ci, context.spec) };
+    approveFromReview({ ...ciArgs, reviewer: '@carol', text: 'AC-1: no Alpha service is listed yet, so the count is 0.' });
+    assert.equal(verifyReview(ciArgs).reviewer, '@carol');
+    // A review request changed after the logged amendment is refused.
+    const request = join(ci, 'reports/TICKET-42-review-request.json');
+    writeFileSync(request, readFileSync(request, 'utf8').replace('Expected 1 Alpha', 'Expected 2 Alpha'));
+    assert.throws(() => verifyReview(ciArgs), /RED failure review request changed|amendment log/);
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
+    rmSync(ci, { recursive: true, force: true });
+  }
+});
+
+test('an amendment keeps the same test files, and an amended test must still fail for the right reason', () => {
+  const f = fixture();
+  try {
+    const args = { root: f.root, ticket: 'TICKET-42', specPath: f.specPath };
+    prepareReview(args);
+    approveFromReview({ ...args, reviewer: '@alice', text: 'AC-1: Alpha is missing when the search is in capitals.' });
+    const before = readFileSync(join(f.root, 'reports/TICKET-42-review-request.json'), 'utf8');
+    const reason = 'The approved test expected the wrong service name.';
+    writeFileSync(f.testFile, "test('[TICKET-42][AC-1] MFE search', () => { /* fixed */ });\n");
+    // Passing on the application without the feature: no RED evidence, refused, and nothing changed.
+    f.report.testResults[0].assertionResults[0].status = 'passed';
+    writeFileSync(join(f.root, 'reports/vitest.json'), JSON.stringify(f.report));
+    assert.throws(() => amendReview({ ...args, author: '@bob', reason }), /must have a failing \[TICKET-42\]\[AC-1\] test before implementation/);
+    assert.equal(readFileSync(join(f.root, 'reports/TICKET-42-review-request.json'), 'utf8'), before);
+    assert.ok(existsSync(join(f.root, 'reports/TICKET-42-approved.json')), 'the earlier approval is kept');
+    assert.deepEqual(readAmendments(f.root, 'TICKET-42'), []);
+    // The edited test is neither approved nor amended: verification still refuses it.
+    assert.throws(() => verifyReview(args), /Reviewed test changed/);
+    // A new failing test file is a new test, not an amendment.
+    f.report.testResults[0].assertionResults[0].status = 'failed';
+    const extra = join(f.root, 'src/Extra.test.tsx');
+    writeFileSync(extra, "test('[TICKET-42][AC-1] MFE extra', () => {});\n");
+    f.report.testResults.push({ name: extra, assertionResults: [{ fullName: '[TICKET-42][AC-1] MFE extra', status: 'failed', failureMessages: ['Expected Alpha'] }] });
+    writeFileSync(join(f.root, 'reports/vitest.json'), JSON.stringify(f.report));
+    assert.throws(() => amendReview({ ...args, author: '@bob', reason }), /needs a new QA writing cycle/);
+    assert.equal(readFileSync(join(f.root, 'reports/TICKET-42-review-request.json'), 'utf8'), before);
+    // A reviewed test file that is gone cannot be amended away.
+    rmSync(extra); rmSync(f.testFile);
+    assert.throws(() => amendReview({ ...args, author: '@bob', reason }), /was reviewed and is gone/);
   } finally { rmSync(f.root, { recursive: true, force: true }); }
 });

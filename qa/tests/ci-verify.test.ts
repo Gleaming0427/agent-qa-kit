@@ -94,7 +94,7 @@ esac
 }
 
 function verify(h: ReturnType<typeof history>, options: {
-  branch?: string; title?: string; pulls?: unknown[]; reviews?: unknown[];
+  branch?: string; title?: string; pulls?: unknown[]; reviews?: unknown[]; env?: Record<string, string>;
 } = {}) {
   const branch = options.branch ?? `feat/${TICKET}`;
   const pulls = options.pulls ?? [{ number: 7, state: 'closed', merged_at: '2026-11-01T10:00:00Z',
@@ -110,11 +110,14 @@ function verify(h: ReturnType<typeof history>, options: {
     cwd: ci, encoding: 'utf8',
     env: { ...process.env, PATH: `${join(h.dir, 'bin')}:${process.env.PATH}`, GITHUB_REPOSITORY: 'acme/shop',
       BASE_REF: 'main', HEAD_REF: branch, PR_TITLE: options.title ?? 'Clear the search', RUNNER_TEMP: temp,
-      GITHUB_OUTPUT: join(temp, 'output'), GITHUB_STEP_SUMMARY: join(temp, 'summary') },
+      GITHUB_OUTPUT: join(temp, 'output'), GITHUB_STEP_SUMMARY: join(temp, 'summary'), PR_NUMBER: '12', HEAD_SHA: 'abcdef123456',
+      ...options.env },
   });
   const read = (path: string) => existsSync(path) ? readFileSync(path, 'utf8') : '';
-  return { code: result.status, output: result.stdout + result.stderr, ci,
-    list: read(join(temp, 'qa-verify-tickets.tsv')), count: read(join(temp, 'output')).trim() };
+  return { code: result.status, output: result.stdout + result.stderr, ci, temp,
+    list: read(join(temp, 'qa-verify-tickets.tsv')), count: read(join(temp, 'output')).trim(),
+    record: read(join(temp, 'qa-verify-record.jsonl')).split('\n').filter(Boolean).map((line) => JSON.parse(line)),
+    summary: read(join(temp, 'summary')) };
 }
 
 test('the verify workflow accepts only the tests a collaborator approved', () => {
@@ -158,5 +161,42 @@ test('the verify workflow has nothing to check without a ticket that has QA test
     r = verify(h, { branch: 'main', title: 'Fix a typo in the footer' });
     assert.equal(r.code, 0, r.output);
     assert.equal(r.count, 'count=0');
+  } finally { rmSync(h.dir, { recursive: true, force: true }); }
+});
+
+test('in advisory mode the verify workflow warns where it would block, records it, and passes', () => {
+  const h = history();
+  try {
+    const advisory = { env: { QA_VERIFY_MODE: 'advisory' } };
+    // Tests edited on the developer's branch: blocking mode fails, advisory mode warns.
+    let r = verify(h, { branch: `feat/${TICKET}-edited`, ...advisory });
+    assert.equal(r.code, 0, r.output);
+    assert.equal(r.count, 'count=0');
+    assert.match(r.output, /::warning title=QA verify \(advisory\)::Would block: TICKET-43: the tests or their review package differ/);
+    assert.doesNotMatch(r.output, /::error/);
+    assert.match(r.summary, /QA verify is advisory[\s\S]*TICKET-43\*\*: would block/);
+    assert.deepEqual(r.record.map((o) => [o.mode, o.pr, o.sha, o.ticket, o.step, o.result]), [['advisory', '12', 'abcdef123456', TICKET, 'prepare', 'fail']]);
+    assert.match(r.record[0].detail, /differ from the version approved in #7/);
+
+    // Approved tests, then a full suite that fails: blocking mode fails, advisory mode records it and passes.
+    r = verify(h, advisory);
+    assert.equal(r.code, 0, r.output);
+    assert.equal(r.count, 'count=1');
+    assert.deepEqual(r.record.map((o) => [o.step, o.result]), [['prepare', 'pass']]);
+    const suite = (mode: string) => spawnSync('bash', ['qa/ci-verify.sh', 'suite'], {
+      cwd: r.ci, encoding: 'utf8',
+      env: { ...process.env, RUNNER_TEMP: r.temp, GITHUB_STEP_SUMMARY: join(r.temp, 'summary'), QA_VERIFY_MODE: mode, PR_NUMBER: '12', HEAD_SHA: 'abcdef123456' },
+    });
+    // This history has no qa/full-suite.sh: the suite cannot pass.
+    const advised = suite('advisory');
+    assert.equal(advised.status, 0, advised.stdout + advised.stderr);
+    assert.match(advised.stdout, /::warning title=QA verify \(advisory\)::Would block: TICKET-43 does not pass the suite check/);
+    const blocked = suite('blocking');
+    assert.equal(blocked.status, 1);
+    assert.match(blocked.stdout, /::error title=QA verify::TICKET-43 does not pass the suite check/);
+    const record = readFileSync(join(r.temp, 'qa-verify-record.jsonl'), 'utf8').trim().split('\n').map((line) => JSON.parse(line));
+    assert.deepEqual(record.map((o) => [o.mode, o.step, o.result]), [['advisory', 'prepare', 'pass'], ['advisory', 'suite', 'fail'], ['blocking', 'suite', 'fail']]);
+
+    assert.equal(verify(h, { env: { QA_VERIFY_MODE: 'warn' } }).code, 1);
   } finally { rmSync(h.dir, { recursive: true, force: true }); }
 });

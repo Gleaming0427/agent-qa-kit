@@ -1,0 +1,82 @@
+name: QA amend tests
+# Started by hand when an approved QA test turns out to be wrong, for instance an
+# expected total worked out by hand. First push the fix to qa/<ticket>: same test
+# files, same titles. No agent runs. The job checks that every test of the ticket
+# still fails for the right reason on the application without the feature, logs who
+# amended the tests and why in the review package, and opens a pull request into
+# feat/<ticket>. Approving it is the human review of the amendment.
+on:
+  workflow_dispatch:
+    inputs:
+      ticket:
+        description: Ticket key whose approved QA tests were fixed on qa/<ticket>
+        required: true
+        type: string
+      app:
+        description: Application folder, relative to the repository
+        required: true
+        default: examples/shop
+        type: string
+      reason:
+        description: Why the approved tests were wrong (logged with the tests and shown to the reviewer)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# The same group as "QA write tests": one change to a ticket's tests at a time.
+concurrency:
+  group: qa-write-${{ inputs.ticket }}
+
+jobs:
+  amend:
+    name: Check and log the amended tests (no AI)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      TICKET: ${{ inputs.ticket }}
+      APP: ${{ inputs.app }}
+      REASON: ${{ inputs.reason }}
+      WORK: ${{ github.workspace }}/work
+    steps:
+      # The kit's scripts come from the branch this workflow runs from; the tests from qa/<ticket>.
+      - uses: actions/checkout@v5
+        with:
+          path: kit
+          persist-credentials: false
+      - uses: actions/checkout@v5
+        with:
+          ref: qa/${{ inputs.ticket }}
+          path: work
+          fetch-depth: 0
+          # No token on disk while the application's tests run.
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Check the request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash kit/qa/ci-amend-tests.sh check
+      - name: Install the application and its browser
+        working-directory: work/${{ inputs.app }}
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Each test must still fail for the right reason (no model call)
+        run: bash kit/qa/ci-amend-tests.sh amend
+      - name: Open the pull request for the human review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash kit/qa/ci-amend-tests.sh publish
+      - name: Upload the reports (even on failure)
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: qa-amend-reports
+          path: |
+            work/${{ inputs.app }}/reports/
+            work/${{ inputs.app }}/test-results/
+          if-no-files-found: ignore
