@@ -591,6 +591,74 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 41996000517,
+      "run_number": 37,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-05T08:38:09Z",
+      "commit": "4af384d8bed53585551f80395bae3da89001cade",
+      "label": "coverage summary, EVAL-1, run 37",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41996000517,
+        "commit": "4af384d8bed53585551f80395bae3da89001cade"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41996000517.json",
+        "sha256": "32bfba344fca94c0c1ffb2307586b78160b9e5a94022647b7b8fd2b05f966502",
+        "artifact": {
+          "id": 13401155212,
+          "name": "eval-report",
+          "digest": "sha256:82d2a024489f6033e49ceeb22cb7dfce91ed693f3d739c6d3cf2dd1396a2242d"
+        }
+      },
+      "doc": "eval/results/2026-11-05-coverage-summary.md",
+      "notes": [
+        "The first campaign of the writer with the coverage summary in its phase 1 verdict, on EVAL-1, the ticket the change is about."
+      ],
+      "inputs": {
+        "tickets": "EVAL-1",
+        "trials": "5",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 41996325075,
+      "run_number": 38,
+      "branch": "claude/funny-knuth-tj8ugx",
+      "started_at": "2026-11-05T08:40:43Z",
+      "commit": "4af384d8bed53585551f80395bae3da89001cade",
+      "label": "coverage summary, run 38",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 41996325075,
+        "commit": "4af384d8bed53585551f80395bae3da89001cade"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-41996325075.json",
+        "sha256": "5ea71706b2287847ebef38982e9c53ded498874bc6bedd851e01b9cd445c7406",
+        "artifact": {
+          "id": 13401815337,
+          "name": "eval-report",
+          "digest": "sha256:5586cecf71a562371ebd89b9cb66ad4b0b258cef4fc1491f5f05fe50d2e6993a"
+        }
+      },
+      "doc": "eval/results/2026-11-05-coverage-summary.md",
+      "notes": [
+        "The writer with the coverage summary, on the two critical tickets and the three where the measured rule 5 wrote wrong amounts."
+      ],
+      "inputs": {
+        "tickets": "EVAL-9 EVAL-10 EVAL-8 EVAL-12 EVAL-17",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }

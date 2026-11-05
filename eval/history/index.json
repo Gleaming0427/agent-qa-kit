@@ -380,5 +380,43 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 0.7311
+  },
+  {
+    "id": "gh-41996000517",
+    "label": "coverage summary, EVAL-1, run 37",
+    "role": "campaign",
+    "started_at": "2026-11-05T08:38:09Z",
+    "commit": "4af384d",
+    "agent": "47cef1a039ad",
+    "writer_prompt": "65581db",
+    "scoring": "original at 4af384d",
+    "tickets": 1,
+    "trials": 5,
+    "agent_errors": 0,
+    "successes": 5,
+    "bugs_detected": "10/10",
+    "trials_with_false_positives": 0,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 0.7119
+  },
+  {
+    "id": "gh-41996325075",
+    "label": "coverage summary, run 38",
+    "role": "campaign",
+    "started_at": "2026-11-05T08:40:43Z",
+    "commit": "4af384d",
+    "agent": "47cef1a039ad",
+    "writer_prompt": "65581db",
+    "scoring": "original at 4af384d",
+    "tickets": 5,
+    "trials": 15,
+    "agent_errors": 0,
+    "successes": 14,
+    "bugs_detected": "23/24",
+    "trials_with_false_positives": 0,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 1.6629
   }
 ]
