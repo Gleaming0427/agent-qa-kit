@@ -7,6 +7,9 @@
   - no agent runs: every test of the ticket must still fail for the right reason on the application without the feature;
   - the amendment is logged with its author and reason in the review package, and the tests need a new approval;
   - QA verify lists the amendments in its summary.
+- **An advisory mode for QA verify.** The repository variable `QA_VERIFY_MODE=advisory` makes every failure a warning that says it would have blocked, and lets the check pass.
+  - In both modes, each run records the outcome of each step, ticket by ticket, in a `qa-verify-record` artifact.
+  - `node qa/verify-record.ts` reads these records and lists the failures for a person to label as false blocks or real problems. It says when the check can block: enough pull requests, no false block, nothing left unlabeled.
 
 ## v0.2.0, 4 November 2026
 

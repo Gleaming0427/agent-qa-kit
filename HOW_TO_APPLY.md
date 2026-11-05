@@ -240,7 +240,27 @@ pull request title contains `TICKET-44`, and open a pull request into `main`.
    (`qa/full-suite.sh`) in a step without it.
 
 A failure blocks the merge. A pull request that names no such ticket passes at
-once, without a model call. If the QA pull request is approved after the
+once, without a model call.
+
+**Start in advisory mode.** Generated tests and the verifier's verdict should
+earn the right to block a merge. Set the repository variable `QA_VERIFY_MODE` to
+`advisory` (Settings → Secrets and variables → Actions → Variables): QA verify
+then runs every check, reports each failure as a warning that says it would have
+blocked, and passes. The **QA branch rules** check still keeps the approved tests
+frozen. In both modes, each run uploads a `qa-verify-record` artifact: one line
+per ticket and step, with the pull request, the commit, the result and the
+version of the agents. After a few weeks, download them and run:
+
+```bash
+node qa/verify-record.ts --labels labels.json path/to/records
+```
+
+It lists every run that would have blocked, with an id. Label each one in
+`labels.json`, as `"false_block"` when the pull request was fine (a wrong test,
+a wrong verdict, a broken environment) or `"caught"` when the check found a real
+problem. It says the check is ready to block once it has seen 10 pull requests
+(`--min-prs`) with no false block and no failure left unlabeled. Then delete the
+variable, or set it to `blocking`, and make the check required. If the QA pull request is approved after the
 developer's pull request was opened, re-run the check. Each verification has a
 $0.20 budget ceiling, and a newer push cancels the run in progress.
 
