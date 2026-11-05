@@ -6,6 +6,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { coverageProblems } from './coverage.ts';
 import { validateEvidence, readRequiredJson } from './strict-evidence.ts';
 import type { Manifest, PlaywrightReport, Verdict, VitestReport } from './strict-evidence.ts';
 
@@ -154,6 +155,11 @@ function check(v: RawVerdict | null): string[] {
       specText, root: PROJECT,
     });
     problems.push(...strict.problems);
+    // Phase 1 also states what the tests cover and leave out, for the reviewer (coverage.ts).
+    if (PHASE === 1 && v.verdict === 'ready') {
+      const written = [...new Set(v.criteria.filter((c) => c.status === 'written').map((c) => c.id))];
+      problems.push(...coverageProblems(v.coverage, written));
+    }
   }
   return [...new Set(problems)];
 }

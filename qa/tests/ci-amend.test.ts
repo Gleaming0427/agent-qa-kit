@@ -11,7 +11,7 @@ import { exportReview, prepareReview } from '../scenario-review.ts';
 // npm (whose test runs write the reports), then the "prepare" step of QA verify on the result.
 const kit = resolve(import.meta.dirname, '../..');
 const KIT_FILES = ['qa/ci-verify.sh', 'qa/check-scope.sh', 'qa/github-approval.ts', 'qa/scenario-review.ts',
-  'qa/criteria-manifest.ts', '.claude/hooks/strict-evidence.ts'];
+  'qa/criteria-manifest.ts', '.claude/hooks/strict-evidence.ts', '.claude/hooks/coverage.ts'];
 const TICKET = 'TICKET-43';
 const UNIT = `[${TICKET}][AC-1] MFE shows the clear button`;
 const SHELL = `[${TICKET}][AC-1] shell shows the clear button`;

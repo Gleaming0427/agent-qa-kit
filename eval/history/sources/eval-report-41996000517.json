@@ -1,0 +1,701 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-05T08:43:40.607Z",
+  "campaign": {
+    "trials": 5,
+    "tickets": 1,
+    "trials_per_ticket": 5,
+    "first_start": "2026-11-05T08:38:55.536Z",
+    "last_finish": "2026-11-05T08:43:27.809Z",
+    "span_ms": 272273,
+    "effective_parallelism": 2.74
+  },
+  "metrics": {
+    "success": {
+      "successes": 5,
+      "n": 5,
+      "rate": 1,
+      "low": 0.5655175352168251,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "red_valid": {
+      "successes": 5,
+      "n": 5,
+      "rate": 1,
+      "low": 0.5655175352168251,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "no_false_positive": {
+      "successes": 5,
+      "n": 5,
+      "rate": 1,
+      "low": 0.5655175352168251,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "no_flaky_test": {
+      "successes": 5,
+      "n": 5,
+      "rate": 1,
+      "low": 0.5655175352168251,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "fail_to_pass": {
+      "successes": 20,
+      "n": 20,
+      "rate": 1,
+      "low": 0.8388748419471806,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "criterion x level units"
+    },
+    "bug_detection": {
+      "successes": 10,
+      "n": 10,
+      "rate": 1,
+      "low": 0.7224672001371107,
+      "high": 0.9999999999999999,
+      "clustered_se": null,
+      "unit": "injected bugs"
+    },
+    "bug_attribution": {
+      "successes": 10,
+      "n": 10,
+      "rate": 1,
+      "low": 0.7224672001371107,
+      "high": 0.9999999999999999,
+      "clustered_se": null,
+      "unit": "detected bugs"
+    },
+    "policy_ok": {
+      "successes": 5,
+      "n": 5,
+      "rate": 1,
+      "low": 0.5655175352168251,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "no_invention_on_ambiguity": {
+      "successes": 0,
+      "n": 0,
+      "rate": null,
+      "low": null,
+      "high": null,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "verifier_gold_correct": {
+      "successes": 5,
+      "n": 5,
+      "rate": 1,
+      "low": 0.5655175352168251,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "verifier runs on the correct implementation"
+    },
+    "verifier_bug_correct": {
+      "successes": 5,
+      "n": 5,
+      "rate": 1,
+      "low": 0.5655175352168251,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "verifier runs on a buggy implementation"
+    },
+    "verifier_bug_faithful": {
+      "successes": 5,
+      "n": 5,
+      "rate": 1,
+      "low": 0.5655175352168251,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "verifier runs on a buggy implementation"
+    },
+    "agent_error": {
+      "successes": 0,
+      "n": 5,
+      "rate": 0,
+      "low": 0,
+      "high": 0.43448246478317476,
+      "clustered_se": null,
+      "unit": "trials"
+    }
+  },
+  "reliability": {
+    "k": 5,
+    "pass_at_1": 1,
+    "pass_at_k": 1,
+    "pass_hat_k": 1
+  },
+  "cost_usd": {
+    "total": 0.7119,
+    "mean_per_trial": 0.1424,
+    "p50": 0.1286,
+    "p95": 0.1664
+  },
+  "tokens": {
+    "n": 5,
+    "input": 162,
+    "output": 42583,
+    "cache_read": 1786781,
+    "cache_creation": 251287,
+    "mean_total_per_trial": 416163
+  },
+  "runner_time_s": {
+    "agent": {
+      "n": 5,
+      "total": 303.4,
+      "p50": 61.3,
+      "p95": 63.3
+    },
+    "score": {
+      "n": 5,
+      "total": 285.5,
+      "p50": 57.5,
+      "p95": 60.3
+    },
+    "verify": {
+      "n": 5,
+      "total": 156.9,
+      "p50": 31.3,
+      "p95": 33.4
+    }
+  },
+  "phase1_duration_s": {
+    "n": 5,
+    "p50": 59.1,
+    "p95": 61.1,
+    "max": 61.6
+  },
+  "phase1_turns": {
+    "n": 5,
+    "p50": 12,
+    "p95": 12
+  },
+  "guard_blocks": {
+    "total": 5,
+    "trials": 5,
+    "trials_with_blocks": 5,
+    "mean_per_trial": 1,
+    "reasons": {
+      "Shell chaining/redirection/escaping forbidden": 5
+    },
+    "trials_missing_subagent_transcripts": 0
+  },
+  "checks": {
+    "trials_with_transcript": 5,
+    "tool_calls": {
+      "Read": 25,
+      "Glob": 5,
+      "Write": 10,
+      "Bash": 15
+    },
+    "unavailable_tool_calls": 0,
+    "unavailable_by_tool": {},
+    "corpus_exposed_trials": [],
+    "corpus_examples": [],
+    "models": {
+      "claude-haiku-5-5": 5,
+      "claude-sonnet-5-5": 5
+    },
+    "split_runner_trials": 5,
+    "scoring_sandbox": {
+      "bwrap": 5
+    },
+    "isolation_flagged_trials": []
+  },
+  "tickets": [
+    {
+      "ticket": "EVAL-1",
+      "kind": "feature",
+      "trials": 5,
+      "successes": 5,
+      "pass_hat_k": 1,
+      "red_valid": 5,
+      "f2p": "20/20",
+      "bugs_detected": "10/10",
+      "false_positive_trials": 0,
+      "mean_cost_usd": 0.1424
+    }
+  ],
+  "trials": [
+    {
+      "ticket": "EVAL-1",
+      "trial": 1,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 8693,
+        "cache_read": 335969,
+        "cache_creation": 72575
+      },
+      "isolation_findings": 0,
+      "scoring_sandbox": "bwrap",
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "discount-includes-shipping",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "any-code-accepted",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.167561,
+      "phase1_duration_ms": 57241,
+      "phase1_turns": 12,
+      "wall_clock_ms": 149769,
+      "runner_ms": {
+        "agent": 59227,
+        "score": 60762,
+        "verify": 29780
+      },
+      "started_at": "2026-11-05T08:38:55.536Z",
+      "finished_at": "2026-11-05T08:42:55.919Z"
+    },
+    {
+      "ticket": "EVAL-1",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 7959,
+        "cache_read": 349468,
+        "cache_creation": 55022
+      },
+      "isolation_findings": 0,
+      "scoring_sandbox": "bwrap",
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "discount-includes-shipping",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "any-code-accepted",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.161895,
+      "phase1_duration_ms": 55557,
+      "phase1_turns": 12,
+      "wall_clock_ms": 145159,
+      "runner_ms": {
+        "agent": 57586,
+        "score": 57452,
+        "verify": 30121
+      },
+      "started_at": "2026-11-05T08:38:56.438Z",
+      "finished_at": "2026-11-05T08:43:17.756Z"
+    },
+    {
+      "ticket": "EVAL-1",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 8322,
+        "cache_read": 366162,
+        "cache_creation": 41013
+      },
+      "isolation_findings": 0,
+      "scoring_sandbox": "bwrap",
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "discount-includes-shipping",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "any-code-accepted",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.128178,
+      "phase1_duration_ms": 59138,
+      "phase1_turns": 12,
+      "wall_clock_ms": 151945,
+      "runner_ms": {
+        "agent": 61531,
+        "score": 58420,
+        "verify": 31994
+      },
+      "started_at": "2026-11-05T08:39:04.025Z",
+      "finished_at": "2026-11-05T08:43:05.727Z"
+    },
+    {
+      "ticket": "EVAL-1",
+      "trial": 4,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 34,
+        "output": 9399,
+        "cache_read": 368857,
+        "cache_creation": 41562
+      },
+      "isolation_findings": 0,
+      "scoring_sandbox": "bwrap",
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "discount-includes-shipping",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "any-code-accepted",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.125693,
+      "phase1_duration_ms": 59081,
+      "phase1_turns": 12,
+      "wall_clock_ms": 149916,
+      "runner_ms": {
+        "agent": 61320,
+        "score": 54833,
+        "verify": 33763
+      },
+      "started_at": "2026-11-05T08:39:00.616Z",
+      "finished_at": "2026-11-05T08:43:01.369Z"
+    },
+    {
+      "ticket": "EVAL-1",
+      "trial": 5,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 1,
+      "guard_block_reasons": {
+        "Shell chaining/redirection/escaping forbidden": 1
+      },
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 3
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 32,
+        "output": 8210,
+        "cache_read": 366325,
+        "cache_creation": 41115
+      },
+      "isolation_findings": 0,
+      "scoring_sandbox": "bwrap",
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "discount-includes-shipping",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "any-code-accepted",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.128576,
+      "phase1_duration_ms": 61603,
+      "phase1_turns": 12,
+      "wall_clock_ms": 149009,
+      "runner_ms": {
+        "agent": 63740,
+        "score": 54019,
+        "verify": 31250
+      },
+      "started_at": "2026-11-05T08:39:01.893Z",
+      "finished_at": "2026-11-05T08:43:27.809Z"
+    }
+  ]
+}

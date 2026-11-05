@@ -5,6 +5,8 @@ import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { coverageMarkdown } from '../.claude/hooks/coverage.ts';
+import type { CriterionCoverage } from '../.claude/hooks/coverage.ts';
 import { cleanMessage, extractPlaywrightTests, validateEvidence } from '../.claude/hooks/strict-evidence.ts';
 import type { Level, Manifest, PlaywrightReport, Verdict, VitestReport } from '../.claude/hooks/strict-evidence.ts';
 import { buildManifest } from './criteria-manifest.ts';
@@ -297,10 +299,14 @@ export function reviewMarkdown({ root, ticket }: { root: string; ticket: string 
   const request = readJson<ReviewRequest>(reportPath(resolve(root), ticket, 'review-request'));
   const amendments = readAmendments(root, ticket);
   const plain = (text: string) => text.replace(/`/g, "'");
+  // The writer's coverage summary, from its phase 1 verdict (absent from verdicts made before it existed).
+  const verdictFile = reportPath(resolve(root), ticket, 'phase1');
+  const coverage = existsSync(verdictFile) ? (readJson<{ coverage?: CriterionCoverage[] }>(verdictFile).coverage ?? []) : [];
   const sections = request.criteria.map(({ id, description, failures }) => [
     `### ${id}: ${plain(description)}`,
     ...failures.map((f) => `- **${f.level === 'mfe' ? 'Unit' : 'Browser'} test** \`${plain(f.title)}\`\n  > ${plain(f.message).slice(0, 300)}`),
-  ].join('\n'));
+    ...(Array.isArray(coverage) ? ['', ...coverageMarkdown(coverage.find((c) => c?.id === id))] : []),
+  ].join('\n').trimEnd());
   const log = amendments.length ? [[
     '### Amendments',
     'Approved tests were changed by hand. Check that each change fixes the test, not the bar: the tests must still say what the ticket asks.',
@@ -310,7 +316,7 @@ export function reviewMarkdown({ root, ticket }: { root: string; ticket: string 
     amendments.length ? `## Amended QA tests for ${ticket}` : `## QA tests for ${ticket}`,
     'The QA writer turned each acceptance criterion into a unit test and a browser test. They fail on purpose: the feature does not exist yet.',
     ...log,
-    'Before approving, check for each criterion that the assertions test what the ticket asks for, and that the failure below comes from the missing feature, not from a broken test or environment.',
+    'Before approving, check for each criterion that the assertions test what the ticket asks for, and that the failure below comes from the missing feature, not from a broken test or environment. Then read what the tests do not cover: a case that matters for the ticket and is missing will not show in the test code.',
     ...sections,
     '### How to approve',
     'Approve this pull request with a review comment that has one line per criterion:',

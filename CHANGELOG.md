@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **A coverage summary for the reviewer.** Reading test code shows what is wrong in a test, not what is missing: the evaluation's missed bugs came from tests that looked right.
+  - The writer's phase 1 verdict now states, for each criterion, the cases its tests use (data, expected values with their arithmetic, the wrong implementation each one rules out) and what they leave out.
+  - The Stop hook sends back a verdict without it, and one whose arithmetic does not add up (`.claude/hooks/coverage.ts`).
+  - The review pull request shows the summary under each criterion.
+  - Verdicts approved before this change stay valid.
 - **Amending approved tests.** A wrong approved test had no clean way out: the repair agent may not touch it, and QA verify refuses a test edited on the developer's branch. Now:
   - a person fixes it on `qa/<TICKET>`, then runs the new **QA amend tests** workflow with the reason;
   - no agent runs: every test of the ticket must still fail for the right reason on the application without the feature;
