@@ -286,3 +286,10 @@ Limits:
 The example CI demonstrates the smoke journey on desktop and mobile with a
 screenshot comparison, the expected RED → Green → Regression cycle, and a final
 full-suite run. It does not connect to Jira or a real application shell.
+
+## 6. Keep it running
+
+- **Smoke tests:** a few stable journeys. Update them only when a critical flow changes.
+- **Screenshots:** the baselines are made in CI. After an intended visual change, delete them and commit the new ones from the `screenshot-baselines` artifact.
+- **Ticket tests:** frozen while the ticket is developed. If an approved test turns out to be wrong, fix it on `qa/<TICKET>` and run **QA amend tests** with the reason. No agent runs: the job checks that the tests still fail for the right reason without the feature, logs who changed them and why, and opens a pull request to approve again (see [section 5](#5-run-the-agents-in-ci)). Delete the `qa/<TICKET>` branch once it is merged: they become ordinary tests. The review package in `qa-reviews/<TICKET>/` stays as a record of what was approved, by whom, and what was amended.
+- **Dependencies:** keep Playwright, Vitest and Vite up to date and check `npm audit`.
