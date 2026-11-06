@@ -10,7 +10,9 @@
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowJs": true,
+    "checkJs": true
   },
-  "include": ["qa/**/*.ts", ".claude/hooks/*.ts", "eval/*.ts", "eval/lib/*.ts", "eval/tests/*.ts"]
+  "include": ["qa/**/*.ts", ".claude/hooks/*.ts", "eval/*.ts", "eval/lib/*.ts", "eval/tests/*.ts", "bin/*.mjs"]
 }

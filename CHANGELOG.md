@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **An installer.** `npx github:Gleaming0427/agent-qa-kit init`, in the repository of an application, installs the kit; `doctor` checks what the workflows need. Until now the files had to be copied by hand.
+  - It finds the application (Vitest and Playwright in its `package.json`), copies the agents, hooks, `qa/` scripts and the four workflows set to that application and to the remote's default branch, adds the missing npm scripts without changing existing ones, and has git ignore `reports/`.
+  - It plans before writing: a file that exists and differs is a conflict, and nothing is written. `.agent-qa-kit.json` records a digest of each file, so that running `init` again upgrades the files nobody changed. `--force` only replaces files committed with no local change.
+  - `doctor` checks the scripts and their JSON reports, Playwright's test folder, a test tagged `@smoke`, a committed `package-lock.json`, ignored files and executable bits. `doctor --run` runs the tests as QA verify's full suite does.
+  - An application at the root of its repository works: **QA amend tests** refused it, as it read the review package's path with a `./` prefix git does not write.
 - **A coverage summary for the reviewer.** Reading test code shows what is wrong in a test, not what is missing: the evaluation's missed bugs came from tests that looked right.
   - The writer's phase 1 verdict now states, for each criterion, the cases its tests use (data, expected values with their arithmetic, the wrong implementation each one rules out) and what they leave out.
   - The Stop hook sends back a verdict without it, and one whose arithmetic does not add up (`.claude/hooks/coverage.ts`).

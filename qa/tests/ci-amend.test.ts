@@ -37,19 +37,20 @@ const playwright = JSON.stringify({ stats: { expected: 0, unexpected: 1, flaky: 
 
 // main holds the kit and the ticket; qa/TICKET-43 the approved RED tests (pull request 7), merged
 // into feat/TICKET-43, where the feature is being built. Then a person fixes the unit test on qa/.
-function history() {
+// folder: the application's folder in the repository, "." for an application at its root.
+function history(folder = 'app') {
   const dir = mkdtempSync(join(tmpdir(), 'qa-ci-amend-'));
   const work = join(dir, 'work');
   for (const file of KIT_FILES) write(work, file, readFileSync(join(kit, file), 'utf8'));
   const spec = '- AC-1: a "Clear search" button is displayed while the search field has text.\n';
   write(work, `specs/${TICKET}.md`, spec);
-  write(work, 'app/src/App.tsx', 'export const App = () => null;\n');
+  write(work, `${folder}/src/App.tsx`, 'export const App = () => null;\n');
   write(work, '.gitignore', 'reports/\n');
   git(work, 'init', '-q', '-b', 'main');
   git(work, 'add', '-A');
   git(work, 'commit', '-qm', 'base');
   git(work, 'checkout', '-qb', `qa/${TICKET}`);
-  const app = join(work, 'app');
+  const app = join(work, folder);
   write(app, `e2e/${TICKET}.spec.ts`, `test('${SHELL}', () => {});\n`);
   write(app, `src/${TICKET}.test.tsx`, `test('${UNIT}', () => { /* expects "Clear" */ });\n`);
   write(app, `reports/${TICKET}-criteria.json`, JSON.stringify(buildManifest(TICKET, spec)));
@@ -63,7 +64,7 @@ function history() {
   git(work, 'add', '-A');
   git(work, 'commit', '-qm', 'QA tests');
   git(work, 'checkout', '-qb', `feat/${TICKET}`);
-  write(work, 'app/src/App.tsx', 'export const App = () => "Clear search";\n');
+  write(work, `${folder}/src/App.tsx`, 'export const App = () => "Clear search";\n');
   git(work, 'commit', '-qam', 'feature');
   // The approved unit test looked for "Clear"; the ticket says "Clear search".
   git(work, 'checkout', '-q', `qa/${TICKET}`);
@@ -96,27 +97,27 @@ exit 1
 `);
   chmodSync(join(dir, 'bin/gh'), 0o755);
   chmodSync(join(dir, 'bin/npm'), 0o755);
-  return { dir };
+  return { dir, folder };
 }
 
-function amend(h: { dir: string }, step: string, work: string, reason = 'The unit test looked for "Clear"; the ticket names the button "Clear search".') {
+function amend(h: { dir: string; folder: string }, step: string, work: string, reason = 'The unit test looked for "Clear"; the ticket names the button "Clear search".') {
   const temp = join(h.dir, 'runner');
   mkdirSync(temp, { recursive: true });
   const result = spawnSync('bash', [join(kit, 'qa/ci-amend-tests.sh'), step], {
     encoding: 'utf8',
-    env: { ...process.env, PATH: `${join(h.dir, 'bin')}:${process.env.PATH}`, TICKET, APP: 'app', REASON: reason, WORK: work,
+    env: { ...process.env, PATH: `${join(h.dir, 'bin')}:${process.env.PATH}`, TICKET, APP: h.folder, REASON: reason, WORK: work,
       GITHUB_REPOSITORY: 'acme/shop', GITHUB_SERVER_URL: 'https://github.com', GITHUB_ACTOR: 'bob', GITHUB_ACTOR_ID: '2',
       RUNNER_TEMP: temp, GITHUB_STEP_SUMMARY: join(temp, 'summary') },
   });
   return { code: result.status, output: result.stdout + result.stderr };
 }
 
-test('the amend workflow logs the amended tests, checks them RED, and opens a pull request to approve', () => {
-  const h = history();
+function amendAndVerify(folder: string) {
+  const h = history(folder);
   try {
     const work = join(h.dir, 'ci-work');
     git(h.dir, 'clone', '-q', '--branch', `qa/${TICKET}`, join(h.dir, 'origin.git'), work);
-    const app = join(work, 'app');
+    const app = join(work, folder);
     writeFileSync(join(h.dir, 'vitest.json'), vitest(app, 'Unable to find a button named Clear search'));
     writeFileSync(join(h.dir, 'playwright.json'), playwright);
 
@@ -167,7 +168,17 @@ test('the amend workflow logs the amended tests, checks them RED, and opens a pu
     assert.match(v.stdout, /tests approved by @carol in #8, unchanged since/);
     assert.match(v.stdout, /1 amendment\(s\) of the approved tests, the latest by @bob: The unit test looked for "Clear"/);
     assert.match(readFileSync(join(temp, 'summary'), 'utf8'), /Approved by @carol in #8\./);
+    assert.equal(readFileSync(join(temp, 'qa-verify-tickets.tsv'), 'utf8').split('\t')[1], folder);
   } finally { rmSync(h.dir, { recursive: true, force: true }); }
+}
+
+test('the amend workflow logs the amended tests, checks them RED, and opens a pull request to approve', () => {
+  amendAndVerify('app');
+});
+
+// The installer lets an application live at the repository's root: the workflows then get ".".
+test('the amend workflow and QA verify also work for an application at the repository root', () => {
+  amendAndVerify('.');
 });
 
 test('the amend workflow refuses a run where no approved test changed', () => {
