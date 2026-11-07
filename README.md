@@ -91,7 +91,7 @@ Setup, commands and maintenance: [HOW_TO_APPLY.md](HOW_TO_APPLY.md). The evaluat
 | Repair | Sonnet, medium effort | $1.00, at most 2 repairs |
 | Visual review (optional, warnings only) | Opus | about $0.17 at most |
 
-Those are ceilings passed to the CLI, not prices. In practice a writer and verifier trial costs $0.10 to $0.14 on the corpus. An evaluation smoke run costs $2 to $3, and a full run about $6. QA eval estimates the cost before it starts and refuses to go above `max_cost_usd`. Budgets, models and effort can be changed with `QA_BUDGET_USD`, `QA_MODEL`, `QA_EFFORT` and the `QA_REPAIR_*` variables.
+Those are ceilings passed to the CLI, not prices. In practice a writer and verifier trial costs $0.10 to $0.14 on the corpus. An evaluation smoke run costs $2 to $3, and a full run about $6. QA eval estimates the cost before it starts and refuses to go above `max_cost_usd`. Budgets, models and effort can be changed with `QA_BUDGET_USD`, `QA_MODEL`, `QA_EFFORT` and the `QA_REPAIR_*` variables. On a large application, the repository variable `QA_MAX_TURNS` gives the agents more turns than their own limit (40 for the writer, 25 for the verifier).
 
 ## Security
 
