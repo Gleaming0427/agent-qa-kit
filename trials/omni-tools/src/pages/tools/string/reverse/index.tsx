@@ -17,7 +17,8 @@ import { useTranslation } from 'react-i18next';
 const initialValues = {
   multiLine: true,
   emptyItems: false,
-  trim: false
+  trim: false,
+  reverseWords: false
 };
 
 const exampleCards: CardExampleType<typeof initialValues>[] = [
@@ -67,8 +68,8 @@ export default function Reverse({ title }: ToolComponentProps) {
     optionsValues: typeof initialValues,
     input: string
   ) => {
-    const { multiLine, emptyItems, trim } = optionsValues;
-    setResult(stringReverser(input, multiLine, emptyItems, trim));
+    const { multiLine, emptyItems, trim, reverseWords } = optionsValues;
+    setResult(stringReverser(input, multiLine, emptyItems, trim, reverseWords));
   };
 
   const getGroups: GetGroupsType<typeof initialValues> = ({
@@ -98,6 +99,13 @@ export default function Reverse({ title }: ToolComponentProps) {
           title={t('reverse.trimWhitespace')}
           description={t('reverse.trimWhitespaceDescription')}
           onChange={(val) => updateField('trim', val)}
+        />,
+        <CheckboxWithDesc
+          key="reverseWords"
+          checked={values.reverseWords}
+          title={t('reverse.reverseWordOrder')}
+          description={t('reverse.reverseWordOrderDescription')}
+          onChange={(val) => updateField('reverseWords', val)}
         />
       ]
     }

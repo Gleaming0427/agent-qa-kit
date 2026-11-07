@@ -4,7 +4,8 @@ export function stringReverser(
   input: string,
   multiLine: boolean,
   emptyItems: boolean,
-  trim: boolean
+  trim: boolean,
+  reverseWords = false
 ) {
   let array: string[] = [];
   let result: string[] = [];
@@ -25,6 +26,11 @@ export function stringReverser(
     array = array.map((line) => line.trim());
   }
 
-  result = array.map((element) => reverseString(element));
+  // Reverse the order of the words, each word kept as it is, or the characters
+  result = array.map((element) =>
+    reverseWords
+      ? element.split(' ').reverse().join(' ')
+      : reverseString(element)
+  );
   return result.join('\n');
 }

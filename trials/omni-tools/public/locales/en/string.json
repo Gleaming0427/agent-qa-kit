@@ -156,6 +156,8 @@
     "processMultiLineDescription": "Each line will be reversed independently",
     "resultTitle": "Reversed text",
     "reversalOptions": "Reversal options",
+    "reverseWordOrder": "Reverse word order",
+    "reverseWordOrderDescription": "Reverse the order of the words, each word kept as it is",
     "shortDescription": "Reverse any text character by character",
     "skipEmptyLines": "Skip empty lines",
     "skipEmptyLinesDescription": "Empty lines will be removed from the output",
