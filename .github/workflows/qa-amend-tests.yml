@@ -25,6 +25,8 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # The "QA approval" status of the pull request it opens (qa/ci-approval.sh).
+  statuses: write
 
 # The same group as "QA write tests": one change to a ticket's tests at a time.
 concurrency:

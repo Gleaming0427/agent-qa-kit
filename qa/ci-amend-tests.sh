@@ -83,6 +83,9 @@ case "${1:-}" in
     fi
     echo "::notice title=Amended QA tests ready for review::$url"
     printf '\n**Review and approve the amendment:** %s\n' "$url" >> "$GITHUB_STEP_SUMMARY"
+    # Red until the amendment is approved: the push above, made with GITHUB_TOKEN, triggers no workflow.
+    bash "$KIT/qa/ci-approval.sh" "${url##*/}" \
+      || echo "::warning title=QA amend tests::$(escape "The QA approval status could not be set on $url: see the log above. QA verify still checks the approval.")"
     ;;
 
   *) echo 'usage: qa/ci-amend-tests.sh check|amend|publish' >&2; exit 2 ;;

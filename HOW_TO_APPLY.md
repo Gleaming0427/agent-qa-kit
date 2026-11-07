@@ -13,8 +13,8 @@ the npm registry. The repository must be a git repository with one application
 whose `package.json` has `vitest` and `@playwright/test`. When there are several,
 run it from the application's folder or give it with `--app apps/web`. It:
 
-- copies the agents, their hooks and the `qa/` scripts, and the four workflows (QA
-  write tests, QA verify, QA branch rules, QA amend tests), set to the application's
+- copies the agents, their hooks and the `qa/` scripts, and the five workflows (QA
+  write tests, QA verify, QA branch rules, QA amend tests, QA approval), set to the application's
   folder, its feature area (`--mfe`, the folder's name by default) and the branch
   that pull requests go into (`--branch`, the remote's default branch by default);
 - adds the npm scripts the agents call when they are missing: `test:unit`,
@@ -278,8 +278,15 @@ AC-1: the Promo code field does not exist yet, so the test cannot fill it
 AC-2: the Promo code field does not exist yet, so no code can be applied
 ```
 
-Then merge it into `feat/TICKET-44`. To change a test before it is approved,
-request changes, delete `qa/TICKET-44` and run the workflow again.
+Approve first, then merge it into `feat/TICKET-44`. The pull request's **QA
+approval** status, next to the merge button, stays red until a collaborator
+approves its latest commit with a reason per criterion. It says what is missing:
+no approval yet, no reason for a criterion, an approval of an older commit, a
+request for changes. QA write tests sets it when it opens the pull request, and
+the **QA approval** workflow updates it after each review (`qa/ci-approval.sh`).
+It does not prevent the merge: QA verify checks the approval again on the
+developer's pull request. To change a test before it is approved, request
+changes, delete `qa/TICKET-44` and run the workflow again.
 
 **Amend an approved test.** An approved test can turn out to be wrong, for
 instance an expected total worked out by hand. The repair agent may not touch it,
@@ -292,8 +299,9 @@ and QA verify refuses a test edited on the developer's branch. Amend it instead:
    each one must still fail for the right reason. It logs who amended the tests
    and why in `qa-reviews/TICKET-44/TICKET-44-amendments.json`, and opens a pull
    request `qa/TICKET-44` → `feat/TICKET-44` that shows the amendment;
-3. a collaborator approves it, with one line per criterion as before. Merge it,
-   then update the developer's branch from `feat/TICKET-44`.
+3. a collaborator approves it, with one line per criterion as before. Merge it
+   once its QA approval status is green, then update the developer's branch from
+   `feat/TICKET-44`.
 
 QA verify then accepts the amended tests and lists each amendment in its summary.
 Adding or removing a test file is not an amendment: delete the branch and write
@@ -346,7 +354,11 @@ Limits:
 - The workflows have not run against the real API yet; their deterministic
   parts are tested in `qa/tests/ci-verify.test.ts`.
 - A pull request opened with `GITHUB_TOKEN` does not trigger other workflows,
-  so the QA pull request gets no checks of its own.
+  so the QA pull request gets no checks of its own when it opens. QA write tests
+  and QA amend tests set its QA approval status themselves.
+- The QA approval status has not run on GitHub yet. Its logic is tested in
+  `qa/tests/github-approval.test.ts` and `qa/tests/ci-approval.test.ts`, with a
+  stand-in for the GitHub CLI.
 - A pull request can change the workflows that judge it. In a team, protect
   `.github/`, `qa/` and `.claude/` with a `CODEOWNERS` file and the ruleset
   option "Require review from Code Owners".

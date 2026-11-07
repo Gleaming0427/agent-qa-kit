@@ -17,7 +17,8 @@
     ".github/workflows/qa-write-tests.yml",
     ".github/workflows/qa-verify.yml",
     ".github/workflows/qa-branches.yml",
-    ".github/workflows/qa-amend-tests.yml"
+    ".github/workflows/qa-amend-tests.yml",
+    ".github/workflows/qa-approval.yml"
   ],
   "engines": {
     "node": ">=22.18"

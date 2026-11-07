@@ -211,6 +211,22 @@ export function amendReview({ root, ticket, specPath, author, reason }: ReviewAr
   return amendment;
 }
 
+/** The criteria whose reason is missing or too short to say why the failure shows missing behavior. */
+export function missingReasons(ids: string[], reasons: Record<string, string> | undefined): string[] {
+  return ids.filter((id) => String(reasons?.[id] ?? '').trim().length < 12);
+}
+
+/** The reasons of a pull request review: one "AC-N: reason" line per criterion. */
+export function reviewReasons(text: string): Record<string, string> {
+  const reasons: Record<string, string> = {};
+  for (const line of text.split(/\r?\n/)) {
+    // Accepts Markdown such as "- AC-1: reason", "**AC-1**: reason" or "`AC-1` — reason".
+    const match = line.match(/^\s*(?:[-*+]\s+)?[*_`]*(AC-[1-9]\d*)[*_`]*\s*[:—–-]\s*[*_`]*\s*(.+)$/);
+    if (match) reasons[match[1]] = match[2].trim();
+  }
+  return reasons;
+}
+
 export function approveReview({ root, ticket, specPath }: ReviewArgs): Approval {
   root = resolve(root); checkTicket(ticket);
   const request = readJson<ReviewRequest>(reportPath(root, ticket, 'review-request'));
@@ -219,11 +235,8 @@ export function approveReview({ root, ticket, specPath }: ReviewArgs): Approval 
   const decision = readJson<ReviewDecision>(reportPath(root, ticket, 'review-decision'));
   const reviewer = String(decision.reviewer ?? '').trim();
   if (!reviewer) throw new Error('Reviewer name is required.');
-  for (const { id } of request.criteria) {
-    if (String(decision.red_reasons?.[id] ?? '').trim().length < 12) {
-      throw new Error(`${id}: explain why this RED failure shows missing behavior, not a broken test or environment.`);
-    }
-  }
+  const [missing] = missingReasons(request.criteria.map(({ id }) => id), decision.red_reasons);
+  if (missing) throw new Error(`${missing}: explain why this RED failure shows missing behavior, not a broken test or environment.`);
   const approval: Approval = {
     schema_version: 1, ticket, request_sha256: fileDigest(reportPath(root, ticket, 'review-request')),
     reviewer, red_reasons: decision.red_reasons ?? {}, approved_at: new Date().toISOString(),
@@ -243,9 +256,8 @@ export function verifyReview({ root, ticket, specPath }: ReviewArgs): Approval {
     throw new Error('Scenario approval does not match the current review request.');
   }
   if (!String(approval.reviewer ?? '').trim()) throw new Error('Scenario approval has no reviewer.');
-  for (const { id } of request.criteria) {
-    if (String(approval.red_reasons?.[id] ?? '').trim().length < 12) throw new Error(`${id}: RED failure reason is missing.`);
-  }
+  const [missing] = missingReasons(request.criteria.map(({ id }) => id), approval.red_reasons);
+  if (missing) throw new Error(`${missing}: RED failure reason is missing.`);
   return approval;
 }
 
@@ -321,19 +333,15 @@ export function reviewMarkdown({ root, ticket }: { root: string; ticket: string 
     '### How to approve',
     'Approve this pull request with a review comment that has one line per criterion:',
     `\`\`\`text\n${request.criteria.map(({ id }) => `${id}: why this failure shows the feature is missing`).join('\n')}\n\`\`\``,
-    `The verification job reads these lines and refuses an approval without them. Merging into \`feat/${ticket}\` then makes these tests the reference for the developer.`,
+    'Approve first, then merge. The **QA approval** status of this pull request stays red until a collaborator approves its latest commit with these lines, and says what is missing. QA verify reads them again later and refuses an approval without them.',
+    `Merging into \`feat/${ticket}\` then makes these tests the reference for the developer.`,
   ].join('\n\n') + '\n';
 }
 
 /** Records an approval given in a pull request review: one "AC-N: reason" line per criterion. */
 export function approveFromReview({ root, ticket, specPath, reviewer, text }: ReviewArgs & { reviewer: string; text: string }): Approval {
   root = resolve(root); checkTicket(ticket);
-  const red_reasons: Record<string, string> = {};
-  for (const line of text.split(/\r?\n/)) {
-    // Accepts Markdown such as "- AC-1: reason", "**AC-1**: reason" or "`AC-1` — reason".
-    const match = line.match(/^\s*(?:[-*+]\s+)?[*_`]*(AC-[1-9]\d*)[*_`]*\s*[:—–-]\s*[*_`]*\s*(.+)$/);
-    if (match) red_reasons[match[1]] = match[2].trim();
-  }
+  const red_reasons = reviewReasons(text);
   writeFileSync(reportPath(root, ticket, 'review-decision'), `${JSON.stringify({ reviewer, red_reasons }, null, 2)}\n`);
   return approveReview({ root, ticket, specPath });
 }

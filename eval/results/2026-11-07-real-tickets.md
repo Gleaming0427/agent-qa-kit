@@ -53,10 +53,11 @@ Not counted: the kit's own CI ran its AI visual review of the demo twice on the 
 ## What it showed about the kit
 
 - **The human step is easy to get wrong.**
-  - #27 was merged before it was approved.
-  - #29 was approved without the line per criterion QA verify needs.
+  - #27 and #29 were both merged before they were approved: #27 at 10:41 UTC, approved at 10:56; #29 at 11:07:05, approved 12 seconds later.
+  - #29's first approval had no text, so no line per criterion. Two approvals with the lines followed.
+  - #31 was approved, then merged, in that order.
 
-  Both were caught only later, by QA verify or by checking by hand. The test pull request should say, while it is open, what its approval is missing.
+  Both were caught only later, by QA verify or by checking by hand. The test pull request should say, while it is open, what its approval is missing. Since then it has a **QA approval** status that does.
 - **A squash-merged test pull request blocks a later amendment.** #29 was squash-merged, so `qa/OMNI-1` and `feat/OMNI-1` both added the test files and #31 could not be merged on GitHub. It was merged by hand, with the approved files unchanged. Test pull requests should be merged with a merge commit, or the amendment should start from the developer's branch.
 - **A real application needs more turns than the demo,** hence `QA_MAX_TURNS`.
 - **The writer's questions work.** On a setup it could not test, it stopped and asked instead of passing broken evidence.

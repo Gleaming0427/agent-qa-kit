@@ -1,0 +1,42 @@
+name: QA approval
+# On a QA pull request (qa/<ticket> into feat/<ticket>): updates its "QA approval"
+# status after each review, and after each push by a person. The status stays red
+# until a collaborator approves the latest commit of the tests with one line per
+# criterion, and says what is missing, so that the tests are approved before they
+# are merged. "QA write tests" and "QA amend tests" set it when they open the pull
+# request: a pull request opened with GITHUB_TOKEN triggers no workflow.
+# No AI and no application code runs here.
+on:
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  pull_request:
+    types: [synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+
+concurrency:
+  group: qa-approval-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  status:
+    name: Update the QA approval status
+    if: startsWith(github.event.pull_request.head.ref, 'qa/') && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Set the status of the latest commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: bash qa/ci-approval.sh "$PR_NUMBER"
