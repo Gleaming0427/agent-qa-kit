@@ -1,0 +1,190 @@
+import { UpdateField } from '@components/options/ToolOptions';
+import { getToolsByCategory } from '@tools/index';
+import { ToolCategory } from '@tools/defineTool';
+import { I18nNamespaces, validNamespaces } from '../i18n';
+import { TFunction } from 'i18next';
+
+// Here starting the shared values for string manipulation.
+
+/**
+ * This map is used to replace special characters with their visual representations.
+ * It is useful for displaying strings in a more readable format, especially in tools
+ **/
+
+export const specialCharMap: { [key: string]: string } = {
+  '': '␀',
+  ' ': '␣',
+  '\n': '↲',
+  '\t': '⇥',
+  '\r': '␍',
+  '\f': '␌',
+  '\v': '␋'
+};
+
+// Here starting the utility functions for string manipulation.
+
+export function capitalizeFirstLetter(string: string | undefined) {
+  if (!string) return '';
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+export function isNumber(number: any): boolean {
+  return !isNaN(parseFloat(number)) && isFinite(number);
+}
+
+export const updateNumberField = <T>(
+  val: string,
+  key: keyof T,
+  updateField: UpdateField<T>
+) => {
+  if (val === '') {
+    // @ts-ignore
+    updateField(key, '');
+  } else if (isNumber(val)) {
+    // @ts-ignore
+    updateField(key, Number(val));
+  }
+};
+
+export const replaceSpecialCharacters = (str: string) => {
+  return str
+    .replace(/\\"/g, '"')
+    .replace(/\\n/g, '\n')
+    .replace(/\\t/g, '\t')
+    .replace(/\\r/g, '\r')
+    .replace(/\\b/g, '\b')
+    .replace(/\\f/g, '\f')
+    .replace(/\\v/g, '\v');
+};
+
+export function reverseString(input: string): string {
+  return input.split('').reverse().join('');
+}
+
+/**
+ * Checks if the input string contains only digits.
+ * @param input - The string to validate.
+ * @returns True if the input contains only digits including float, false otherwise.
+ */
+export function containsOnlyDigits(input: string): boolean {
+  return /^\d+(\.\d+)?$/.test(input.trim());
+}
+
+/**
+ * unquote a string if properly quoted.
+ * @param value - The string to unquote.
+ * @param quoteCharacter - The character used for quoting (e.g., '"', "'").
+ * @returns The unquoted string if it was quoted, otherwise the original string.
+ */
+export function unquoteIfQuoted(value: string, quoteCharacter: string): string {
+  if (
+    quoteCharacter &&
+    value.startsWith(quoteCharacter) &&
+    value.endsWith(quoteCharacter)
+  ) {
+    return value.slice(1, -1); // Remove first and last character
+  }
+  return value;
+}
+
+/**
+ * Count the occurence of items.
+ * @param array - array get from user with a custom delimiter.
+ * @param ignoreItemCase - boolean status to ignore the case i .
+ * @returns Dict of Items count {[Item]: occcurence}.
+ */
+export function itemCounter(
+  array: string[],
+  ignoreItemCase: boolean
+): { [key: string]: number } {
+  const dict: { [key: string]: number } = {};
+  for (const item of array) {
+    let key = ignoreItemCase ? item.toLowerCase() : item;
+
+    if (key in specialCharMap) {
+      key = specialCharMap[key];
+    }
+
+    dict[key] = (dict[key] || 0) + 1;
+  }
+  return dict;
+}
+
+export const getToolCategoryTitle = (
+  categoryName: string,
+  t: TFunction<I18nNamespaces[]>
+): string =>
+  getToolsByCategory([], t).find((category) => category.type === categoryName)!
+    .rawTitle;
+
+// Type guard to check if a value is a valid I18nNamespaces
+const isValidI18nNamespace = (value: string): value is I18nNamespaces => {
+  return validNamespaces.includes(value as I18nNamespaces);
+};
+
+export const getI18nNamespaceFromToolCategory = (
+  category: ToolCategory
+): I18nNamespaces => {
+  // Map image-related categories to 'image'
+  if (['png', 'image-generic'].includes(category)) {
+    return 'image';
+  } else if (['gif'].includes(category)) {
+    return 'video';
+  }
+  // Use type guard to check if category is a valid I18nNamespaces
+  if (isValidI18nNamespace(category)) {
+    return category;
+  }
+
+  return 'translation';
+};
+
+/**
+ * Strips HTML tags from a string and decodes HTML entities into plain text.
+ *
+ * This function parses the provided HTML string using the browser's DOMParser,
+ * extracts the text content, and returns a clean, human-readable string.
+ *
+ * @param html - A string containing HTML markup
+ * @returns A plain text string with all HTML tags removed and entities decoded
+ *
+ * @example
+ * stripAndDecodeHtml('<p>Hello <strong>world</strong></p>')
+ * // returns: 'Hello world'
+ *
+ * @example
+ * stripAndDecodeHtml('&lt;div&gt;Test&lt;/div&gt;')
+ * // returns: '<div>Test</div>'
+ */
+export function stripAndDecodeHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent ?? '';
+}
+
+/**
+ * Escapes special characters shared by HTML and XML into their
+ * corresponding entities, making a string safe for insertion into
+ * either markup language.
+ *
+ * Replaces:
+ * - &  → &amp;
+ * - <  → &lt;
+ * - >  → &gt;
+ * - "  → &quot;
+ * - '  → &#039;
+ *
+ * @param {string} str - The input string to escape.
+ * @returns {string} The escaped string, safe for insertion into HTML or XML.
+ *
+ * @example
+ * escapeMarkup('<div class="test">Hello & welcome</div>');
+ * // Returns: '&lt;div class=&quot;test&quot;&gt;Hello &amp; welcome&lt;/div&gt;'
+ */
+export function escapeMarkup(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
