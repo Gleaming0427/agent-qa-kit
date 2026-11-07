@@ -16,7 +16,42 @@ KIT="$(cd "$(dirname "$0")/.." && pwd)"
 escape() { local text="${1//%/%25}"; text="${text//$'\r'/%0D}"; printf '%s' "${text//$'\n'/%0A}"; }
 fail() { echo "::error title=QA amend tests::$(escape "$1")"; exit 1; }
 branch_exists() { gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$1" --silent >/dev/null 2>&1; }
+warn() { echo "::warning title=QA amend tests::$(escape "$1")"; }
+commit_as_actor() { git -c user.name="$GITHUB_ACTOR" -c user.email="$GITHUB_ACTOR_ID+$GITHUB_ACTOR@users.noreply.github.com" "$@"; }
 REVIEW_BODY="$RUNNER_TEMP/qa-amend-body.md"
+
+# A QA pull request merged with "Squash and merge" or "Rebase and merge" puts a copy of its commits
+# on feat/<TICKET>, not the commits of qa/<TICKET>. The next pull request from qa/<TICKET> then adds
+# the same test files again, and conflicts. When the copy holds exactly the merged tests, as it does
+# when nothing else had reached feat/<TICKET> yet, a merge commit on qa/<TICKET> records it without
+# changing any file: the amendment then merges cleanly. Runs in the checkout of qa/<TICKET>, with
+# origin/feat/<TICKET> fetched. Called with || (set -e does not apply): each step returns on failure.
+record_copy() {
+  local pulls="$RUNNER_TEMP/qa-amend-pulls.json" feat="origin/feat/$TICKET" merged number head copy differ
+  gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/pulls?state=closed&per_page=100&head=${GITHUB_REPOSITORY%%/*}:qa/$TICKET" > "$pulls" || return 1
+  merged="$(node "$KIT/qa/github-approval.ts" merged "$TICKET" "$GITHUB_REPOSITORY" "$pulls")" || return 1
+  [[ "$merged" != null ]] || return 0
+  number="$(jq -r .number <<<"$merged")"; head="$(jq -r .head_sha <<<"$merged")"; copy="$(jq -r '.merge_commit_sha // empty' <<<"$merged")"
+  # Merged with a merge commit, or its copy already recorded: nothing to do.
+  git merge-base --is-ancestor "$head" "$feat" 2>/dev/null && return 0
+  [[ -n "$copy" ]] && git merge-base --is-ancestor "$copy" HEAD 2>/dev/null && return 0
+  local manual="The amendment's pull request may conflict on the test files: merge it into feat/$TICKET by hand, keeping the version of qa/$TICKET (HOW_TO_APPLY.md, \"Amend an approved test\")."
+  if [[ -z "$copy" ]] || ! git merge-base --is-ancestor "$copy" "$feat" 2>/dev/null || ! git merge-base --is-ancestor "$head" HEAD 2>/dev/null; then
+    warn "The tests of #$number are not on feat/$TICKET as qa/$TICKET has them, and their copy cannot be traced. $manual"
+    return 0
+  fi
+  differ="$(git diff --name-only "$head" "$copy" | tr '\n' ' ')"
+  if [[ -n "$differ" ]]; then
+    warn "#$number was merged into feat/$TICKET as a copy (squash or rebase) that also holds other changes: ${differ% }. $manual"
+    return 0
+  fi
+  commit_as_actor merge --quiet --no-edit -s ours "$copy" -m "Record that #$number reached feat/$TICKET as ${copy:0:7}
+
+#$number was merged with a squash or a rebase: feat/$TICKET has a copy of its tests, not the
+commits of qa/$TICKET. This merge changes no file. It lets the amendment merge into
+feat/$TICKET without adding the tests a second time." || return 1
+  echo "::notice title=QA amend tests::$(escape "#$number reached feat/$TICKET as a copy (${copy:0:7}): recorded on qa/$TICKET, so the amendment merges cleanly.")"
+}
 REASON_FILE="$RUNNER_TEMP/qa-amend-reason.txt"
 CONTEXT="$RUNNER_TEMP/qa-amend-context.json"
 
@@ -67,9 +102,9 @@ case "${1:-}" in
     (( ${#other[@]} == 0 )) || fail "The job changed files outside the review package: ${other[*]}"
     (( ${#changed[@]} > 0 )) || fail 'The review package did not change.'
     git add -- "${changed[@]}"
-    git -c user.name="$GITHUB_ACTOR" -c user.email="$GITHUB_ACTOR_ID+$GITHUB_ACTOR@users.noreply.github.com" \
-      commit --quiet -m "test($TICKET): log the amendment of the approved QA tests"
+    commit_as_actor commit --quiet -m "test($TICKET): log the amendment of the approved QA tests"
     git fetch --quiet --no-tags origin "+refs/heads/feat/$TICKET:refs/remotes/origin/feat/$TICKET"
+    ( record_copy ) || warn "Could not check how the previous tests of $TICKET reached feat/$TICKET: see the log above. If the pull request conflicts, merge it by hand (HOW_TO_APPLY.md, \"Amend an approved test\")."
     bash "$KIT/qa/check-scope.sh" scope "origin/feat/$TICKET"
     git push --quiet origin "HEAD:refs/heads/qa/$TICKET"
     open="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "qa/$TICKET" --base "feat/$TICKET" --state open --json url --jq '.[0].url // empty')"

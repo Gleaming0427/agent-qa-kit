@@ -334,7 +334,7 @@ export function reviewMarkdown({ root, ticket }: { root: string; ticket: string 
     'Approve this pull request with a review comment that has one line per criterion:',
     `\`\`\`text\n${request.criteria.map(({ id }) => `${id}: why this failure shows the feature is missing`).join('\n')}\n\`\`\``,
     'Approve first, then merge. The **QA approval** status of this pull request stays red until a collaborator approves its latest commit with these lines, and says what is missing. QA verify reads them again later and refuses an approval without them.',
-    `Merging into \`feat/${ticket}\` then makes these tests the reference for the developer.`,
+    `Merging into \`feat/${ticket}\` then makes these tests the reference for the developer. Prefer **Create a merge commit**: after a squash, a later amendment may have to be merged by hand.`,
   ].join('\n\n') + '\n';
 }
 

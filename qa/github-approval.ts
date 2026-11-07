@@ -5,13 +5,15 @@
 //
 // Usage: node qa/github-approval.ts pull TICKET OWNER/REPO pulls.json
 //        node qa/github-approval.ts approval TICKET OWNER/REPO pulls.json reviews.json
+//        node qa/github-approval.ts merged TICKET OWNER/REPO pulls.json
 //        node qa/github-approval.ts status pull.json reviews.json review-request.json
 //   pulls.json    gh api --paginate --slurp "repos/OWNER/REPO/pulls?state=all&head=OWNER:qa/TICKET"
 //   pull.json     gh api "repos/OWNER/REPO/pulls/NUMBER"
 //   reviews.json  gh api --paginate --slurp "repos/OWNER/REPO/pulls/NUMBER/reviews"
 // Prints the pull request {number, head_sha} (null when the ticket has none), or
 // the approval {number, head_sha, reviewer, body}, as JSON; otherwise explains
-// the refusal (exit 1). "status" prints the "QA approval" commit status of a QA
+// the refusal (exit 1). "merged" prints the latest merged QA pull request
+// {number, head_sha, merge_commit_sha}, or null. "status" prints the "QA approval" commit status of a QA
 // pull request, {state, description}: what its approval still misses, if anything.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -22,6 +24,8 @@ export interface PullRequest {
   number: number;
   state: string;
   merged_at?: string | null;
+  // The commit that the merge put on the base branch: a merge commit, or the copy a squash or a rebase made.
+  merge_commit_sha?: string | null;
   head: { ref: string; sha: string; repo?: { full_name?: string } | null };
 }
 export interface Review {
@@ -50,6 +54,13 @@ export function findQaPull(pulls: PullRequest[], ticket: string, repo: string): 
     throw new Error(`The QA pull request #${pull.number} was closed without merging: its tests were not accepted.`);
   }
   return pull;
+}
+
+/** The latest QA pull request of a ticket that was merged: the one whose tests feat/<TICKET> holds. */
+export function lastMergedQaPull(pulls: PullRequest[], ticket: string, repo: string): PullRequest | null {
+  return pulls
+    .filter((pull) => pull.head.ref === `qa/${ticket}` && pull.head.repo?.full_name === repo && pull.merged_at)
+    .sort((a, b) => b.number - a.number)[0] ?? null;
 }
 
 export function findApproval(pull: PullRequest, reviews: Review[]): FoundApproval {
@@ -126,17 +137,24 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.log(JSON.stringify({ ...status, description: status.description.length > 140 ? `${status.description.slice(0, 139)}…` : status.description }));
     } else {
       const [command, ticket, repo, pullsFile, reviewsFile] = process.argv.slice(2);
-      if (!ticket || !repo || !pullsFile || !(command === 'pull' || command === 'approval' && reviewsFile)) {
+      if (!ticket || !repo || !pullsFile || !(['pull', 'merged'].includes(command) || command === 'approval' && reviewsFile)) {
         throw new Error('Usage: node qa/github-approval.ts pull TICKET OWNER/REPO pulls.json\n'
           + '       node qa/github-approval.ts approval TICKET OWNER/REPO pulls.json reviews.json\n'
+          + '       node qa/github-approval.ts merged TICKET OWNER/REPO pulls.json\n'
           + '       node qa/github-approval.ts status pull.json reviews.json review-request.json');
       }
-      const pull = findQaPull(items<PullRequest>(pullsFile), ticket, repo);
-      if (command === 'pull') {
-        console.log(JSON.stringify(pull && { number: pull.number, head_sha: pull.head.sha }));
+      const pulls = items<PullRequest>(pullsFile);
+      if (command === 'merged') {
+        const merged = lastMergedQaPull(pulls, ticket, repo);
+        console.log(JSON.stringify(merged && { number: merged.number, head_sha: merged.head.sha, merge_commit_sha: merged.merge_commit_sha ?? null }));
       } else {
-        if (!pull) throw new Error(`No pull request from qa/${ticket}: run the "QA write tests" workflow for ${ticket} first.`);
-        console.log(JSON.stringify(findApproval(pull, items<Review>(reviewsFile!))));
+        const pull = findQaPull(pulls, ticket, repo);
+        if (command === 'pull') {
+          console.log(JSON.stringify(pull && { number: pull.number, head_sha: pull.head.sha }));
+        } else {
+          if (!pull) throw new Error(`No pull request from qa/${ticket}: run the "QA write tests" workflow for ${ticket} first.`);
+          console.log(JSON.stringify(findApproval(pull, items<Review>(reviewsFile!))));
+        }
       }
     }
   } catch (error) {

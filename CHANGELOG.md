@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **An amendment after a squash-merged test pull request.** On omni-tools, the test pull request was squash-merged: `feat/OMNI-1` got a copy of the tests, not the commits of `qa/OMNI-1`, so the amendment's pull request added the same files again and could not be merged on GitHub.
+  - QA amend tests now finds how the latest test pull request was merged. When its copy on `feat/<TICKET>` holds only the tests, it records it on `qa/<TICKET>` with a merge commit that changes no file, and the amendment merges cleanly.
+  - Replayed on the trial's commits, the amendment then merges into the same files as the merge made by hand.
+  - When the copy also holds other changes, it warns instead: recording it would undo them on `feat/<TICKET>`. HOW_TO_APPLY.md gives the commands to merge by hand, checked on the same commits.
+  - The test pull request's text recommends **Create a merge commit**.
 - **A QA approval status on the test pull request.** On two real tickets, both test pull requests were merged before they were approved, and one was first approved with no text. Nothing said so until QA verify ran on the developer's pull request.
   - The test pull request now has a **QA approval** status next to its merge button. It stays red until a collaborator approves its latest commit with a reason per criterion, and says what is missing. It turns green once the approval is the one QA verify will accept.
   - QA write tests and QA amend tests set it when they open the pull request, which triggers no workflow of its own. The new **QA approval** workflow updates it after each review and each push by a person (`qa/ci-approval.sh`). No AI and no application code runs there.

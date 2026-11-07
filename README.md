@@ -60,7 +60,7 @@ What went wrong on omni-tools, and what it changed:
 - On the next run it couldn't render the component in a unit test. Instead of passing off broken evidence, it stopped and asked how to test it. The answer went into the ticket.
 - QA verify blocked the correct code. The approved browser tests looked for a checkbox the page shows four times. Nobody caught it in review, because the option didn't exist yet. The tests were fixed through QA amend tests, approved again, and QA verify passed.
 
-It also showed that the human step is easy to get wrong. Both test pull requests were merged before they were approved, and one was first approved without the reasons QA verify needs. The test pull request now has a **QA approval** status that stays red until its approval is complete, and says what is missing. A squash merge also blocked the amendment: that is still to fix.
+It also showed that the human step is easy to get wrong. Both test pull requests were merged before they were approved, and one was first approved without the reasons QA verify needs. The test pull request now has a **QA approval** status that stays red until its approval is complete, and says what is missing. A squash merge also blocked the amendment. QA amend tests now handles it when the squash holds only the tests.
 
 ## Try the demo
 
