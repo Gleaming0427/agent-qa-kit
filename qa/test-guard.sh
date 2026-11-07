@@ -16,6 +16,19 @@ check() {
     failures=$((failures + 1))
   fi
 }
+# A refusal names what to do instead: the agents read it before their next try.
+says() {
+  local text="$1" description="$2" json="$3" message
+  n=$((n + 1))
+  message="$(printf '%s' "$json" | QA_GUARD_MODE="$MODE" "$GUARD" 2>&1)"
+  if [[ "$message" == *"$text"* ]]; then
+    printf ' ok   says     %s\n' "$description"
+  else
+    printf ' FAIL (no "%s") %s: %s\n' "$text" "$description" "$message"
+    failures=$((failures + 1))
+  fi
+}
+search() { jq -cn --arg t "$1" --arg p "$2" --arg q "$3" '{tool_name:$t,tool_input:{path:$p,pattern:$q}}'; }
 action() { jq -cn --arg t "$1" --arg k "$2" --arg v "$3" '{tool_name:$t,tool_input:{($k):$v}}'; }
 file_action() { jq -cn --arg t "$1" --arg f "$2" --arg c "$3" '{tool_name:$t,tool_input:{file_path:$f,content:$c,new_string:$c}}'; }
 echo 'Reads'
@@ -34,6 +47,11 @@ check 2 'glob with an absolute pattern outside the project' "$(action Glob patte
 check 2 'glob with a parent path'             "$(action Glob pattern '../../eval/**')"
 check 2 'glob with an absolute alternative'   "$(action Glob pattern '{src,/etc}/*')"
 check 2 'glob in the home folder'             "$(action Glob pattern '~/.ssh/*')"
+# Glob from the project root lists names only, as Glob with no path does; Grep would read every file.
+check 0 'glob from the project root'          "$(search Glob /project '{src,e2e}/**/*')"
+check 0 'glob from the project root, as .'    "$(search Glob . 'src/**/*.tsx')"
+check 2 'grep from the project root'          "$(search Grep /project 'loyal|member')"
+says 'Grep needs a folder inside the project, such as src or e2e' 'grep from the root says which folder to give' "$(search Grep /project 'loyal')"
 echo 'Writes' 
 check 0 'write component test'                "$(file_action Write apps/services/src/ServiceList.test.tsx "it('AC-2', () => {})")"
 check 0 'write Playwright scenario'           "$(file_action Write /project/e2e/TICKET-42.spec.ts "test.describe('@services', () => {})")"
@@ -51,6 +69,15 @@ echo 'Commands'
 check 0 'affected tests'                     "$(action Bash command 'npm run test:affected')"
 check 0 'E2E grep'                           "$(action Bash command 'npm run test:e2e -- --grep @services')"
 check 0 'summary'                            "$(action Bash command 'npm run test:summary')"
+check 0 'run the tests, then the summary'    "$(action Bash command 'npm run test:summary -- --run @services')"
+check 2 'summary, feature area without @'    "$(action Bash command 'npm run test:summary -- --run services')"
+check 2 'summary with another option'        "$(action Bash command 'npm run test:summary -- --run @services --json')"
+check 2 'read a file with cat'               "$(action Bash command 'cat reports/TICKET-42-criteria.json')"
+says 'use the Read tool to read a file'      'cat says to use Read'  "$(action Bash command 'cat reports/TICKET-42-criteria.json')"
+says 'Glob to list files'                    'ls says to use Glob'   "$(action Bash command 'ls src')"
+# What the agents tried most in the evaluation: the three test commands in one, the output cut.
+check 2 'the test cycle chained'             "$(action Bash command 'npm run test:affected >/dev/null 2>&1; npm run test:e2e -- --grep @shop >/dev/null 2>&1; npm run test:summary 2>&1 | tail -60')"
+says 'npm run test:summary -- --run @<mfe>'  'chaining says to run one command, and how to run a cycle' "$(action Bash command 'npm run test:affected 2>&1 | tail -n 80')"
 check 0 'one test file'                      "$(action Bash command 'npx vitest run apps/services/src/ServiceList.test.tsx')"
 check 0 'read diff'                          "$(action Bash command 'git diff --name-only origin/master...HEAD')"
 check 2 'update snapshots -u'                "$(action Bash command 'npx vitest run -u')"

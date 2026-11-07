@@ -10,14 +10,23 @@
 //   reports/playwright.json  Playwright JSON report (shell level)
 //
 // Usage: node qa/summary.ts   (or npm run test:summary)
+//        node qa/summary.ts --run @<mfe>   (or npm run test:summary -- --run @<mfe>)
+//
+// With --run, it first runs `npm run test:affected`, then `npm run test:e2e -- --grep @<mfe>`,
+// keeps their full output out of the way, and prints the summary of both: one command for a
+// whole test cycle. The agents kept chaining those three commands and cutting the output with
+// `| tail`, which the guard refuses, a turn lost each time.
 
-import { existsSync, readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
 import type { PlaywrightReport, PlaywrightSuite, PlaywrightTest, VitestReport } from '../.claude/hooks/strict-evidence.ts';
 
 interface Failure { title: string; message?: string; trace?: string }
 
 const MAX_LENGTH = 300;
 const MAX_FAILURES = 10;
+// The last lines of a test command's output, shown when it wrote no report.
+const OUTPUT_TAIL = 30;
 
 const clean = (text: unknown = '') =>
   String(text)
@@ -111,6 +120,33 @@ function printFailures(failures: Failure[]) {
   if (failures.length > MAX_FAILURES) {
     console.log(`  … and ${failures.length - MAX_FAILURES} more failures`);
   }
+}
+
+/** Runs the unit tests, then the browser tests of a feature area; says when one wrote no report, and why. */
+function runTests(mfe: string) {
+  const steps: [string[], string][] = [
+    [['run', 'test:affected'], 'reports/vitest.json'],
+    [['run', 'test:e2e', '--', '--grep', mfe], 'reports/playwright.json'],
+  ];
+  for (const [args, report] of steps) {
+    // A report left by an earlier run would pass for this one's.
+    rmSync(report, { force: true });
+    const run = spawnSync('npm', args, { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+    if (existsSync(report)) continue;
+    const ended = run.error ? run.error.message : run.signal ? `signal ${run.signal}` : `exit code ${run.status}`;
+    const lines = `${run.stdout ?? ''}\n${run.stderr ?? ''}`.split('\n').map(clean).filter(Boolean).slice(-OUTPUT_TAIL);
+    console.log(`npm ${args.join(' ')} wrote no ${report} (${ended}). Its last lines:`);
+    for (const line of lines) console.log(`  ${line.length > MAX_LENGTH ? `${line.slice(0, MAX_LENGTH)}…` : line}`);
+  }
+}
+
+const options = process.argv.slice(2);
+if (options.length) {
+  if (options.length !== 2 || options[0] !== '--run' || !/^@[a-z0-9-]+$/.test(options[1])) {
+    console.log('Usage: npm run test:summary, or npm run test:summary -- --run @<mfe> to run the tests first.');
+    process.exit(2);
+  }
+  runTests(options[1]);
 }
 
 const vitest = readJson<VitestReport>('reports/vitest.json');

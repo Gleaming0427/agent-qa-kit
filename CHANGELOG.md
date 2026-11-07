@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **Fewer turns lost to refused commands.** Each tool call the guard refuses costs the agent a turn. In the campaign of 5 November (15 trials), it refused 16 calls of the writer and 41 of the verifier:
+  - 12 of the writer's were its three test commands chained with `;`, their output cut with `| tail` or `| head`;
+  - 23 of the verifier's were `cat` on a file, often tried again after the refusal, and 12 a test command cut with `| tail`.
+
+  Now:
+  - `npm run test:summary -- --run @<mfe>` runs the unit tests, then the browser tests of the feature area, and prints the summary of both: one command for a test cycle. When a run writes no report, it shows the end of that run's output. The writer's instructions use it.
+  - The guard's refusals say what to do instead: one command per call, the Read, Glob and Grep tools rather than `cat`, `ls` or `find`, a folder for Grep. The reasons the evaluation counts refusals by stay the same, except for Grep from the project root.
+  - Glob may search from the project root, as it already did with no path. Grep still may not: it would read files such as `.env`.
+  - The verifier's instructions now say, as the writer's did, that shell commands such as `cat` are refused. The writer, which had that line, never tried `cat` in the campaign.
+  - Measured on the smoke selection (run 42401051963), on the 5 tickets shared with the campaign of 5 November: writer refusals 16 → 1, verifier refusals 41 → 0, writer turns 11.3 → 9.0 on average, cost per trial $0.111 → $0.094; every score at 100%. The release decision asks for every ticket before a release (`eval/results/2026-11-07-guard-refusals.md`).
 - **An amendment after a squash-merged test pull request.** On omni-tools, the test pull request was squash-merged: `feat/OMNI-1` got a copy of the tests, not the commits of `qa/OMNI-1`, so the amendment's pull request added the same files again and could not be merged on GitHub.
   - QA amend tests now finds how the latest test pull request was merged. When its copy on `feat/<TICKET>` holds only the tests, it records it on `qa/<TICKET>` with a merge commit that changes no file, and the amendment merges cleanly.
   - Replayed on the trial's commits, the amendment then merges into the same files as the merge made by hand.

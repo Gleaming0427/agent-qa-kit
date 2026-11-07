@@ -437,5 +437,24 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 0.4296
+  },
+  {
+    "id": "gh-42401051963",
+    "label": "fewer refused commands, smoke, run 40",
+    "role": "campaign",
+    "started_at": "2026-11-07T18:23:27Z",
+    "commit": "8df9571",
+    "agent": "a470ead5663c",
+    "writer_prompt": "e38f57c",
+    "scoring": "original at 8df9571",
+    "tickets": 6,
+    "trials": 18,
+    "agent_errors": 0,
+    "successes": 18,
+    "bugs_detected": "30/30",
+    "trials_with_false_positives": 0,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 1.7346
   }
 ]
