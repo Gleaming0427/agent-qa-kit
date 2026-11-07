@@ -140,7 +140,9 @@ configuration files, as in the example:
 ```
 
 `test:summary` gives the path of `qa/summary.ts` from the application's folder,
-`node ../../qa/summary.ts` for `apps/web`.
+`node ../../qa/summary.ts` for `apps/web`. `npm run test:summary -- --run @shop`
+runs `test:affected`, then `test:e2e -- --grep @shop`, and prints the summary of
+both: the QA writer runs a test cycle with this one command.
 
 Every test name must contain `[TICKET-42][AC-1]` (adapt ticket and ID). The
 Playwright scenarios for the ticket belong in `e2e/TICKET-42.spec.ts`, inside

@@ -1,0 +1,89 @@
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import test from 'node:test';
+
+// npm run test:summary -- --run @<mfe>: one command for a test cycle, with a stand-in for npm whose
+// test runs write the reports, or fail to.
+const SUMMARY = resolve(import.meta.dirname, '../summary.ts');
+const vitest = JSON.stringify({ numPassedTests: 1, numFailedTests: 1, testResults: [{ assertionResults: [
+  { fullName: '[SHOP-2][AC-1] MFE heading counts each line quantity', status: 'failed',
+    failureMessages: ['Unable to find an accessible element with the role "heading" and name "Cart (3)"'] },
+] }] });
+const playwright = JSON.stringify({ stats: { expected: 0, unexpected: 1, flaky: 0 }, suites: [{ title: 'SHOP-2.spec.ts', specs: [{
+  title: '[SHOP-2][AC-1] shell heading counts each line quantity',
+  tests: [{ status: 'unexpected', results: [{ status: 'failed', error: { message: "Locator: getByRole('heading', { name: 'Cart (3)' })" } }] }],
+}] }] });
+
+function app(e2e: 'report' | 'crash') {
+  const dir = mkdtempSync(join(tmpdir(), 'qa-summary-'));
+  mkdirSync(join(dir, 'bin'));
+  mkdirSync(join(dir, 'reports'));
+  writeFileSync(join(dir, 'vitest.json'), vitest);
+  writeFileSync(join(dir, 'playwright.json'), playwright);
+  // Reports from an earlier run, which --run must not show as this one's.
+  writeFileSync(join(dir, 'reports/vitest.json'), '{"numPassedTests":9,"numFailedTests":0,"testResults":[]}');
+  writeFileSync(join(dir, 'reports/playwright.json'), '{"stats":{"expected":9,"unexpected":0,"flaky":0},"suites":[]}');
+  writeFileSync(join(dir, 'bin/npm'), `#!/usr/bin/env bash
+echo "$*" >> "${dir}/calls.log"
+echo "lots of test output"
+case "$*" in
+  'run test:affected') cp "${dir}/vitest.json" reports/vitest.json; exit 1 ;;
+  'run test:e2e -- --grep @shop')
+    ${e2e === 'report' ? `cp "${dir}/playwright.json" reports/playwright.json; exit 1` : `echo 'Error: browserType.launch: Executable does not exist' >&2; exit 1`} ;;
+  *) echo "unexpected npm call: $*" >&2; exit 9 ;;
+esac
+`);
+  chmodSync(join(dir, 'bin/npm'), 0o755);
+  return dir;
+}
+
+function summary(dir: string, ...args: string[]) {
+  const result = spawnSync(process.execPath, [SUMMARY, ...args], {
+    cwd: dir, encoding: 'utf8', env: { ...process.env, PATH: `${join(dir, 'bin')}:${process.env.PATH}` },
+  });
+  const calls = existsSync(join(dir, 'calls.log')) ? readFileSync(join(dir, 'calls.log'), 'utf8') : '';
+  return { code: result.status, out: result.stdout + result.stderr, calls };
+}
+
+test('--run @<mfe> runs the unit tests, then the browser tests, and prints only the summary of both', () => {
+  const dir = app('report');
+  try {
+    const r = summary(dir, '--run', '@shop');
+    assert.equal(r.code, 0, r.out);
+    assert.equal(r.calls, 'run test:affected\nrun test:e2e -- --grep @shop\n');
+    assert.match(r.out, /^MFE level \(Vitest\): 1 passed, 1 failed\n {2}✗ \[SHOP-2\]\[AC-1\] MFE heading/);
+    assert.match(r.out, /Shell level \(Playwright\): 0 passed, 1 failed, 0 flaky\n {2}✗ SHOP-2\.spec\.ts › \[SHOP-2\]\[AC-1\]/);
+    assert.doesNotMatch(r.out, /lots of test output|9 passed/, 'neither the raw output nor the earlier reports');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('--run says which command wrote no report, with the end of its output', () => {
+  const dir = app('crash');
+  try {
+    const r = summary(dir, '--run', '@shop');
+    assert.equal(r.code, 0, r.out);
+    assert.match(r.out, /^npm run test:e2e -- --grep @shop wrote no reports\/playwright\.json \(exit code 1\)\. Its last lines:\n {2}lots of test output\n {2}Error: browserType\.launch: Executable does not exist\n/);
+    assert.match(r.out, /MFE level \(Vitest\): 1 passed, 1 failed/);
+    assert.doesNotMatch(r.out, /Shell level/, 'no summary from the earlier browser report');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('an option other than --run @<mfe> is refused before any test runs', () => {
+  const dir = app('report');
+  try {
+    for (const args of [['--run'], ['--run', 'shop'], ['--run', '@Shop'], ['--run', '@shop', 'extra'], ['--update']]) {
+      const r = summary(dir, ...args);
+      assert.equal(r.code, 2, args.join(' '));
+      assert.match(r.out, /Usage: npm run test:summary, or npm run test:summary -- --run @<mfe>/);
+      assert.equal(r.calls, '', args.join(' '));
+    }
+    // Without an option, it only reads the reports, as before.
+    const r = summary(dir);
+    assert.equal(r.code, 0);
+    assert.match(r.out, /MFE level \(Vitest\): 9 passed, 0 failed/);
+    assert.equal(r.calls, '');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
