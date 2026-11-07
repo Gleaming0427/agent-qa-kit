@@ -64,7 +64,12 @@ case "$TOOL" in
     ;;
   Grep|Glob)
     path="$(jq -r '.tool_input.path // empty' <<<"$INPUT")"
-    if [[ "$TOOL" == Grep && -z "$path" ]]; then deny "Grep requires an explicit source path"; fi
+    # The project root: Glob lists file names there, as it does with no path; Grep would read every file.
+    if [[ "$path" == "$PROJECT" || "$path" == "$PROJECT/" || "$path" == . || "$path" == ./ ]]; then
+      [[ "$TOOL" == Glob ]] || deny 'Grep needs a folder inside the project, such as src or e2e, not the whole project: it would read secrets files such as .env'
+      path=''
+    fi
+    if [[ "$TOOL" == Grep && -z "$path" ]]; then deny "Grep requires an explicit source path: a folder inside the project, such as src or e2e"; fi
     if [[ -n "$path" ]]; then
       rel="$(relative_path "$path")" || exit 2
       check_not_secret "$rel"
@@ -109,7 +114,8 @@ case "$TOOL" in
   Bash)
     cmd="$(jq -r '.tool_input.command // empty' <<<"$INPUT")"
     [[ -n "$cmd" && "$cmd" != *$'\n'* ]] || deny 'Empty or multi-line command'
-    [[ ! "$cmd" =~ [\;\&\|\<\>\`\\] && "$cmd" != *'$('* ]] || deny 'Shell chaining/redirection/escaping forbidden'
+    [[ ! "$cmd" =~ [\;\&\|\<\>\`\\] && "$cmd" != *'$('* ]] \
+      || deny 'Shell chaining/redirection/escaping forbidden: run one command per call, with no ;, &&, | or >. Test output needs no cutting: npm run test:summary condenses it, and npm run test:summary -- --run @<mfe> runs the unit and browser tests first'
     [[ "$cmd" != *'$'* && "$cmd" != *'${'* ]] || deny 'Shell expansion forbidden'
     [[ "$cmd" != *'../'* && "$cmd" != *'/..'* ]] || deny 'Parent paths forbidden' 
     [[ "$cmd" != *' --update'* && "$cmd" != *' -u' ]] || deny 'Snapshot updates forbidden'
@@ -118,6 +124,10 @@ case "$TOOL" in
       'npm run build') [[ "${QA_GUARD_MODE:-qa}" == repair ]] || deny "Command not allowed: $cmd" ;;
       'npm run test:e2e -- --grep '@*)
         grep -Eq '^npm run test:e2e -- --grep @[a-z0-9-]+$' <<<"$cmd" || deny 'Unsafe E2E grep option'
+        ;;
+      # Runs test:affected, then test:e2e -- --grep @<mfe>, then prints the summary (qa/summary.ts).
+      'npm run test:summary -- --run '*)
+        grep -Eq '^npm run test:summary -- --run @[a-z0-9-]+$' <<<"$cmd" || deny 'Unsafe test:summary option'
         ;;
       'npx vitest run '*)
         grep -Eq '^npx vitest run ([a-zA-Z0-9_/-]+\.)?([a-zA-Z0-9_/-]+)\.test\.tsx?$' <<<"$cmd" || deny 'Only one local test file allowed'
@@ -129,6 +139,9 @@ case "$TOOL" in
       'git log '*)
         grep -Eq '^git log (-[0-9]+|--oneline)$' <<<"$cmd" || deny 'Unsupported git log command'
         ;;
+      # The agents reach for these to read, list or search files: say which tool does it.
+      cat\ *|head\ *|tail\ *|less\ *|more\ *|ls|ls\ *|find\ *|grep\ *|rg\ *|wc\ *|sed\ *|awk\ *|tree|tree\ *)
+        deny "Command not allowed: $cmd (use the Read tool to read a file, Glob to list files and Grep to search them)" ;;
       *) deny "Command not allowed: $cmd" ;;
     esac
     ;;

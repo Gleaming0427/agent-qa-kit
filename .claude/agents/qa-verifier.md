@@ -32,6 +32,12 @@ The launcher checks the human review receipt before starting this phase.
 6. Never declare pass on zero tests, skipped tests, stale reports or flaky E2E.
 7. Ask a question instead of fabricating a test or endpoint.
 
+Only test commands are allowed, one per call: the guard refuses `;`, `&&`,
+`|` and `>`. Do not cut their output: `npm run test:summary` condenses it.
+Read the manifest and the tests with the Read tool, find files with Glob and
+search them with Grep and a folder such as `src` or `e2e` as its path: shell
+commands such as `cat`, `ls` or `find` are refused.
+
 You only run the ticket's tests. After a pass, the launcher itself reruns every
 unit and browser test, smoke journeys included, before accepting the result.
 
