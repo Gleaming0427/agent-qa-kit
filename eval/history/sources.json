@@ -693,6 +693,40 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 42401051963,
+      "run_number": 40,
+      "branch": "claude/magical-feynman-bhdsbc",
+      "started_at": "2026-11-07T18:23:27Z",
+      "commit": "8df95716cc7f67ab4ada82f1a9ebc711cee6b0c7",
+      "label": "fewer refused commands, smoke, run 40",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 42401051963,
+        "commit": "8df95716cc7f67ab4ada82f1a9ebc711cee6b0c7"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-42401051963.json",
+        "sha256": "c401544efd20e276cea0ce9662f31263b997db860648b9ef378d0ce0dda181ab",
+        "artifact": {
+          "id": 13585906930,
+          "name": "eval-report",
+          "digest": "sha256:7cee62e04930e2212dcd0a5d063bd50306f6c885a3fed1b3366d2e1085ef7d31"
+        }
+      },
+      "doc": "eval/results/2026-11-07-guard-refusals.md",
+      "notes": [
+        "The writer's one-command test cycle and the guard's refusals that say what to do instead, on the smoke selection; the release decision asked for every ticket (5 comparable tickets, 6 needed)."
+      ],
+      "inputs": {
+        "tickets": "smoke",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }
