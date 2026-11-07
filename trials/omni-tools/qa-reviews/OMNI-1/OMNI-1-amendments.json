@@ -1,0 +1,16 @@
+[
+  {
+    "at": "2026-11-07T11:27:21.630Z",
+    "author": "@Gleaming0427",
+    "reason": "The page shows each option four times, in the tool and in its three example cards, so the browser tests' lookup by label matched four checkboxes and Playwright refused to choose. They now take the first one, the tool's own.",
+    "files": [
+      {
+        "path": "e2e/OMNI-1.spec.ts",
+        "before": "61adda72dbdc2f9d5805df53b3894b696090cce24877f366df1802d33e7a317a",
+        "after": "c42d92b08def0f1cfbda480eabe4313037ed6593a4be9dd6a1ccbd0000b6353e"
+      }
+    ],
+    "previous_request_sha256": "baf294d9ecd803b4882b87393fd66c63edf67a22e217dc546ef37ee782315287",
+    "request_sha256": "e816c412d21573775238a24e9b27f956296378cf98f516e44f52e2aaf958fbd2"
+  }
+]
