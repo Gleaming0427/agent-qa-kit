@@ -1,0 +1,130 @@
+{
+  "ticket": "OMNI-1",
+  "phase": 1,
+  "verdict": "ready",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "level": "mfe",
+      "status": "written",
+      "evidence": "[OMNI-1][AC-1] service tests in src/pages/tools/string/reverse/OMNI-1.test.ts; they fail on assertions (received 'dlrow gib olleH', not 'world big Hello')"
+    },
+    {
+      "id": "AC-1",
+      "level": "shell",
+      "status": "written",
+      "evidence": "[OMNI-1][AC-1] e2e/OMNI-1.spec.ts; it fails on expect(getByLabel('Reverse word order')).toBeVisible() because the option is not there yet"
+    },
+    {
+      "id": "AC-2",
+      "level": "mfe",
+      "status": "written",
+      "evidence": "[OMNI-1][AC-2] service tests; they fail on assertions (received 'owt eno\\nruof eerht')"
+    },
+    {
+      "id": "AC-2",
+      "level": "shell",
+      "status": "written",
+      "evidence": "[OMNI-1][AC-2] e2e/OMNI-1.spec.ts; it fails on the toBeVisible expect for the missing option"
+    },
+    {
+      "id": "AC-3",
+      "level": "mfe",
+      "status": "written",
+      "evidence": "[OMNI-1][AC-3] service tests; the one with the true case fails (received 'dlroW olleH', not 'World Hello'). The omitted-argument test passes now, as intended, because it only guards existing behaviour."
+    },
+    {
+      "id": "AC-3",
+      "level": "shell",
+      "status": "written",
+      "evidence": "[OMNI-1][AC-3] e2e/OMNI-1.spec.ts; it fails on the toBeVisible expect for the missing option"
+    }
+  ],
+  "coverage": [
+    {
+      "id": "AC-1",
+      "cases": [
+        {
+          "data": "'Hello big world', multiLine=false, reverseWords=true",
+          "expect": "'world big Hello': words in reverse order, letters kept",
+          "rules_out": "a character reversal ('dlrow gib olleH'), or reversing words and also their letters"
+        },
+        {
+          "data": "'one two three four five', reverseWords=true",
+          "expect": "'five four three two one'",
+          "rules_out": "swapping only the first and last word, or leaving the middle words in place"
+        },
+        {
+          "data": "browser: the option starts unchecked, then check it with 'Hello big world' typed in",
+          "expect": "result 'world big Hello'",
+          "rules_out": "an option that starts on, or one that is shown but not wired to the result"
+        }
+      ],
+      "not_covered": [
+        "several spaces between words",
+        "leading or trailing whitespace",
+        "a single word",
+        "an empty input",
+        "punctuation attached to words"
+      ]
+    },
+    {
+      "id": "AC-2",
+      "cases": [
+        {
+          "data": "'one two\\nthree four', multiLine=true, reverseWords=true",
+          "expect": "'two one\\nfour three'",
+          "rules_out": "reversing the words of the whole text ('four three\\ntwo one'), or the characters of each line ('owt eno\\nruof eerht')"
+        },
+        {
+          "data": "'a b c\\nd e\\nf', multiLine=true, reverseWords=true",
+          "expect": "'c b a\\ne d\\nf': 3 lines with 3, 2 and 1 words",
+          "rules_out": "treating the lines as one word list, or mixing words between lines"
+        },
+        {
+          "data": "browser: Process multi-line text is checked at first, option on, 'one two\\nthree four' typed in",
+          "expect": "'two one\\nfour three'",
+          "rules_out": "a page that ignores multi-line when reversing words"
+        }
+      ],
+      "not_covered": [
+        "blank lines between lines",
+        "Skip empty lines or Trim whitespace combined with word reversal",
+        "multi-line off with several lines and word reversal on",
+        "Windows (CRLF) line endings"
+      ]
+    },
+    {
+      "id": "AC-3",
+      "cases": [
+        {
+          "data": "'Hello World', multiLine=false, reverseWords=false",
+          "expect": "'dlroW olleH'; with reverseWords=true the same input gives 'World Hello'",
+          "rules_out": "an option that has no effect, or one that changes the default behaviour"
+        },
+        {
+          "data": "fifth argument left out",
+          "expect": "'dlroW olleH' (false by default)",
+          "rules_out": "a default of true for the new argument"
+        },
+        {
+          "data": "browser: type 'Hello World', then check and uncheck the option",
+          "expect": "'dlroW olleH', then 'World Hello', then 'dlroW olleH'",
+          "rules_out": "a toggle that cannot be undone"
+        }
+      ],
+      "not_covered": [
+        "character reversal with Skip empty lines or Trim whitespace combined with the new option off",
+        "multi-line input with the option off",
+        "Unicode characters or emoji"
+      ]
+    }
+  ],
+  "flaky_tests": [],
+  "spec_questions": [],
+  "alerts": [
+    "The service tests call stringReverser through a loosely typed reference, `(...args: unknown[]) => string`. The build runs `tsc` first, and five-argument calls fail to compile against the current four-argument signature, which stopped the browser server from starting. The cast can be removed once the fifth argument exists.",
+    "The browser tests find the option with getByLabel('Reverse word order'). This relies on the new option using the exact visible label 'Reverse word order', rendered like the existing checkboxes."
+  ],
+  "cost_usd": 0.25304380000000004
+}

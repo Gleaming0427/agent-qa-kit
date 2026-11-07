@@ -1,0 +1,74 @@
+{
+  "schema_version": 2,
+  "ticket": "OMNI-1",
+  "spec_sha256": "0d038437a5ee85ac47564496702cce8a831199515b404b085fb89a0edebedf58",
+  "manifest_sha256": "c6aa060486379ebc760648250ff1580e445ac859c04c4b2ac0350cb91952f8ff",
+  "phase1_verdict_sha256": "103fb982e69df13fa20f2bedfb098a1cacba54ea265384b3bead85bae7f27e93",
+  "red_vitest_sha256": "fa28a5073d9a217e0ff174e3c4cd5997e06bce7d6cc8c55bedbfa752be4cf283",
+  "red_playwright_sha256": "6d40fb957aadf515a0dd20fa0b43b5f09baa654a2c16ad1c889c0e1acfb0f3ac",
+  "tests": [
+    {
+      "path": "e2e/OMNI-1.spec.ts",
+      "sha256": "61adda72dbdc2f9d5805df53b3894b696090cce24877f366df1802d33e7a317a"
+    },
+    {
+      "path": "src/pages/tools/string/reverse/OMNI-1.test.ts",
+      "sha256": "d0026b5971c0c84fafe7e69b92de68e036f135d7d9faf593bb11d19ca825151f"
+    }
+  ],
+  "criteria": [
+    {
+      "id": "AC-1",
+      "description": "the tool's options include \"Reverse word order\", off at first. With it on, the words of the text come out in reverse order and each word keeps its letters: \"Hello big world\" becomes \"world big Hello\".",
+      "failures": [
+        {
+          "level": "mfe",
+          "title": " OMNI-1 reverse word order [OMNI-1][AC-1] reverses the order of words and keeps each word",
+          "message": "expected 'dlrow gib olleH' to be 'world big Hello' // Object.is equality"
+        },
+        {
+          "level": "mfe",
+          "title": " OMNI-1 reverse word order [OMNI-1][AC-1] reverses word order of a longer single line",
+          "message": "expected 'evif ruof eerht owt eno' to be 'five four three two one' // Object.is equality"
+        },
+        {
+          "level": "shell",
+          "title": "e2e/OMNI-1.spec.ts @omni OMNI-1 [OMNI-1][AC-1] reverse word order is off at first and reverses words when on",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByLabel('Reverse word order') Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms - waiting for getByLabel('Reverse word order')"
+        }
+      ]
+    },
+    {
+      "id": "AC-2",
+      "description": "with \"Reverse word order\" and \"Process multi-line text\" both on, the words of each line are reversed separately and the lines keep their order: \"one two\" on the first line and \"three four\" on the second become \"two one\" and \"four three\".",
+      "failures": [
+        {
+          "level": "mfe",
+          "title": " OMNI-1 reverse word order [OMNI-1][AC-2] reverses words of each line separately, keeping line order",
+          "message": "expected 'owt eno\\nruof eerht' to be 'two one\\nfour three' // Object.is equality"
+        },
+        {
+          "level": "shell",
+          "title": "e2e/OMNI-1.spec.ts @omni OMNI-1 [OMNI-1][AC-2] with multi-line on, words of each line are reversed separately",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByLabel('Reverse word order') Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms - waiting for getByLabel('Reverse word order')"
+        }
+      ]
+    },
+    {
+      "id": "AC-3",
+      "description": "with \"Reverse word order\" off, the tool still reverses the characters: \"Hello World\" becomes \"dlroW olleH\".",
+      "failures": [
+        {
+          "level": "mfe",
+          "title": " OMNI-1 reverse word order [OMNI-1][AC-3] still reverses characters when the option is false",
+          "message": "expected 'dlroW olleH' to be 'World Hello' // Object.is equality"
+        },
+        {
+          "level": "shell",
+          "title": "e2e/OMNI-1.spec.ts @omni OMNI-1 [OMNI-1][AC-3] with reverse word order off, characters are reversed",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByLabel('Reverse word order') Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms - waiting for getByLabel('Reverse word order')"
+        }
+      ]
+    }
+  ]
+}
