@@ -31,7 +31,7 @@ It then checks what the workflows need, as `npx github:Gleaming0427/agent-qa-kit
 doctor` does: the scripts and the reports they write (`reports/vitest.json`,
 `reports/playwright.json`), Playwright's `testDir` (the agents write the browser
 tests in `e2e/`), a browser test tagged `@smoke` (section 1), a committed
-`package-lock.json` (the workflows run `npm ci`), and what git ignores. A `FAIL`
+lockfile, and what git ignores. A `FAIL`
 must be fixed for the workflows to pass; a `warn` is worth reading. `doctor --run`
 also runs `test:unit`, `test:e2e` and `test:summary` the way QA verify's full
 suite does, and reads their reports. Commit the files it lists, then make the
@@ -41,6 +41,17 @@ To upgrade, run `init` again. A file still as the last install wrote it is
 updated; a file you changed is a conflict. `--force` replaces it, only if it is
 committed with no local change, so that git can give it back. To pin a version,
 add a tag or a commit: `npx github:Gleaming0427/agent-qa-kit#<tag> init`.
+
+**npm or pnpm.** The workflows install the application from its lockfile
+(`qa/ci-install-app.sh`): `npm ci` for a `package-lock.json`, `pnpm install
+--frozen-lockfile` for a `pnpm-lock.yaml`. In a workspace, the lockfile may be at
+the workspace's root, next to `pnpm-workspace.yaml` or to a package.json with
+`"workspaces"`. pnpm needs its version in `"packageManager"`, for instance
+`"pnpm@10.34.9"`: every pnpm version writes the same lockfile format, so the
+lockfile cannot tell which one to install. Whatever installed the dependencies,
+the agents and the full suite run the scripts with `npm run`, which only starts a
+script of `package.json`; their allowed commands stay the same. Yarn and Bun are
+not supported.
 
 The agents run on Linux and macOS (their commands go through an OS sandbox). On
 Windows, use the GitHub workflows.

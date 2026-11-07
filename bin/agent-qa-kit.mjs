@@ -44,6 +44,7 @@ const KIT_FILES = [
   'qa/check-scope.sh',
   'qa/check-tests.ts',
   'qa/ci-amend-tests.sh',
+  'qa/ci-install-app.sh',
   'qa/ci-install-agents.sh',
   'qa/ci-verify.sh',
   'qa/ci-write-tests.sh',
@@ -533,6 +534,47 @@ function tsconfigCoversKit(config) {
   return (config.include ?? []).some((/** @type {unknown} */ i) => typeof i === 'string' && /^(\.\/)?(\*\*|\*\/|qa(\/|$))/.test(i));
 }
 
+/** How the workflows will install the application: the same decision as qa/ci-install-app.sh,
+ * which the tests compare with this one on the same repositories.
+ * @param {string} root @param {string} appDir
+ * @returns {{ manager: 'npm' | 'pnpm', lockDir: string, version: string } | { problem: string }} */
+function installPlan(root, appDir) {
+  /** @param {string} dir */
+  const declared = (dir) => { const value = readJson(join(dir, 'package.json'))?.packageManager; return typeof value === 'string' ? value : ''; };
+  for (let dir = appDir; ; dir = dirname(dir)) {
+    const npm = existsSync(join(dir, 'package-lock.json'));
+    const pnpm = existsSync(join(dir, 'pnpm-lock.yaml'));
+    const rel = repoPath(root, dir);
+    if (npm || pnpm) {
+      /** @type {'npm' | 'pnpm'} */
+      let manager = pnpm ? 'pnpm' : 'npm';
+      if (npm && pnpm) {
+        if (declared(dir).startsWith('pnpm@')) manager = 'pnpm';
+        else if (declared(dir).startsWith('npm@')) manager = 'npm';
+        else return { problem: `${rel} has both package-lock.json and pnpm-lock.yaml: delete the one you do not use, or name the package manager in "packageManager".` };
+      }
+      if (dir !== appDir && manager === 'pnpm' && !existsSync(join(dir, 'pnpm-workspace.yaml'))) {
+        return { problem: `${inApp(rel, 'pnpm-lock.yaml')} is not the application's: there is no pnpm-workspace.yaml next to it. Commit the application's own lockfile.` };
+      }
+      if (dir !== appDir && manager === 'npm' && !Array.isArray(readJson(join(dir, 'package.json'))?.workspaces)) {
+        return { problem: `${inApp(rel, 'package-lock.json')} is not the application's: its package.json has no "workspaces". Commit the application's own lockfile.` };
+      }
+      if (manager === 'npm') return { manager, lockDir: dir, version: '-' };
+      const match = declared(dir).match(/^pnpm@([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?)(\+[0-9A-Za-z.]+)?$/);
+      if (!match) {
+        const local = spawnSync('pnpm', ['--version'], { encoding: 'utf8', shell: process.platform === 'win32' });
+        const yours = local.status === 0 && /^\d+\.\d+\.\d+/.test(local.stdout.trim()) ? local.stdout.trim() : '<version>';
+        return { problem: `Name the pnpm version in ${inApp(rel, 'package.json')}: "packageManager": "pnpm@${yours}"${yours === '<version>' ? ', the output of pnpm --version' : ' (your pnpm --version)'}. Every pnpm version writes the same lockfile format, so the workflows cannot tell which one to install.` };
+      }
+      return { manager, lockDir: dir, version: match[1] };
+    }
+    const other = ['yarn.lock', 'bun.lock', 'bun.lockb'].find((name) => existsSync(join(dir, name)));
+    if (other) return { problem: `The application uses ${other}: the workflows install applications with npm or pnpm only.` };
+    if (dir === root || dirname(dir) === dir) break;
+  }
+  return { problem: 'No package-lock.json or pnpm-lock.yaml: install the application with npm or pnpm and commit the lockfile. The workflows install from it.' };
+}
+
 /** @param {string} root @param {string} cwd @param {ReturnType<typeof parseArgs>} options @returns {{ app: string | null, sections: [string, Check[]][] }} */
 function doctor(root, cwd, options) {
   /** @type {[string, Check[]][]} */
@@ -601,23 +643,17 @@ function doctor(root, cwd, options) {
     ? { level: 'fail', text: `Missing npm scripts: ${absent.join(', ')}. init adds them.` }
     : { level: 'ok', text: `npm scripts ${SCRIPT_NAMES.join(', ')}` });
 
-  // The workflows run npm ci in the application's folder.
-  const lockOwner = (() => {
-    for (let dir = appDir; ; dir = dirname(dir)) {
-      if (existsSync(join(dir, 'package-lock.json'))) return dir === appDir || Array.isArray(readJson(join(dir, 'package.json'))?.workspaces) ? dir : null;
-      if (dir === root || dirname(dir) === dir) return null;
-    }
-  })();
-  if (lockOwner) {
-    const lock = repoPath(root, join(lockOwner, 'package-lock.json'));
-    const tracked = git(root, ['ls-files', '--error-unmatch', '--', lock]).status === 0;
-    checks.push(tracked ? { level: 'ok', text: `${lock} is committed (the workflows run npm ci)` }
-      : { level: 'warn', text: `${lock} is not committed yet: the workflows run npm ci, which needs it.` });
-  } else {
-    const other = ['pnpm-lock.yaml', 'yarn.lock', 'bun.lockb', 'bun.lock'].find((name) => existsSync(join(appDir, name)) || existsSync(join(root, name)));
-    checks.push({ level: 'fail', text: other
-      ? `The application uses ${other}, but the workflows install it with npm ci, which needs a package-lock.json.`
-      : 'No package-lock.json: run npm install and commit it. The workflows install the application with npm ci.' });
+  // The workflows install the application as qa/ci-install-app.sh decides, from its lockfile.
+  const install = installPlan(root, appDir);
+  if ('problem' in install) checks.push({ level: 'fail', text: install.problem });
+  else {
+    const how = install.manager === 'npm' ? 'with npm ci' : `with pnpm ${install.version}`;
+    const needed = [join(install.lockDir, install.manager === 'npm' ? 'package-lock.json' : 'pnpm-lock.yaml')];
+    if (install.manager === 'pnpm' && existsSync(join(install.lockDir, 'pnpm-workspace.yaml'))) needed.push(join(install.lockDir, 'pnpm-workspace.yaml'));
+    const untracked = needed.map((abs) => repoPath(root, abs)).filter((path) => git(root, ['ls-files', '--error-unmatch', '--', path]).status !== 0);
+    checks.push(untracked.length
+      ? { level: 'warn', text: `${untracked.join(' and ')} not committed yet: the workflows install the application ${how}, from what is committed.` }
+      : { level: 'ok', text: `${repoPath(root, needed[0])} is committed: the workflows install the application ${how}` });
   }
 
   const vConfig = vitestConfig(appDir);

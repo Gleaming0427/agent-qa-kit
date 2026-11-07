@@ -35,7 +35,7 @@ awk '/^---$/ && n < 2 { n++; next } n >= 2' "$AGENT" > "$SYSTEM_PROMPT"
 TOOLING="$(node "$KIT/qa/tooling-integrity.ts" snapshot)" || fail 'cannot record node_modules and the git files'
 check_tooling() {
   node "$KIT/qa/tooling-integrity.ts" compare <<<"$TOOLING" \
-    || fail "node_modules or the git files changed during the $1: do not trust this run, reinstall the dependencies (npm ci) and review the repair"
+    || fail "node_modules or the git files changed during the $1: do not trust this run, reinstall the dependencies (npm ci, or pnpm install) and review the repair"
 }
 
 for (( attempt = 1; ; attempt++ )); do
