@@ -249,7 +249,17 @@ test('an application at the root of a CommonJS package: the installed scripts ru
     s = run(dir, 'bash', ['qa/run-qa.sh', 'SHOP-1', '1', 'specs/SHOP-1.md', 'shop'],
       { QA_DRY_RUN: '1', QA_PROJECT_DIR: dir, PATH: `${join(dir, 'stub')}:${process.env.PATH}` });
     assert.equal(s.code, 0, s.out);
-    assert.match(s.out, /Preview only: ticket=SHOP-1 phase=1 model=\S+ effort=\S+ budget=\$1\.00/);
+    assert.match(s.out, /Preview only: ticket=SHOP-1 phase=1 model=\S+ effort=\S+ budget=\$1\.00 turns=40\n/);
+    // QA_MAX_TURNS, a repository variable in the workflows, replaces the agent's own limit.
+    const preview = (turns: string) => run(dir, 'bash', ['qa/run-qa.sh', 'SHOP-1', '1', 'specs/SHOP-1.md', 'shop'],
+      { QA_DRY_RUN: '1', QA_PROJECT_DIR: dir, QA_MAX_TURNS: turns, PATH: `${join(dir, 'stub')}:${process.env.PATH}` });
+    assert.match(preview('60').out, / turns=60\n/);
+    assert.match(preview('').out, / turns=40\n/, 'an unset repository variable is empty: the agent keeps its limit');
+    for (const bad of ['0', '1000', '60; rm -rf /', 'many']) {
+      s = preview(bad);
+      assert.equal(s.code, 3, bad);
+      assert.match(s.out, /QA_MAX_TURNS must be a number of turns from 1 to 999/);
+    }
     s = run(dir, 'bash', ['.claude/hooks/qa-guard.sh'], { CLAUDE_PROJECT_DIR: dir });
     assert.notEqual(s.code, 127, 'the guard hook starts');
   } finally { rmSync(dir, { recursive: true, force: true }); }

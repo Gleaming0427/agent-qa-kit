@@ -44,6 +44,24 @@ I measure the agents on 17 small tickets for a demo shop. Each ticket has hidden
 
 These are small samples, 3 to 5 trials per ticket. Treat them as signals, not proof.
 
+### Two real tickets, end to end
+
+The whole workflow, as a team would run it: the writer's tests, a person's review, the developer's pull request, QA verify. One ticket on the demo shop, one on [omni-tools](https://github.com/iib0011/omni-tools), a real React app of about 860 files. Details: [eval/results/2026-11-07-real-tickets.md](eval/results/2026-11-07-real-tickets.md).
+
+| | Demo shop: express delivery | omni-tools: reverse the word order |
+|---|---|---|
+| Tests written | first try, about 1 minute | third try |
+| QA verify | passed | blocked once, then passed |
+| Full suite | 9 unit, 8 browser tests | 705 unit, 9 browser tests |
+| Model calls | $0.17 | $1.44 |
+
+What went wrong on omni-tools, and what it changed:
+- The writer ran out of turns on a codebase much bigger than the demo. `QA_MAX_TURNS` now raises the limit.
+- On the next run it couldn't render the component in a unit test. Instead of passing off broken evidence, it stopped and asked how to test it. The answer went into the ticket.
+- QA verify blocked the correct code. The approved browser tests looked for a checkbox the page shows four times. Nobody caught it in review, because the option didn't exist yet. The tests were fixed through QA amend tests, approved again, and QA verify passed.
+
+It also showed that the human step is easy to get wrong. One test pull request was merged before it was approved, another approved without the reasons QA verify needs. A squash merge then blocked the amendment. Those are the next things to fix.
+
 ## Try the demo
 
 Needs Node.js 22.18+ (22.x or 24.x), npm, Bash and `jq`. No AI calls.
@@ -91,7 +109,7 @@ Setup, commands and maintenance: [HOW_TO_APPLY.md](HOW_TO_APPLY.md). The evaluat
 | Repair | Sonnet, medium effort | $1.00, at most 2 repairs |
 | Visual review (optional, warnings only) | Opus | about $0.17 at most |
 
-Those are ceilings passed to the CLI, not prices. In practice a writer and verifier trial costs $0.10 to $0.14 on the corpus. An evaluation smoke run costs $2 to $3, and a full run about $6. QA eval estimates the cost before it starts and refuses to go above `max_cost_usd`. Budgets, models and effort can be changed with `QA_BUDGET_USD`, `QA_MODEL`, `QA_EFFORT` and the `QA_REPAIR_*` variables.
+Those are ceilings passed to the CLI, not prices. In practice a writer and verifier trial costs $0.10 to $0.14 on the corpus. An evaluation smoke run costs $2 to $3, and a full run about $6. QA eval estimates the cost before it starts and refuses to go above `max_cost_usd`. Budgets, models and effort can be changed with `QA_BUDGET_USD`, `QA_MODEL`, `QA_EFFORT` and the `QA_REPAIR_*` variables. On a large application, the repository variable `QA_MAX_TURNS` gives the agents more turns than their own limit (40 for the writer, 25 for the verifier).
 
 ## Security
 
@@ -106,7 +124,7 @@ The kit does not protect against someone with write access to the repository. De
 ## Limits
 
 - Checks prove that named tests ran and gave the expected result. They can't prove the assertions match what the user wanted, so a person still reviews.
-- The writer and the verifier have run in CI through QA eval. The other workflows are tested, but have not run on a real ticket yet. The repair agent isn't measured.
-- The installer has run on one real project, immich, a large pnpm monorepo: install and full suite, no agent ([eval/results/2026-11-07-immich.md](eval/results/2026-11-07-immich.md)). The agents have not run on a real project yet.
+- The four product workflows have each run on a real ticket, but only on two tickets, one of them in the demo. The repair agent isn't measured.
+- The installer has run on one large project, immich, a pnpm monorepo: install and full suite, no agent ([eval/results/2026-11-07-immich.md](eval/results/2026-11-07-immich.md)).
 - The evaluation corpus is 17 tickets of one small shop: it says how the agents do there, not on a real project.
 - The visual review can miss problems or report ones that aren't there, so it only warns.
