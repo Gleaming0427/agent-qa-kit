@@ -58,7 +58,7 @@ Not counted: the kit's own CI ran its AI visual review of the demo twice on the 
   - #31 was approved, then merged, in that order.
 
   Both were caught only later, by QA verify or by checking by hand. The test pull request should say, while it is open, what its approval is missing. Since then it has a **QA approval** status that does.
-- **A squash-merged test pull request blocks a later amendment.** #29 was squash-merged, so `qa/OMNI-1` and `feat/OMNI-1` both added the test files and #31 could not be merged on GitHub. It was merged by hand, with the approved files unchanged. Test pull requests should be merged with a merge commit, or the amendment should start from the developer's branch.
+- **A squash-merged test pull request blocks a later amendment.** #29 was squash-merged, so `qa/OMNI-1` and `feat/OMNI-1` both added the test files and #31 could not be merged on GitHub. It was merged by hand, with the approved files unchanged. Test pull requests should be merged with a merge commit, or the amendment should start from the developer's branch. Since then, QA amend tests records such a copy on `qa/<ticket>` with a merge commit that changes no file. Replayed on this trial's commits, the amendment then merges without conflict, into the same files as the merge made by hand.
 - **A real application needs more turns than the demo,** hence `QA_MAX_TURNS`.
 - **The writer's questions work.** On a setup it could not test, it stopped and asked instead of passing broken evidence.
 - **QA verify did its job both ways.** It passed two correct changes, and refused one whose approved tests could not pass on any implementation. The fix went through a logged, re-approved amendment, not through the developer.

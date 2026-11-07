@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { approvalStatus, findApproval, findQaPull } from '../github-approval.ts';
+import { approvalStatus, findApproval, findQaPull, lastMergedQaPull } from '../github-approval.ts';
 import type { PullRequest, Review } from '../github-approval.ts';
 
 const repo = 'acme/shop';
@@ -22,6 +22,13 @@ test('the QA pull request is the latest one opened from qa/<ticket> in the repos
   assert.equal(findQaPull([pull({ head: { ref: 'qa/TICKET-4', sha: latest, repo: { full_name: repo } } })], 'TICKET-43', repo), null);
   assert.throws(() => findQaPull([pull({ state: 'closed' })], 'TICKET-43', repo), /closed without merging/);
   assert.equal(findQaPull([pull({ state: 'closed', merged_at: '2026-11-01T10:00:00Z' })], 'TICKET-43', repo)?.number, 7);
+});
+
+test('the tests feat/<ticket> holds come from the latest merged QA pull request', () => {
+  const merged = (number: number) => pull({ number, state: 'closed', merged_at: '2026-11-01T10:00:00Z', merge_commit_sha: 'c'.repeat(40) });
+  const fromFork = pull({ number: 9, state: 'closed', merged_at: '2026-11-02T10:00:00Z', head: { ref: 'qa/TICKET-43', sha: latest, repo: { full_name: 'someone/shop' } } });
+  assert.equal(lastMergedQaPull([merged(5), merged(7), pull({ number: 8 }), pull({ number: 10, state: 'closed' }), fromFork], 'TICKET-43', repo)?.number, 7);
+  assert.equal(lastMergedQaPull([pull()], 'TICKET-43', repo), null);
 });
 
 test('a collaborator must approve the latest version of the tests', () => {

@@ -38,7 +38,10 @@ const playwright = JSON.stringify({ stats: { expected: 0, unexpected: 1, flaky: 
 // main holds the kit and the ticket; qa/TICKET-43 the approved RED tests (pull request 7), merged
 // into feat/TICKET-43, where the feature is being built. Then a person fixes the unit test on qa/.
 // folder: the application's folder in the repository, "." for an application at its root.
-function history(folder = 'app') {
+// merge: how pull request 7 reached feat/: with a merge commit; with a squash, before the feature
+// (a copy of the tests on main), or with a squash after the feature (a copy that holds the feature).
+type Merge = 'merge' | 'squash' | 'squash after the feature';
+function history(folder = 'app', merge: Merge = 'merge') {
   const dir = mkdtempSync(join(tmpdir(), 'qa-ci-amend-'));
   const work = join(dir, 'work');
   for (const file of KIT_FILES) write(work, file, readFileSync(join(kit, file), 'utf8'));
@@ -63,9 +66,26 @@ function history(folder = 'app') {
   exportReview({ root: app, ticket: TICKET, specPath, mfe: 'services' });
   git(work, 'add', '-A');
   git(work, 'commit', '-qm', 'QA tests');
-  git(work, 'checkout', '-qb', `feat/${TICKET}`);
-  write(work, `${folder}/src/App.tsx`, 'export const App = () => "Clear search";\n');
-  git(work, 'commit', '-qam', 'feature');
+  const approved = git(work, 'rev-parse', 'HEAD');
+  const feature = () => {
+    write(work, `${folder}/src/App.tsx`, 'export const App = () => "Clear search";\n');
+    git(work, 'commit', '-qam', 'feature');
+  };
+  if (merge === 'merge') {
+    git(work, 'checkout', '-qb', `feat/${TICKET}`);
+    feature();
+  } else if (merge === 'squash') {
+    git(work, 'branch', `feat/${TICKET}`, git(work, 'commit-tree', `${approved}^{tree}`, '-p', 'main', '-m', `QA tests (#7)`));
+    git(work, 'checkout', '-q', `feat/${TICKET}`);
+    feature();
+  } else {
+    git(work, 'checkout', '-qb', `feat/${TICKET}`, 'main');
+    feature();
+    git(work, 'merge', '-q', '--squash', `qa/${TICKET}`);
+    git(work, 'commit', '-qm', 'QA tests (#7)');
+  }
+  // The commit pull request 7 put on feat/: before the feature commit, except for a squash after it.
+  const copy = git(work, 'rev-parse', merge === 'squash after the feature' ? `feat/${TICKET}` : `feat/${TICKET}~1`);
   // The approved unit test looked for "Clear"; the ticket says "Clear search".
   git(work, 'checkout', '-q', `qa/${TICKET}`);
   write(app, `src/${TICKET}.test.tsx`, `test('${UNIT}', () => { /* expects "Clear search" */ });\n`);
@@ -101,7 +121,10 @@ exit 1
 `);
   chmodSync(join(dir, 'bin/gh'), 0o755);
   chmodSync(join(dir, 'bin/npm'), 0o755);
-  return { dir, folder };
+  // Pull request 7 as GitHub lists it once merged: the commit it put on feat/ is merge_commit_sha.
+  writeFileSync(join(dir, 'pulls.json'), JSON.stringify([[{ number: 7, state: 'closed', merged_at: '2026-11-01T10:00:00Z',
+    merge_commit_sha: copy, head: { ref: `qa/${TICKET}`, sha: approved, repo: { full_name: 'acme/shop' } } }]]));
+  return { dir, folder, approved, copy };
 }
 
 function amend(h: { dir: string; folder: string }, step: string, work: string, reason = 'The unit test looked for "Clear"; the ticket names the button "Clear search".') {
@@ -116,8 +139,8 @@ function amend(h: { dir: string; folder: string }, step: string, work: string, r
   return { code: result.status, output: result.stdout + result.stderr };
 }
 
-function amendAndVerify(folder: string) {
-  const h = history(folder);
+function amendAndVerify(folder: string, merge: Merge = 'merge') {
+  const h = history(folder, merge);
   try {
     const work = join(h.dir, 'ci-work');
     git(h.dir, 'clone', '-q', '--branch', `qa/${TICKET}`, join(h.dir, 'origin.git'), work);
@@ -147,11 +170,19 @@ function amendAndVerify(folder: string) {
     assert.doesNotMatch(r.output, /::warning/);
     const calls = readFileSync(join(h.dir, 'calls.log'), 'utf8');
     assert.match(calls, /pr create --repo acme\/shop --base feat\/TICKET-43 --head qa\/TICKET-43 --title TICKET-43: amended QA tests to review/);
-    const pushed = git(h.dir, '--git-dir=origin.git', 'show', '--stat', '--format=%s', `qa/${TICKET}`);
+    const origin = (...args: string[]) => git(h.dir, '--git-dir=origin.git', ...args);
+    const head = origin('rev-parse', `qa/${TICKET}`);
+    if (merge === 'squash') {
+      // The copy of the tests on feat/ is recorded on qa/ by a merge that changes no file.
+      assert.match(r.output, /#7 reached feat\/TICKET-43 as a copy \([0-9a-f]{7}\): recorded on qa\/TICKET-43/);
+      assert.match(origin('log', '-1', '--format=%s', head), /^Record that #7 reached feat\/TICKET-43 as [0-9a-f]{7}$/);
+      assert.equal(origin('rev-parse', `${head}^2`), h.copy);
+      assert.equal(origin('diff', '--stat', `${head}^1`, head), '');
+    }
+    const pushed = origin('show', '--stat', '--format=%s', merge === 'squash' ? `${head}^1` : head);
     assert.match(pushed, /^test\(TICKET-43\): log the amendment of the approved QA tests/);
     assert.match(pushed, /TICKET-43-amendments\.json/);
     // The amended tests are not approved yet: the pull request says so next to its merge button.
-    const head = git(h.dir, '--git-dir=origin.git', 'rev-parse', `qa/${TICKET}`);
     assert.ok(calls.includes(`api --silent -X POST repos/acme/shop/statuses/${head} -f state=failure -f context=QA approval `
       + '-f description=Not approved yet. Approve with one line per criterion (AC-1), then merge.'), calls);
 
@@ -159,7 +190,10 @@ function amendAndVerify(folder: string) {
     git(h.dir, '--git-dir=origin.git', 'update-ref', 'refs/pull/8/head', head);
     const dev = join(h.dir, 'dev');
     git(h.dir, 'clone', '-q', '--branch', `feat/${TICKET}`, join(h.dir, 'origin.git'), dev);
+    // As GitHub merges the amendment's pull request: without conflict, the feature kept, the amended test in.
     git(dev, 'merge', '-q', '--no-edit', `origin/qa/${TICKET}`);
+    assert.match(readFileSync(join(dev, folder, 'src/App.tsx'), 'utf8'), /Clear search/);
+    assert.match(readFileSync(join(dev, folder, `src/${TICKET}.test.tsx`), 'utf8'), /expects "Clear search"/);
     writeFileSync(join(h.dir, 'pulls.json'), JSON.stringify([[
       { number: 8, state: 'closed', merged_at: '2026-11-05T10:00:00Z', head: { ref: `qa/${TICKET}`, sha: head, repo: { full_name: 'acme/shop' } } },
       { number: 7, state: 'closed', merged_at: '2026-11-01T10:00:00Z', head: { ref: `qa/${TICKET}`, sha: 'old', repo: { full_name: 'acme/shop' } } },
@@ -189,6 +223,34 @@ test('the amend workflow logs the amended tests, checks them RED, and opens a pu
 // The installer lets an application live at the repository's root: the workflows then get ".".
 test('the amend workflow and QA verify also work for an application at the repository root', () => {
   amendAndVerify('.');
+});
+
+// In the trial on omni-tools, the test pull request was squash-merged: the amendment's pull request
+// then added the same test files again and conflicted. It had to be merged by hand.
+test('after a squash of the test pull request, the amendment still merges into feat/ without conflict', () => {
+  amendAndVerify('app', 'squash');
+});
+
+test('after a squash that also holds the feature, the amendment is published with a warning to merge it by hand', () => {
+  const h = history('app', 'squash after the feature');
+  try {
+    const work = join(h.dir, 'ci-work');
+    git(h.dir, 'clone', '-q', '--branch', `qa/${TICKET}`, join(h.dir, 'origin.git'), work);
+    writeFileSync(join(h.dir, 'vitest.json'), vitest(join(work, 'app'), 'Unable to find a button named Clear search'));
+    writeFileSync(join(h.dir, 'playwright.json'), playwright);
+    writeFileSync(join(h.dir, 'reviews.json'), JSON.stringify([[]]));
+    for (const step of ['check', 'amend', 'publish']) {
+      const r = amend(h, step, work);
+      assert.equal(r.code, 0, r.output);
+      if (step === 'publish') {
+        assert.match(r.output, /::warning title=QA amend tests::#7 was merged into feat\/TICKET-43 as a copy \(squash or rebase\) that also holds other changes: app\/src\/App\.tsx\. The amendment's pull request may conflict/);
+      }
+    }
+    // Nothing recorded: a merge that kept qa/'s files would undo the feature on feat/.
+    const origin = (...args: string[]) => git(h.dir, '--git-dir=origin.git', ...args);
+    assert.match(origin('log', '-1', '--format=%s', `qa/${TICKET}`), /^test\(TICKET-43\): log the amendment/);
+    assert.match(readFileSync(join(h.dir, 'calls.log'), 'utf8'), /pr create --repo acme\/shop --base feat\/TICKET-43 --head qa\/TICKET-43/);
+  } finally { rmSync(h.dir, { recursive: true, force: true }); }
 });
 
 test('the amend workflow refuses a run where no approved test changed', () => {

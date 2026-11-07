@@ -285,8 +285,10 @@ no approval yet, no reason for a criterion, an approval of an older commit, a
 request for changes. QA write tests sets it when it opens the pull request, and
 the **QA approval** workflow updates it after each review (`qa/ci-approval.sh`).
 It does not prevent the merge: QA verify checks the approval again on the
-developer's pull request. To change a test before it is approved, request
-changes, delete `qa/TICKET-44` and run the workflow again.
+developer's pull request. Prefer **Create a merge commit**: after a squash, a
+later amendment may have to be merged by hand (see below). To change a test
+before it is approved, request changes, delete `qa/TICKET-44` and run the
+workflow again.
 
 **Amend an approved test.** An approved test can turn out to be wrong, for
 instance an expected total worked out by hand. The repair agent may not touch it,
@@ -302,6 +304,27 @@ and QA verify refuses a test edited on the developer's branch. Amend it instead:
 3. a collaborator approves it, with one line per criterion as before. Merge it
    once its QA approval status is green, then update the developer's branch from
    `feat/TICKET-44`.
+
+A test pull request merged with **Squash and merge** or **Rebase and merge**
+puts a copy of the tests on `feat/TICKET-44`, not the commits of
+`qa/TICKET-44`. The amendment's pull request would then add the same test files
+again and conflict. When the copy holds only the tests, as it does when nothing
+else had reached `feat/TICKET-44` before, QA amend tests records it on
+`qa/TICKET-44` with a merge commit that changes no file, and the amendment
+merges cleanly. Otherwise it warns, and the amendment has to be merged by hand,
+keeping the version of `qa/TICKET-44` of each conflicting file:
+
+```bash
+git fetch origin
+git switch feat/TICKET-44
+git merge origin/qa/TICKET-44
+git checkout origin/qa/TICKET-44 -- $(git diff --name-only --diff-filter=U)
+git commit --no-edit
+git push origin feat/TICKET-44
+```
+
+Approve the amendment's pull request first: GitHub marks it as merged once
+`feat/TICKET-44` holds its commits.
 
 QA verify then accepts the amended tests and lists each amendment in its summary.
 Adding or removing a test file is not an amendment: delete the branch and write
