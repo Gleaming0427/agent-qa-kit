@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "ticket": "OMNI-1",
+  "spec_sha256": "0d038437a5ee85ac47564496702cce8a831199515b404b085fb89a0edebedf58",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "description": "the tool's options include \"Reverse word order\", off at first. With it on, the words of the text come out in reverse order and each word keeps its letters: \"Hello big world\" becomes \"world big Hello\"."
+    },
+    {
+      "id": "AC-2",
+      "description": "with \"Reverse word order\" and \"Process multi-line text\" both on, the words of each line are reversed separately and the lines keep their order: \"one two\" on the first line and \"three four\" on the second become \"two one\" and \"four three\"."
+    },
+    {
+      "id": "AC-3",
+      "description": "with \"Reverse word order\" off, the tool still reverses the characters: \"Hello World\" becomes \"dlroW olleH\"."
+    }
+  ]
+}

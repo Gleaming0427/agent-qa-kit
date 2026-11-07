@@ -1,0 +1,542 @@
+{
+  "config": {
+    "argv": [
+      "/opt/hostedtoolcache/node/22.23.4/x64/bin/node",
+      "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/node_modules/.bin/playwright",
+      "test",
+      "--reporter=list,json",
+      "--grep",
+      "@omni"
+    ],
+    "configFile": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/playwright.config.ts",
+    "rootDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "ci": {
+        "commitHref": "https://github.com/Gleaming0427/agent-qa-kit/commit/e818b24e01214bf071049a8955611c77e1b04e52",
+        "commitHash": "e818b24e01214bf071049a8955611c77e1b04e52",
+        "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42366257634"
+      },
+      "gitCommit": {
+        "shortHash": "e818b24",
+        "hash": "e818b24e01214bf071049a8955611c77e1b04e52",
+        "subject": "Trial: answer the QA writer's questions in OMNI-1",
+        "body": "Trial: answer the QA writer's questions in OMNI-1\n\nThe second run stopped as blocked: rendering the Reverse component under\nVitest crashes, and the writer asked whether the unit tests should call\nthe service instead, and with which signature. They should, with the\noption as a fifth argument.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01N4hLdP5g662ooCzymstwRm\n",
+        "author": {
+          "name": "Claude",
+          "email": "noreply@anthropic.com",
+          "time": 1794049124000
+        },
+        "committer": {
+          "name": "Claude",
+          "email": "noreply@anthropic.com",
+          "time": 1794049124000
+        },
+        "branch": "trial/omni-tools"
+      },
+      "actualWorkers": 2
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/Gleaming0427/agent-qa-kit/commit/e818b24e01214bf071049a8955611c77e1b04e52",
+            "commitHash": "e818b24e01214bf071049a8955611c77e1b04e52",
+            "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42366257634"
+          },
+          "gitCommit": {
+            "shortHash": "e818b24",
+            "hash": "e818b24e01214bf071049a8955611c77e1b04e52",
+            "subject": "Trial: answer the QA writer's questions in OMNI-1",
+            "body": "Trial: answer the QA writer's questions in OMNI-1\n\nThe second run stopped as blocked: rendering the Reverse component under\nVitest crashes, and the writer asked whether the unit tests should call\nthe service instead, and with which signature. They should, with the\noption as a fifth argument.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01N4hLdP5g662ooCzymstwRm\n",
+            "author": {
+              "name": "Claude",
+              "email": "noreply@anthropic.com",
+              "time": 1794049124000
+            },
+            "committer": {
+              "name": "Claude",
+              "email": "noreply@anthropic.com",
+              "time": 1794049124000
+            },
+            "branch": "trial/omni-tools"
+          },
+          "actualWorkers": 2
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools",
+        "testIgnore": [],
+        "testMatch": [
+          "/(src\\/.*\\.e2e\\.(spec\\.)?ts|e2e\\/.*\\.spec\\.ts)$/"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/Gleaming0427/agent-qa-kit/commit/e818b24e01214bf071049a8955611c77e1b04e52",
+            "commitHash": "e818b24e01214bf071049a8955611c77e1b04e52",
+            "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42366257634"
+          },
+          "gitCommit": {
+            "shortHash": "e818b24",
+            "hash": "e818b24e01214bf071049a8955611c77e1b04e52",
+            "subject": "Trial: answer the QA writer's questions in OMNI-1",
+            "body": "Trial: answer the QA writer's questions in OMNI-1\n\nThe second run stopped as blocked: rendering the Reverse component under\nVitest crashes, and the writer asked whether the unit tests should call\nthe service instead, and with which signature. They should, with the\noption as a fifth argument.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01N4hLdP5g662ooCzymstwRm\n",
+            "author": {
+              "name": "Claude",
+              "email": "noreply@anthropic.com",
+              "time": 1794049124000
+            },
+            "committer": {
+              "name": "Claude",
+              "email": "noreply@anthropic.com",
+              "time": 1794049124000
+            },
+            "branch": "trial/omni-tools"
+          },
+          "actualWorkers": 2
+        },
+        "name": "chromium",
+        "testDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools",
+        "snapshotDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools",
+        "testIgnore": [],
+        "testMatch": {},
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://localhost:4173",
+          "trace": "on-first-retry",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 2,
+    "webServer": {
+      "command": "npm run build && npm run serve",
+      "url": "http://localhost:4173"
+    }
+  },
+  "suites": [
+    {
+      "title": "e2e/OMNI-1.spec.ts",
+      "file": "e2e/OMNI-1.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "@omni OMNI-1",
+          "file": "e2e/OMNI-1.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "[OMNI-1][AC-1] reverse word order is off at first and reverses words when on",
+              "ok": false,
+              "tags": [
+                "omni"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5313,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts:12:26",
+                        "location": {
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                          "column": 26,
+                          "line": 12
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 10 |\u001b[39m   }) \u001b[33m=>\u001b[39m {\n \u001b[90m 11 |\u001b[39m     \u001b[36mconst\u001b[39m option \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Reverse word order'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 12 |\u001b[39m     \u001b[36mawait\u001b[39m expect(option)\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 13 |\u001b[39m     \u001b[36mawait\u001b[39m expect(option)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoBeChecked()\u001b[33m;\u001b[39m\n \u001b[90m 14 |\u001b[39m\n \u001b[90m 15 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByTestId(\u001b[32m'text-input'\u001b[39m)\u001b[33m.\u001b[39mfill(\u001b[32m'Hello big world'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                            "column": 26,
+                            "line": 12
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n\n\n  10 |   }) => {\n  11 |     const option = page.getByLabel('Reverse word order');\n> 12 |     await expect(option).toBeVisible();\n     |                          ^\n  13 |     await expect(option).not.toBeChecked();\n  14 |\n  15 |     await page.getByTestId('text-input').fill('Hello big world');\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts:12:26"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T11:03:10.346Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/test-results/e2e-OMNI-1--omni-OMNI-1-OM-62f45--and-reverses-words-when-on-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                        "column": 26,
+                        "line": 12
+                      }
+                    },
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5718,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts:12:26",
+                        "location": {
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                          "column": 26,
+                          "line": 12
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 10 |\u001b[39m   }) \u001b[33m=>\u001b[39m {\n \u001b[90m 11 |\u001b[39m     \u001b[36mconst\u001b[39m option \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Reverse word order'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 12 |\u001b[39m     \u001b[36mawait\u001b[39m expect(option)\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 13 |\u001b[39m     \u001b[36mawait\u001b[39m expect(option)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoBeChecked()\u001b[33m;\u001b[39m\n \u001b[90m 14 |\u001b[39m\n \u001b[90m 15 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByTestId(\u001b[32m'text-input'\u001b[39m)\u001b[33m.\u001b[39mfill(\u001b[32m'Hello big world'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                            "column": 26,
+                            "line": 12
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n\n\n  10 |   }) => {\n  11 |     const option = page.getByLabel('Reverse word order');\n> 12 |     await expect(option).toBeVisible();\n     |                          ^\n  13 |     await expect(option).not.toBeChecked();\n  14 |\n  15 |     await page.getByTestId('text-input').fill('Hello big world');\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts:12:26"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2026-11-07T11:03:16.427Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/test-results/e2e-OMNI-1--omni-OMNI-1-OM-62f45--and-reverses-words-when-on-chromium-retry1/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/test-results/e2e-OMNI-1--omni-OMNI-1-OM-62f45--and-reverses-words-when-on-chromium-retry1/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                        "column": 26,
+                        "line": 12
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "09b5a01817a1912c82b5-cfbd8f6b3ac966261c17",
+              "file": "e2e/OMNI-1.spec.ts",
+              "line": 8,
+              "column": 7
+            },
+            {
+              "title": "[OMNI-1][AC-2] with multi-line on, words of each line are reversed separately",
+              "ok": false,
+              "tags": [
+                "omni"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 5273,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts:26:26",
+                        "location": {
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                          "column": 26,
+                          "line": 26
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 24 |\u001b[39m   }) \u001b[33m=>\u001b[39m {\n \u001b[90m 25 |\u001b[39m     \u001b[36mconst\u001b[39m option \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Reverse word order'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m expect(option)\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 27 |\u001b[39m     \u001b[36mconst\u001b[39m multiLine \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Process multi-line text'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 28 |\u001b[39m     \u001b[36mawait\u001b[39m expect(multiLine)\u001b[33m.\u001b[39mtoBeChecked()\u001b[33m;\u001b[39m\n \u001b[90m 29 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                            "column": 26,
+                            "line": 26
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n\n\n  24 |   }) => {\n  25 |     const option = page.getByLabel('Reverse word order');\n> 26 |     await expect(option).toBeVisible();\n     |                          ^\n  27 |     const multiLine = page.getByLabel('Process multi-line text');\n  28 |     await expect(multiLine).toBeChecked();\n  29 |\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts:26:26"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T11:03:10.349Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/test-results/e2e-OMNI-1--omni-OMNI-1-OM-833bb-ine-are-reversed-separately-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                        "column": 26,
+                        "line": 26
+                      }
+                    },
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 5689,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts:26:26",
+                        "location": {
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                          "column": 26,
+                          "line": 26
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 24 |\u001b[39m   }) \u001b[33m=>\u001b[39m {\n \u001b[90m 25 |\u001b[39m     \u001b[36mconst\u001b[39m option \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Reverse word order'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m expect(option)\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 27 |\u001b[39m     \u001b[36mconst\u001b[39m multiLine \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Process multi-line text'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 28 |\u001b[39m     \u001b[36mawait\u001b[39m expect(multiLine)\u001b[33m.\u001b[39mtoBeChecked()\u001b[33m;\u001b[39m\n \u001b[90m 29 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                            "column": 26,
+                            "line": 26
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n\n\n  24 |   }) => {\n  25 |     const option = page.getByLabel('Reverse word order');\n> 26 |     await expect(option).toBeVisible();\n     |                          ^\n  27 |     const multiLine = page.getByLabel('Process multi-line text');\n  28 |     await expect(multiLine).toBeChecked();\n  29 |\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts:26:26"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2026-11-07T11:03:16.412Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/test-results/e2e-OMNI-1--omni-OMNI-1-OM-833bb-ine-are-reversed-separately-chromium-retry1/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/test-results/e2e-OMNI-1--omni-OMNI-1-OM-833bb-ine-are-reversed-separately-chromium-retry1/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                        "column": 26,
+                        "line": 26
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "09b5a01817a1912c82b5-a5e6f9ccbd1c3f05582e",
+              "file": "e2e/OMNI-1.spec.ts",
+              "line": 22,
+              "column": 7
+            },
+            {
+              "title": "[OMNI-1][AC-3] with reverse word order off, characters are reversed",
+              "ok": false,
+              "tags": [
+                "omni"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 5189,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts:41:26",
+                        "location": {
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                          "column": 26,
+                          "line": 41
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 39 |\u001b[39m   }) \u001b[33m=>\u001b[39m {\n \u001b[90m 40 |\u001b[39m     \u001b[36mconst\u001b[39m option \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Reverse word order'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 41 |\u001b[39m     \u001b[36mawait\u001b[39m expect(option)\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mawait\u001b[39m expect(option)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoBeChecked()\u001b[33m;\u001b[39m\n \u001b[90m 43 |\u001b[39m\n \u001b[90m 44 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByTestId(\u001b[32m'text-input'\u001b[39m)\u001b[33m.\u001b[39mfill(\u001b[32m'Hello World'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                            "column": 26,
+                            "line": 41
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n\n\n  39 |   }) => {\n  40 |     const option = page.getByLabel('Reverse word order');\n> 41 |     await expect(option).toBeVisible();\n     |                          ^\n  42 |     await expect(option).not.toBeChecked();\n  43 |\n  44 |     await page.getByTestId('text-input').fill('Hello World');\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts:41:26"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T11:03:22.778Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/test-results/e2e-OMNI-1--omni-OMNI-1-OM-94e25-off-characters-are-reversed-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                        "column": 26,
+                        "line": 41
+                      }
+                    },
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5395,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts:41:26",
+                        "location": {
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                          "column": 26,
+                          "line": 41
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 39 |\u001b[39m   }) \u001b[33m=>\u001b[39m {\n \u001b[90m 40 |\u001b[39m     \u001b[36mconst\u001b[39m option \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Reverse word order'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 41 |\u001b[39m     \u001b[36mawait\u001b[39m expect(option)\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mawait\u001b[39m expect(option)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoBeChecked()\u001b[33m;\u001b[39m\n \u001b[90m 43 |\u001b[39m\n \u001b[90m 44 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByTestId(\u001b[32m'text-input'\u001b[39m)\u001b[33m.\u001b[39mfill(\u001b[32m'Hello World'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                            "column": 26,
+                            "line": 41
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Reverse word order')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Reverse word order')\u001b[22m\n\n\n  39 |   }) => {\n  40 |     const option = page.getByLabel('Reverse word order');\n> 41 |     await expect(option).toBeVisible();\n     |                          ^\n  42 |     await expect(option).not.toBeChecked();\n  43 |\n  44 |     await page.getByTestId('text-input').fill('Hello World');\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts:41:26"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2026-11-07T11:03:28.483Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/test-results/e2e-OMNI-1--omni-OMNI-1-OM-94e25-off-characters-are-reversed-chromium-retry1/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/test-results/e2e-OMNI-1--omni-OMNI-1-OM-94e25-off-characters-are-reversed-chromium-retry1/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/trials/omni-tools/e2e/OMNI-1.spec.ts",
+                        "column": 26,
+                        "line": 41
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "09b5a01817a1912c82b5-0a6c41be3e7d2ca4a868",
+              "file": "e2e/OMNI-1.spec.ts",
+              "line": 37,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-07T11:02:26.592Z",
+    "duration": 67527.735,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}
