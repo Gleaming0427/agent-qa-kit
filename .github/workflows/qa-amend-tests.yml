@@ -60,11 +60,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash kit/qa/ci-amend-tests.sh check
+      # With npm or pnpm, whichever the application's lockfile belongs to.
       - name: Install the application and its browser
-        working-directory: work/${{ inputs.app }}
-        run: |
-          npm ci --no-audit --no-fund
-          npx playwright install --with-deps chromium
+        run: bash kit/qa/ci-install-app.sh "work/$APP"
       - name: Each test must still fail for the right reason (no model call)
         run: bash kit/qa/ci-amend-tests.sh amend
       - name: Open the pull request for the human review

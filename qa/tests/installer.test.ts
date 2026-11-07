@@ -132,7 +132,7 @@ test('init a second time changes nothing', () => {
     commitAll(dir);
     const r = cli(dir, 'init');
     assert.equal(r.code, 0, r.out);
-    assert.match(r.out, /same {6}32 file\(s\) already up to date/);
+    assert.match(r.out, new RegExp(`same {6}${expectedFiles().length} file\\(s\\) already up to date`));
     assert.match(r.out, /Already installed and up to date/);
     assert.equal(status(dir), '');
   } finally { rmSync(dir, { recursive: true, force: true }); }
@@ -372,7 +372,7 @@ test('doctor names what the workflows still need', () => {
     assert.equal(cli(dir, 'init').code, 0);
     d = cli(dir, 'doctor');
     assert.equal(d.code, 1);
-    assert.match(d.out, /FAIL {2}The application uses yarn\.lock, but the workflows install it with npm ci/);
+    assert.match(d.out, /FAIL {2}The application uses yarn\.lock: the workflows install applications with npm or pnpm only/);
     assert.match(d.out, /FAIL {2}No browser test is tagged @smoke/);
     assert.match(d.out, /warn {2}The repository's tsconfig\.json would also type-check qa\/ and \.claude\/hooks\//);
 
@@ -381,7 +381,7 @@ test('doctor names what the workflows still need', () => {
     write(dir, 'tsconfig.json', '{ "include": ["**/*.ts"], "exclude": ["node_modules", "qa", ".claude"] }\n');
     d = cli(dir, 'doctor');
     assert.equal(d.code, 0, d.out);
-    assert.match(d.out, /warn {2}apps\/web\/package-lock\.json is not committed yet/);
+    assert.match(d.out, /warn {2}apps\/web\/package-lock\.json not committed yet: the workflows install the application with npm ci/);
     assert.doesNotMatch(d.out, /tsconfig/);
 
     // Broken afterwards: a file removed, the hook without its executable bit, reports no longer ignored.

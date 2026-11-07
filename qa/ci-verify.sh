@@ -112,7 +112,7 @@ case "${1:-}" in
   install)
     mapfile -t apps < <(cut -f2 "$LIST" | sort -u)
     for app in "${apps[@]}"; do
-      (cd "$app" && npm ci --no-audit --no-fund && npx playwright install --with-deps chromium)
+      bash qa/ci-install-app.sh "$app"
     done
     bash qa/ci-install-agents.sh
     ;;

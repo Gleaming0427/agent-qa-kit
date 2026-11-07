@@ -64,13 +64,13 @@ The demo is a small React shop that can switch a bug on and off. It shows the te
 
 ## Use it on your app
 
-In your app's repository (Node.js 22.18+, Vitest and Playwright):
+In your app's repository (Node.js 22.18+, Vitest and Playwright, npm or pnpm):
 
 ```bash
 npx github:Gleaming0427/agent-qa-kit init
 ```
 
-It copies the agents, their checks and four GitHub workflows, and adds the npm scripts they call if they are missing. If a file is already there and differs, it writes nothing and says which. Then it lists what is still missing, for instance a browser test tagged `@smoke` or a committed `package-lock.json`, and the GitHub settings to make. `doctor --run` runs your tests the way the workflows will.
+It copies the agents, their checks and four GitHub workflows, and adds the npm scripts they call if they are missing. If a file is already there and differs, it writes nothing and says which. Then it lists what is still missing, for instance a browser test tagged `@smoke` or a committed lockfile, and the GitHub settings to make. `doctor --run` runs your tests the way the workflows will.
 
 Tickets are Markdown files in `specs/`, with no Jira connection. Four GitHub workflows do the work:
 
