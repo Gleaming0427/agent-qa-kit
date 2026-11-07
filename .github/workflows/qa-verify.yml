@@ -8,7 +8,8 @@ name: QA verify
 # shows the check can block.
 on:
   pull_request:
-    branches: [main]
+    # Trial branches: QA verify also runs on pull requests into them (see eval/results).
+    branches: [main, 'trial/**']
 
 permissions:
   contents: read
