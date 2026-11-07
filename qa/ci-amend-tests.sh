@@ -56,9 +56,11 @@ case "${1:-}" in
     cd "$WORK"
     gh auth setup-git
     changed=(); other=()
+    # git lists paths from the repository's root: an application at the root ("." ) has no prefix.
+    package="qa-reviews/$TICKET/"; [[ "$APP" == . || "$APP" == ./ ]] || package="${APP%/}/$package"
     while IFS= read -r -d '' file; do
       case "$file" in
-        "$APP/qa-reviews/$TICKET/"*) changed+=("$file") ;;
+        "$package"*) changed+=("$file") ;;
         *) other+=("$file") ;;
       esac
     done < <(git ls-files -z --modified --others --exclude-standard)

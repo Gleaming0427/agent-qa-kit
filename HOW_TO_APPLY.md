@@ -1,5 +1,50 @@
 # Apply the QA workflow
 
+## Install the kit
+
+In the repository of your application, with Node.js 22.18 or later:
+
+```bash
+npx github:Gleaming0427/agent-qa-kit init
+```
+
+npm downloads the kit from GitHub and runs its installer; nothing is published to
+the npm registry. The repository must be a git repository with one application
+whose `package.json` has `vitest` and `@playwright/test`. When there are several,
+run it from the application's folder or give it with `--app apps/web`. It:
+
+- copies the agents, their hooks and the `qa/` scripts, and the four workflows (QA
+  write tests, QA verify, QA branch rules, QA amend tests), set to the application's
+  folder, its feature area (`--mfe`, the folder's name by default) and the branch
+  that pull requests go into (`--branch`, the remote's default branch by default);
+- adds the npm scripts the agents call when they are missing: `test:unit`,
+  `test:affected`, `test:e2e` and `test:summary`. It never changes a script that
+  exists;
+- adds `/reports/` to the application's `.gitignore`;
+- writes `.agent-qa-kit.json`, the installed version and a digest of each file.
+
+It plans every change before it writes one. If a file it would write exists and
+differs from the kit, it lists the conflicts and writes nothing. `--dry-run` shows
+the plan without writing.
+
+It then checks what the workflows need, as `npx github:Gleaming0427/agent-qa-kit
+doctor` does: the scripts and the reports they write (`reports/vitest.json`,
+`reports/playwright.json`), Playwright's `testDir` (the agents write the browser
+tests in `e2e/`), a browser test tagged `@smoke` (section 1), a committed
+`package-lock.json` (the workflows run `npm ci`), and what git ignores. A `FAIL`
+must be fixed for the workflows to pass; a `warn` is worth reading. `doctor --run`
+also runs `test:unit`, `test:e2e` and `test:summary` the way QA verify's full
+suite does, and reads their reports. Commit the files it lists, then make the
+GitHub settings of [section 5](#5-run-the-agents-in-ci).
+
+To upgrade, run `init` again. A file still as the last install wrote it is
+updated; a file you changed is a conflict. `--force` replaces it, only if it is
+committed with no local change, so that git can give it back. To pin a version,
+add a tag or a commit: `npx github:Gleaming0427/agent-qa-kit#<tag> init`.
+
+The agents run on Linux and macOS (their commands go through an OS sandbox). On
+Windows, use the GitHub workflows.
+
 ## 1. Start with a fixed smoke journey
 
 Choose one or two user journeys whose failure would be costly. Keep their
@@ -55,19 +100,23 @@ Resolve ambiguous criteria before the agent writes tests.
 
 ## 3. Establish and review the RED baseline
 
-Add these scripts to the real application's `package.json` (copy
-`qa/summary.ts` and `.claude/hooks/strict-evidence.ts`, which it imports):
+The application needs these scripts in its `package.json`. `init` adds the
+missing ones; the Vitest and Playwright JSON reports may also be set in their
+configuration files, as in the example:
 
 ```json
 {
   "scripts": {
-    "test:affected": "vitest run --reporter=dot --reporter=json --outputFile.json=reports/vitest.json",
-    "test:unit": "vitest run --reporter=dot --reporter=json --outputFile.json=reports/vitest.json",
-    "test:e2e": "playwright test",
+    "test:affected": "vitest run --reporter=default --reporter=json --outputFile.json=reports/vitest.json",
+    "test:unit": "vitest run --reporter=default --reporter=json --outputFile.json=reports/vitest.json",
+    "test:e2e": "PLAYWRIGHT_JSON_OUTPUT_FILE=reports/playwright.json playwright test --reporter=list,json",
     "test:summary": "node qa/summary.ts"
   }
 }
 ```
+
+`test:summary` gives the path of `qa/summary.ts` from the application's folder,
+`node ../../qa/summary.ts` for `apps/web`.
 
 Every test name must contain `[TICKET-42][AC-1]` (adapt ticket and ID). The
 Playwright scenarios for the ticket belong in `e2e/TICKET-42.spec.ts`, inside
@@ -293,3 +342,4 @@ full-suite run. It does not connect to Jira or a real application shell.
 - **Screenshots:** the baselines are made in CI. After an intended visual change, delete them and commit the new ones from the `screenshot-baselines` artifact.
 - **Ticket tests:** frozen while the ticket is developed. If an approved test turns out to be wrong, fix it on `qa/<TICKET>` and run **QA amend tests** with the reason. No agent runs: the job checks that the tests still fail for the right reason without the feature, logs who changed them and why, and opens a pull request to approve again (see [section 5](#5-run-the-agents-in-ci)). Delete the `qa/<TICKET>` branch once it is merged: they become ordinary tests. The review package in `qa-reviews/<TICKET>/` stays as a record of what was approved, by whom, and what was amended.
 - **Dependencies:** keep Playwright, Vitest and Vite up to date and check `npm audit`.
+- **The kit:** after a change to the test setup, run `npx github:Gleaming0427/agent-qa-kit doctor --run`. To upgrade the kit, run `init` again: it updates the files you have not changed and lists the others.

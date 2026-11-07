@@ -64,9 +64,15 @@ The demo is a small React shop that can switch a bug on and off. It shows the te
 
 ## Use it on your app
 
-The app needs `test:affected`, `test:unit`, `test:e2e` and `test:summary` scripts that write Vitest and Playwright JSON reports. Tickets are Markdown files, with no Jira connection, and the agents need the Claude Code CLI.
+In your app's repository (Node.js 22.18+, Vitest and Playwright):
 
-Four GitHub workflows do the work:
+```bash
+npx github:Gleaming0427/agent-qa-kit init
+```
+
+It copies the agents, their checks and four GitHub workflows, and adds the npm scripts they call if they are missing. If a file is already there and differs, it writes nothing and says which. Then it lists what is still missing, for instance a browser test tagged `@smoke` or a committed `package-lock.json`, and the GitHub settings to make. `doctor --run` runs your tests the way the workflows will.
+
+Tickets are Markdown files in `specs/`, with no Jira connection. Four GitHub workflows do the work:
 
 - **QA write tests:** started by hand with a ticket key. The writer's tests arrive as a pull request, and approving it is the human review.
 - **QA verify:** runs on pull requests into `main`. When one names a ticket with QA tests, it checks they are the approved ones, then runs the verifier and the full suite. Otherwise it passes without calling a model.
@@ -101,5 +107,6 @@ The kit does not protect against someone with write access to the repository. De
 
 - Checks prove that named tests ran and gave the expected result. They can't prove the assertions match what the user wanted, so a person still reviews.
 - The writer and the verifier have run in CI through QA eval. The other workflows are tested, but have not run on a real ticket yet. The repair agent isn't measured.
+- The installer is tested on the demo shop and on test repositories, not yet on other real projects.
 - The evaluation corpus is 17 tickets of one small shop: it says how the agents do there, not on a real project.
 - The visual review can miss problems or report ones that aren't there, so it only warns.

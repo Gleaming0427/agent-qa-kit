@@ -3,6 +3,22 @@
   "version": "0.2.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "agent-qa-kit": "bin/agent-qa-kit.mjs"
+  },
+  "files": [
+    "bin/",
+    ".claude/agents/",
+    ".claude/hooks/",
+    ".claude/qa-settings.json",
+    ".claude/repair-settings.json",
+    "qa/*.sh",
+    "qa/*.ts",
+    ".github/workflows/qa-write-tests.yml",
+    ".github/workflows/qa-verify.yml",
+    ".github/workflows/qa-branches.yml",
+    ".github/workflows/qa-amend-tests.yml"
+  ],
   "engines": {
     "node": ">=22.18"
   },
