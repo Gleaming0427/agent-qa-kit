@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('@omni OMNI-1', () => {
+  // Each option also appears in the three example cards below the tool: the first one is the tool's.
   test.beforeEach(async ({ page }) => {
     await page.goto('/string/reverse');
   });
@@ -8,7 +9,7 @@ test.describe('@omni OMNI-1', () => {
   test('[OMNI-1][AC-1] reverse word order is off at first and reverses words when on', async ({
     page
   }) => {
-    const option = page.getByLabel('Reverse word order');
+    const option = page.getByLabel('Reverse word order').first();
     await expect(option).toBeVisible();
     await expect(option).not.toBeChecked();
 
@@ -22,9 +23,9 @@ test.describe('@omni OMNI-1', () => {
   test('[OMNI-1][AC-2] with multi-line on, words of each line are reversed separately', async ({
     page
   }) => {
-    const option = page.getByLabel('Reverse word order');
+    const option = page.getByLabel('Reverse word order').first();
     await expect(option).toBeVisible();
-    const multiLine = page.getByLabel('Process multi-line text');
+    const multiLine = page.getByLabel('Process multi-line text').first();
     await expect(multiLine).toBeChecked();
 
     await page.getByTestId('text-input').fill('one two\nthree four');
@@ -37,7 +38,7 @@ test.describe('@omni OMNI-1', () => {
   test('[OMNI-1][AC-3] with reverse word order off, characters are reversed', async ({
     page
   }) => {
-    const option = page.getByLabel('Reverse word order');
+    const option = page.getByLabel('Reverse word order').first();
     await expect(option).toBeVisible();
     await expect(option).not.toBeChecked();
 
