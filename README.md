@@ -60,7 +60,7 @@ What went wrong on omni-tools, and what it changed:
 - On the next run it couldn't render the component in a unit test. Instead of passing off broken evidence, it stopped and asked how to test it. The answer went into the ticket.
 - QA verify blocked the correct code. The approved browser tests looked for a checkbox the page shows four times. Nobody caught it in review, because the option didn't exist yet. The tests were fixed through QA amend tests, approved again, and QA verify passed.
 
-It also showed that the human step is easy to get wrong. One test pull request was merged before it was approved, another approved without the reasons QA verify needs. A squash merge then blocked the amendment. Those are the next things to fix.
+It also showed that the human step is easy to get wrong. Both test pull requests were merged before they were approved, and one was first approved without the reasons QA verify needs. The test pull request now has a **QA approval** status that stays red until its approval is complete, and says what is missing. A squash merge also blocked the amendment: that is still to fix.
 
 ## Try the demo
 
@@ -88,11 +88,12 @@ In your app's repository (Node.js 22.18+, Vitest and Playwright, npm or pnpm):
 npx github:Gleaming0427/agent-qa-kit init
 ```
 
-It copies the agents, their checks and four GitHub workflows, and adds the npm scripts they call if they are missing. If a file is already there and differs, it writes nothing and says which. Then it lists what is still missing, for instance a browser test tagged `@smoke` or a committed lockfile, and the GitHub settings to make. `doctor --run` runs your tests the way the workflows will.
+It copies the agents, their checks and five GitHub workflows, and adds the npm scripts they call if they are missing. If a file is already there and differs, it writes nothing and says which. Then it lists what is still missing, for instance a browser test tagged `@smoke` or a committed lockfile, and the GitHub settings to make. `doctor --run` runs your tests the way the workflows will.
 
-Tickets are Markdown files in `specs/`, with no Jira connection. Four GitHub workflows do the work:
+Tickets are Markdown files in `specs/`, with no Jira connection. These GitHub workflows do the work:
 
 - **QA write tests:** started by hand with a ticket key. The writer's tests arrive as a pull request, and approving it is the human review.
+- **QA approval:** keeps a status on that pull request, red until a collaborator approves its latest commit with a reason per criterion. Approve first, then merge.
 - **QA verify:** runs on pull requests into `main`. When one names a ticket with QA tests, it checks they are the approved ones, then runs the verifier and the full suite. Otherwise it passes without calling a model.
   - Start it with `QA_VERIFY_MODE=advisory` to only warn. It keeps a record of what it would have blocked, and `node qa/verify-record.ts` tells you when it has earned the right to block.
 - **QA amend tests:** for an approved test that turns out to be wrong. You fix it, give a reason, and it gets logged and approved again.
@@ -124,7 +125,7 @@ The kit does not protect against someone with write access to the repository. De
 ## Limits
 
 - Checks prove that named tests ran and gave the expected result. They can't prove the assertions match what the user wanted, so a person still reviews.
-- The four product workflows have each run on a real ticket, but only on two tickets, one of them in the demo. The repair agent isn't measured.
+- QA write tests, QA verify, QA amend tests and QA branch rules have each run on a real ticket, but only on two tickets, one of them in the demo. QA approval has not run on GitHub yet. The repair agent isn't measured.
 - The installer has run on one large project, immich, a pnpm monorepo: install and full suite, no agent ([eval/results/2026-11-07-immich.md](eval/results/2026-11-07-immich.md)).
 - The evaluation corpus is 17 tickets of one small shop: it says how the agents do there, not on a real project.
 - The visual review can miss problems or report ones that aren't there, so it only warns.

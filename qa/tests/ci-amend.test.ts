@@ -80,6 +80,10 @@ case "$*" in
   'api repos/acme/shop/git/ref/heads/'*) git --git-dir="${dir}/origin.git" rev-parse --verify --quiet "refs/heads/\${2#repos/acme/shop/git/ref/heads/}" >/dev/null ;;
   'pr list '*) ;;
   'pr create '*) echo 'https://github.com/acme/shop/pull/8' ;;
+  # The pull request just opened, at the commit pushed to qa/<ticket>, and its "QA approval" status.
+  'api repos/acme/shop/pulls/8') jq -n --arg sha "$(git --git-dir="${dir}/origin.git" rev-parse "refs/heads/qa/${TICKET}")" \
+    '{number: 8, state: "open", merged_at: null, head: {ref: "qa/${TICKET}", sha: $sha, repo: {full_name: "acme/shop"}}}' ;;
+  'api --silent -X POST repos/acme/shop/statuses/'*) ;;
   *'/pulls?'*) cat "${dir}/pulls.json" ;;
   *'/pulls/8/reviews'*) cat "${dir}/reviews.json" ;;
   *) echo "unexpected gh call: $*" >&2; exit 1 ;;
@@ -137,15 +141,21 @@ function amendAndVerify(folder: string) {
     assert.match(body, /^## Amended QA tests for TICKET-43[\s\S]*by @bob: The unit test looked for "Clear"/);
     assert.match(body, /Unable to find a button named Clear search/);
 
+    writeFileSync(join(h.dir, 'reviews.json'), JSON.stringify([[]]));
     r = amend(h, 'publish', work);
     assert.equal(r.code, 0, r.output);
-    assert.match(readFileSync(join(h.dir, 'calls.log'), 'utf8'), /pr create --repo acme\/shop --base feat\/TICKET-43 --head qa\/TICKET-43 --title TICKET-43: amended QA tests to review/);
+    assert.doesNotMatch(r.output, /::warning/);
+    const calls = readFileSync(join(h.dir, 'calls.log'), 'utf8');
+    assert.match(calls, /pr create --repo acme\/shop --base feat\/TICKET-43 --head qa\/TICKET-43 --title TICKET-43: amended QA tests to review/);
     const pushed = git(h.dir, '--git-dir=origin.git', 'show', '--stat', '--format=%s', `qa/${TICKET}`);
     assert.match(pushed, /^test\(TICKET-43\): log the amendment of the approved QA tests/);
     assert.match(pushed, /TICKET-43-amendments\.json/);
+    // The amended tests are not approved yet: the pull request says so next to its merge button.
+    const head = git(h.dir, '--git-dir=origin.git', 'rev-parse', `qa/${TICKET}`);
+    assert.ok(calls.includes(`api --silent -X POST repos/acme/shop/statuses/${head} -f state=failure -f context=QA approval `
+      + '-f description=Not approved yet. Approve with one line per criterion (AC-1), then merge.'), calls);
 
     // QA verify on the developer's branch, once the amendment is merged into it and approved by @carol.
-    const head = git(h.dir, '--git-dir=origin.git', 'rev-parse', `qa/${TICKET}`);
     git(h.dir, '--git-dir=origin.git', 'update-ref', 'refs/pull/8/head', head);
     const dev = join(h.dir, 'dev');
     git(h.dir, 'clone', '-q', '--branch', `feat/${TICKET}`, join(h.dir, 'origin.git'), dev);

@@ -74,6 +74,9 @@ case "${1:-}" in
       || fail "qa/$TICKET is pushed, but the pull request could not be opened. Allow it in Settings > Actions > General (\"Allow GitHub Actions to create and approve pull requests\"), or open it yourself: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/feat/$TICKET...qa/$TICKET?expand=1"
     echo "::notice title=QA tests ready for review::$url"
     printf '\n**Review and approve:** %s\n' "$url" >> "$GITHUB_STEP_SUMMARY"
+    # Red until the approval is complete: this pull request triggers no workflow of its own.
+    bash qa/ci-approval.sh "${url##*/}" \
+      || echo "::warning title=QA write tests::$(escape "The QA approval status could not be set on $url: see the log above. QA verify still checks the approval.")"
     ;;
 
   *) echo 'usage: qa/ci-write-tests.sh check|write|publish' >&2; exit 2 ;;

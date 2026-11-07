@@ -5,14 +5,18 @@
 //
 // Usage: node qa/github-approval.ts pull TICKET OWNER/REPO pulls.json
 //        node qa/github-approval.ts approval TICKET OWNER/REPO pulls.json reviews.json
+//        node qa/github-approval.ts status pull.json reviews.json review-request.json
 //   pulls.json    gh api --paginate --slurp "repos/OWNER/REPO/pulls?state=all&head=OWNER:qa/TICKET"
+//   pull.json     gh api "repos/OWNER/REPO/pulls/NUMBER"
 //   reviews.json  gh api --paginate --slurp "repos/OWNER/REPO/pulls/NUMBER/reviews"
 // Prints the pull request {number, head_sha} (null when the ticket has none), or
 // the approval {number, head_sha, reviewer, body}, as JSON; otherwise explains
-// the refusal (exit 1).
+// the refusal (exit 1). "status" prints the "QA approval" commit status of a QA
+// pull request, {state, description}: what its approval still misses, if anything.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { missingReasons, reviewReasons } from './scenario-review.ts';
 
 export interface PullRequest {
   number: number;
@@ -73,21 +77,67 @@ export function findApproval(pull: PullRequest, reviews: Review[]): FoundApprova
   return { number: pull.number, head_sha: pull.head.sha, reviewer: `@${reviewer}`, body: review.body ?? '' };
 }
 
+export interface ApprovalStatus { state: 'success' | 'failure'; description: string }
+
+/**
+ * The "QA approval" status of a QA pull request, shown next to its merge button: red until a
+ * collaborator approves its latest commit with a reason per criterion, as QA verify will require.
+ * It does not check the files themselves: QA verify does, against the approved commit.
+ */
+export function approvalStatus(pull: PullRequest, reviews: Review[], criteria: string[]): ApprovalStatus {
+  const lines = criteria.join(', ');
+  const merged = Boolean(pull.merged_at);
+  let approval: FoundApproval;
+  try {
+    approval = findApproval(pull, reviews);
+  } catch (error) {
+    const decided = reviews.some((review) => ['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(review.state));
+    const description = decided
+      ? (error as Error).message.replace(/^The QA pull request #\d+ /, 'This pull request ')
+      : merged
+        ? `Merged before approval. Approve it now, one line per criterion (${lines}): QA verify needs it.`
+        : `Not approved yet. Approve with one line per criterion (${lines}), then merge.`;
+    return { state: 'failure', description };
+  }
+  const missing = missingReasons(criteria, reviewReasons(approval.body));
+  if (missing.length) {
+    return {
+      state: 'failure',
+      description: `${approval.reviewer} approved without a reason for ${missing.join(', ')}. Approve again with one line per criterion.`,
+    };
+  }
+  return { state: 'success', description: `Approved by ${approval.reviewer}, with a reason per criterion.${merged ? '' : ' Ready to merge.'}` };
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    const [command, ticket, repo, pullsFile, reviewsFile] = process.argv.slice(2);
-    if (!ticket || !repo || !pullsFile || !(command === 'pull' || command === 'approval' && reviewsFile)) {
-      throw new Error('Usage: node qa/github-approval.ts pull TICKET OWNER/REPO pulls.json\n'
-        + '       node qa/github-approval.ts approval TICKET OWNER/REPO pulls.json reviews.json');
-    }
     // With --slurp, gh writes every page as one array of pages.
     const items = <T>(file: string) => (JSON.parse(readFileSync(file, 'utf8')) as (T | T[])[]).flat() as T[];
-    const pull = findQaPull(items<PullRequest>(pullsFile), ticket, repo);
-    if (command === 'pull') {
-      console.log(JSON.stringify(pull && { number: pull.number, head_sha: pull.head.sha }));
+    if (process.argv[2] === 'status') {
+      const [pullFile, reviewsFile, requestFile] = process.argv.slice(3);
+      if (!pullFile || !reviewsFile || !requestFile) {
+        throw new Error('Usage: node qa/github-approval.ts status pull.json reviews.json review-request.json');
+      }
+      const request = JSON.parse(readFileSync(requestFile, 'utf8')) as { criteria?: { id?: unknown }[] };
+      const criteria = (request.criteria ?? []).map(({ id }) => String(id));
+      if (!criteria.length || criteria.some((id) => !/^AC-[1-9]\d*$/.test(id))) throw new Error(`${requestFile} lists no valid criterion.`);
+      const status = approvalStatus(JSON.parse(readFileSync(pullFile, 'utf8')) as PullRequest, items<Review>(reviewsFile), criteria);
+      // GitHub refuses a status description longer than 140 characters.
+      console.log(JSON.stringify({ ...status, description: status.description.length > 140 ? `${status.description.slice(0, 139)}…` : status.description }));
     } else {
-      if (!pull) throw new Error(`No pull request from qa/${ticket}: run the "QA write tests" workflow for ${ticket} first.`);
-      console.log(JSON.stringify(findApproval(pull, items<Review>(reviewsFile!))));
+      const [command, ticket, repo, pullsFile, reviewsFile] = process.argv.slice(2);
+      if (!ticket || !repo || !pullsFile || !(command === 'pull' || command === 'approval' && reviewsFile)) {
+        throw new Error('Usage: node qa/github-approval.ts pull TICKET OWNER/REPO pulls.json\n'
+          + '       node qa/github-approval.ts approval TICKET OWNER/REPO pulls.json reviews.json\n'
+          + '       node qa/github-approval.ts status pull.json reviews.json review-request.json');
+      }
+      const pull = findQaPull(items<PullRequest>(pullsFile), ticket, repo);
+      if (command === 'pull') {
+        console.log(JSON.stringify(pull && { number: pull.number, head_sha: pull.head.sha }));
+      } else {
+        if (!pull) throw new Error(`No pull request from qa/${ticket}: run the "QA write tests" workflow for ${ticket} first.`);
+        console.log(JSON.stringify(findApproval(pull, items<Review>(reviewsFile!))));
+      }
     }
   } catch (error) {
     console.error(`QA approval: ${(error as Error).message}`);

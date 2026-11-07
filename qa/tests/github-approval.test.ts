@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { findApproval, findQaPull } from '../github-approval.ts';
+import { approvalStatus, findApproval, findQaPull } from '../github-approval.ts';
 import type { PullRequest, Review } from '../github-approval.ts';
 
 const repo = 'acme/shop';
@@ -43,4 +43,32 @@ test('a request for changes or a dismissal cancels the approval', () => {
 
 test('the approval that gives a reason per criterion is preferred', () => {
   assert.equal(findApproval(pull(), [review('alice', 'APPROVED'), review('bob', 'APPROVED', { body: 'LGTM' })]).reviewer, '@alice');
+});
+
+test('the QA approval status says, before the merge, what the approval is missing', () => {
+  const criteria = ['AC-1', 'AC-2', 'AC-3'];
+  const full = 'AC-1: the Delivery choice does not exist yet.\nAC-2: there is no Express radio to select yet.\nAC-3: the empty cart has no express option yet.';
+  const status = (reviews: Review[], change: Partial<PullRequest> = {}) => approvalStatus(pull(change), reviews, criteria);
+  const merged = { state: 'closed', merged_at: '2026-11-07T10:41:14Z' };
+
+  assert.deepEqual(status([]), { state: 'failure', description: 'Not approved yet. Approve with one line per criterion (AC-1, AC-2, AC-3), then merge.' });
+  assert.equal(status([review('alice', 'COMMENTED', { body: full })]).state, 'failure', 'a comment is not an approval');
+  // In the trial, both test pull requests were merged before they were approved.
+  assert.deepEqual(status([], merged),
+    { state: 'failure', description: 'Merged before approval. Approve it now, one line per criterion (AC-1, AC-2, AC-3): QA verify needs it.' });
+  // And one was first approved with no text.
+  assert.deepEqual(status([review('alice', 'APPROVED', { body: null })]),
+    { state: 'failure', description: '@alice approved without a reason for AC-1, AC-2, AC-3. Approve again with one line per criterion.' });
+  assert.match(status([review('alice', 'APPROVED', { body: 'AC-1: the Delivery choice does not exist yet.\nAC-3: ok' })]).description,
+    /^@alice approved without a reason for AC-2, AC-3\./, 'a reason too short to explain the failure does not count');
+  assert.deepEqual(status([review('alice', 'APPROVED', { body: full, commit_id: older })]), { state: 'failure',
+    description: 'This pull request has no valid approval: @alice approved an older version of the tests (aaaaaaa, latest bbbbbbb).' });
+  assert.deepEqual(status([review('alice', 'APPROVED', { body: full }), review('bob', 'CHANGES_REQUESTED', { body: 'AC-2 is wrong' })]),
+    { state: 'failure', description: '@bob requested changes on the QA pull request #7.' });
+
+  assert.deepEqual(status([review('alice', 'APPROVED', { body: null }), review('alice', 'APPROVED', { body: full })]),
+    { state: 'success', description: 'Approved by @alice, with a reason per criterion. Ready to merge.' });
+  assert.deepEqual(status([review('alice', 'APPROVED', { body: full })], merged),
+    { state: 'success', description: 'Approved by @alice, with a reason per criterion.' });
+  assert.equal(approvalStatus(pull(), [], ['AC-1']).description, 'Not approved yet. Approve with one line per criterion (AC-1), then merge.');
 });

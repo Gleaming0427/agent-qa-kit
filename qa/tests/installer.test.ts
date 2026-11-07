@@ -12,7 +12,7 @@ import test from 'node:test';
 const kit = resolve(import.meta.dirname, '../..');
 const BIN = join(kit, 'bin/agent-qa-kit.mjs');
 const VERSION = JSON.parse(readFileSync(join(kit, 'package.json'), 'utf8')).version;
-const WORKFLOWS = ['qa-write-tests.yml', 'qa-verify.yml', 'qa-branches.yml', 'qa-amend-tests.yml'];
+const WORKFLOWS = ['qa-write-tests.yml', 'qa-verify.yml', 'qa-branches.yml', 'qa-amend-tests.yml', 'qa-approval.yml'];
 const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
 
 // What a repository needs from the kit, read from the kit itself: a script added to qa/ or a hook

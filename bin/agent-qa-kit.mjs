@@ -44,6 +44,7 @@ const KIT_FILES = [
   'qa/check-scope.sh',
   'qa/check-tests.ts',
   'qa/ci-amend-tests.sh',
+  'qa/ci-approval.sh',
   'qa/ci-install-app.sh',
   'qa/ci-node-version.sh',
   'qa/ci-install-agents.sh',
@@ -65,7 +66,7 @@ const KIT_FILES = [
 // repository's own package.json says ("type": "commonjs", or nothing).
 const MODULE_PACKAGE = '{\n  "type": "module"\n}\n';
 const GENERATED = { 'qa/package.json': MODULE_PACKAGE, '.claude/hooks/package.json': MODULE_PACKAGE };
-const WORKFLOWS = ['qa-write-tests.yml', 'qa-verify.yml', 'qa-branches.yml', 'qa-amend-tests.yml'];
+const WORKFLOWS = ['qa-write-tests.yml', 'qa-verify.yml', 'qa-branches.yml', 'qa-amend-tests.yml', 'qa-approval.yml'];
 const SCRIPT_NAMES = ['test:unit', 'test:affected', 'test:e2e', 'test:summary'];
 const VITEST_REPORT = 'reports/vitest.json';
 const PLAYWRIGHT_REPORT = 'reports/playwright.json';
