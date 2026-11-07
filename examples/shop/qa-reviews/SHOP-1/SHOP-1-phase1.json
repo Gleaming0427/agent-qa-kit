@@ -1,0 +1,112 @@
+{
+  "ticket": "SHOP-1",
+  "phase": 1,
+  "verdict": "ready",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "level": "mfe",
+      "status": "written",
+      "evidence": "[SHOP-1][AC-1] MFE test in src/SHOP-1.test.tsx; RED: cannot find the text 'Delivery'"
+    },
+    {
+      "id": "AC-1",
+      "level": "shell",
+      "status": "written",
+      "evidence": "[SHOP-1][AC-1] shell test in e2e/SHOP-1.spec.ts; RED: expect(getByText('Delivery')).toBeVisible() fails"
+    },
+    {
+      "id": "AC-2",
+      "level": "mfe",
+      "status": "written",
+      "evidence": "[SHOP-1][AC-2] MFE test; RED: radio 'Express' not found"
+    },
+    {
+      "id": "AC-2",
+      "level": "shell",
+      "status": "written",
+      "evidence": "[SHOP-1][AC-2] shell test; RED: expect(radio Express).toBeVisible() fails"
+    },
+    {
+      "id": "AC-3",
+      "level": "mfe",
+      "status": "written",
+      "evidence": "[SHOP-1][AC-3] MFE test; RED: radio 'Express' not found"
+    },
+    {
+      "id": "AC-3",
+      "level": "shell",
+      "status": "written",
+      "evidence": "[SHOP-1][AC-3] shell test; RED: expect(radio Express).toBeVisible() fails"
+    }
+  ],
+  "coverage": [
+    {
+      "id": "AC-1",
+      "cases": [
+        {
+          "data": "Fresh page, then 1 Notebook (€4.50)",
+          "expect": "2 radios; Standard checked, Express unchecked; Shipping €4.90; total 4.50 + 4.90 = €9.40",
+          "rules_out": "Express selected by default, or standard shipping changed below €50"
+        },
+        {
+          "data": "Add a Backpack (€49.00) to the Notebook",
+          "expect": "subtotal 4.50 + 49.00 = 53.50; Shipping Free; total €53.50",
+          "rules_out": "standard shipping no longer free from €50"
+        }
+      ],
+      "not_covered": [
+        "exactly €50.00 subtotal",
+        "a subtotal of €49.99",
+        "keyboard navigation of the radios"
+      ]
+    },
+    {
+      "id": "AC-2",
+      "cases": [
+        {
+          "data": "1 Notebook, select Express",
+          "expect": "Shipping €9.90; total 4.50 + 9.90 = €14.40",
+          "rules_out": "express ignored, or express charged at the standard fee (4.90)"
+        },
+        {
+          "data": "Add a Backpack with Express still selected (subtotal 53.50)",
+          "expect": "Shipping €9.90; total 53.50 + 9.90 = €63.40",
+          "rules_out": "express becoming free from €50 like standard"
+        },
+        {
+          "data": "Switch back to Standard at 53.50",
+          "expect": "Shipping Free; total €53.50",
+          "rules_out": "the express choice sticking after switching back"
+        }
+      ],
+      "not_covered": [
+        "express with several quantities",
+        "express choice kept after checkout",
+        "a subtotal of exactly €50.00"
+      ]
+    },
+    {
+      "id": "AC-3",
+      "cases": [
+        {
+          "data": "Empty cart with Standard, then with Express selected",
+          "expect": "Shipping €0.00 and total €0.00 both times (not 9.90)",
+          "rules_out": "express fee charged on an empty cart"
+        }
+      ],
+      "not_covered": [
+        "a cart emptied by decreasing quantities with Express selected",
+        "an empty cart after checkout with Express selected"
+      ]
+    }
+  ],
+  "flaky_tests": [],
+  "spec_questions": [
+    "The spec does not say how the Delivery choice is built. The tests assume a radio group with the options labelled 'Standard' and 'Express', and a visible 'Delivery' text. If it is a select, the locators need to change."
+  ],
+  "alerts": [
+    "The AC-3 MFE test failed at the missing Express radio, not on an expect(), because the radio lookup throws. This is still missing behavior. The AC-3 shell test does fail on an expect()."
+  ],
+  "cost_usd": 0.160662
+}

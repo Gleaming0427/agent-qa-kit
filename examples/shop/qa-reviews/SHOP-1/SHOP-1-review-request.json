@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "ticket": "SHOP-1",
+  "spec_sha256": "2e56943aeeec47cba0d26b3f4c50b83fe9b28cbe8ff6ac87bb1633f4268d62c4",
+  "manifest_sha256": "fdc03b2c0e9b61733e3b1793ce29075409e71fb47e6b8a0dec08bce2a5b5043e",
+  "phase1_verdict_sha256": "328641f55d8eae9b05bb12706633ddb5fc4bc49b95a42de66439a47477d1ef1a",
+  "red_vitest_sha256": "e21436ede19a1d542a2d4a404567199bea87ee9ce160262cca480fb6e7c3eca4",
+  "red_playwright_sha256": "3f279f3f5c6a40aa8bf460e4f7c5beb64ea1e0ce97712bc25b2155dcb0ff0e61",
+  "tests": [
+    {
+      "path": "e2e/SHOP-1.spec.ts",
+      "sha256": "0de6e7e95f5fec482b9eb3bbb77a3be421a0f645e3e3a03457afb6abe5d236fb"
+    },
+    {
+      "path": "src/SHOP-1.test.tsx",
+      "sha256": "9b44293de9a2cd9a3a043c89e3425dddc35eda9bb69f309d4e9fa04677c5f743"
+    }
+  ],
+  "criteria": [
+    {
+      "id": "AC-1",
+      "description": "the cart shows a \"Delivery\" choice with two options, \"Standard\" and \"Express\". \"Standard\" is selected at first and keeps the current shipping: €4.90 below €50, free from €50.",
+      "failures": [
+        {
+          "level": "mfe",
+          "title": "SHOP-1 MFE: express delivery [SHOP-1][AC-1] MFE delivery offers Standard (selected) and Express, standard shipping unchanged",
+          "message": "TestingLibraryElementError: Unable to find an element with the text: Delivery. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible. Ignored nodes: comments, script, style <body> <div> <main class=\"shell\" > <header> <span class=\"brand\" > Demo Shop </span> <span class=\"env\" > QA sandbox · no real payments </span> </header> <div class=\"layout\" > <section aria-labelledby=\"shop-title\" > <h1"
+        },
+        {
+          "level": "shell",
+          "title": "SHOP-1.spec.ts @shop SHOP-1, express delivery [SHOP-1][AC-1] shell delivery offers Standard (selected) and Express, standard shipping unchanged",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByText('Delivery', { exact: true }) Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByText('Delivery', { exact: true })"
+        }
+      ]
+    },
+    {
+      "id": "AC-2",
+      "description": "with \"Express\" selected, shipping costs €9.90 whatever the subtotal, from €50 too. The \"Shipping\" line of the order summary shows it, and the total includes it.",
+      "failures": [
+        {
+          "level": "mfe",
+          "title": "SHOP-1 MFE: express delivery [SHOP-1][AC-2] MFE express costs €9.90 below and above €50 and is in the total",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"radio\" and name \"Express\" Here are the accessible roles: main: Name \"\": <main class=\"shell\" /> -------------------------------------------------- banner: Name \"\": <header /> -------------------------------------------------- region: Name \"Shop\": <section aria-labelledby=\"shop-title\" /> Name \"Cart\": <section aria-labelledby=\"cart-title\" class=\"cart\" /> -------------------------------------------------- heading: Name \""
+        },
+        {
+          "level": "shell",
+          "title": "SHOP-1.spec.ts @shop SHOP-1, express delivery [SHOP-1][AC-2] shell express costs €9.90 below and above €50 and is in the total",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByRole('radio', { name: 'Express' }) Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByRole('radio', { name: 'Express' })"
+        }
+      ]
+    },
+    {
+      "id": "AC-3",
+      "description": "an empty cart ships nothing with either option: the \"Shipping\" line shows €0.00 and the total is €0.00.",
+      "failures": [
+        {
+          "level": "mfe",
+          "title": "SHOP-1 MFE: express delivery [SHOP-1][AC-3] MFE empty cart ships nothing with either option",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"radio\" and name \"Express\" Here are the accessible roles: main: Name \"\": <main class=\"shell\" /> -------------------------------------------------- banner: Name \"\": <header /> -------------------------------------------------- region: Name \"Shop\": <section aria-labelledby=\"shop-title\" /> Name \"Cart\": <section aria-labelledby=\"cart-title\" class=\"cart\" /> -------------------------------------------------- heading: Name \""
+        },
+        {
+          "level": "shell",
+          "title": "SHOP-1.spec.ts @shop SHOP-1, express delivery [SHOP-1][AC-3] shell empty cart ships nothing with either option",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByRole('radio', { name: 'Express' }) Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByRole('radio', { name: 'Express' })"
+        }
+      ]
+    }
+  ]
+}

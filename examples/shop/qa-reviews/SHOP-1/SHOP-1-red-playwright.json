@@ -1,0 +1,515 @@
+{
+  "config": {
+    "configFile": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/playwright.config.ts",
+    "rootDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 300000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "ci": {
+        "commitHref": "https://github.com/Gleaming0427/agent-qa-kit/commit/46222d07e5df0bb4e39f5c67eda8744a83853a6b",
+        "commitHash": "46222d07e5df0bb4e39f5c67eda8744a83853a6b",
+        "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42364145697"
+      },
+      "gitCommit": {
+        "shortHash": "46222d0",
+        "hash": "46222d07e5df0bb4e39f5c67eda8744a83853a6b",
+        "subject": "Trial: ticket SHOP-1 for a real QA run on the demo shop",
+        "body": "Trial: ticket SHOP-1 for a real QA run on the demo shop\n\nThe ticket the QA writer gets, and QA verify running on pull requests\ninto trial branches, so that the trial's pull requests stay off main.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01N4hLdP5g662ooCzymstwRm\n",
+        "author": {
+          "name": "Claude",
+          "email": "noreply@anthropic.com",
+          "time": 1794047323000
+        },
+        "committer": {
+          "name": "Claude",
+          "email": "noreply@anthropic.com",
+          "time": 1794047323000
+        },
+        "branch": "trial/shop"
+      },
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "reports/playwright.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/Gleaming0427/agent-qa-kit/commit/46222d07e5df0bb4e39f5c67eda8744a83853a6b",
+            "commitHash": "46222d07e5df0bb4e39f5c67eda8744a83853a6b",
+            "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42364145697"
+          },
+          "gitCommit": {
+            "shortHash": "46222d0",
+            "hash": "46222d07e5df0bb4e39f5c67eda8744a83853a6b",
+            "subject": "Trial: ticket SHOP-1 for a real QA run on the demo shop",
+            "body": "Trial: ticket SHOP-1 for a real QA run on the demo shop\n\nThe ticket the QA writer gets, and QA verify running on pull requests\ninto trial branches, so that the trial's pull requests stay off main.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01N4hLdP5g662ooCzymstwRm\n",
+            "author": {
+              "name": "Claude",
+              "email": "noreply@anthropic.com",
+              "time": 1794047323000
+            },
+            "committer": {
+              "name": "Claude",
+              "email": "noreply@anthropic.com",
+              "time": 1794047323000
+            },
+            "branch": "trial/shop"
+          },
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/Gleaming0427/agent-qa-kit/commit/46222d07e5df0bb4e39f5c67eda8744a83853a6b",
+            "commitHash": "46222d07e5df0bb4e39f5c67eda8744a83853a6b",
+            "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42364145697"
+          },
+          "gitCommit": {
+            "shortHash": "46222d0",
+            "hash": "46222d07e5df0bb4e39f5c67eda8744a83853a6b",
+            "subject": "Trial: ticket SHOP-1 for a real QA run on the demo shop",
+            "body": "Trial: ticket SHOP-1 for a real QA run on the demo shop\n\nThe ticket the QA writer gets, and QA verify running on pull requests\ninto trial branches, so that the trial's pull requests stay off main.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01N4hLdP5g662ooCzymstwRm\n",
+            "author": {
+              "name": "Claude",
+              "email": "noreply@anthropic.com",
+              "time": 1794047323000
+            },
+            "committer": {
+              "name": "Claude",
+              "email": "noreply@anthropic.com",
+              "time": 1794047323000
+            },
+            "branch": "trial/shop"
+          },
+          "actualWorkers": 1
+        },
+        "id": "mobile",
+        "name": "mobile",
+        "testDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.55.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run serve:e2e",
+      "url": "http://127.0.0.1:4173",
+      "reuseExistingServer": false,
+      "timeout": 60000,
+      "env": {
+        "VITE_DEMO_BUG": "0"
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "SHOP-1.spec.ts",
+      "file": "SHOP-1.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "@shop SHOP-1, express delivery",
+          "file": "SHOP-1.spec.ts",
+          "line": 8,
+          "column": 6,
+          "specs": [
+            {
+              "title": "[SHOP-1][AC-1] shell delivery offers Standard (selected) and Express, standard shipping unchanged",
+              "ok": false,
+              "tags": [
+                "shop"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5178,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByText('Delivery', { exact: true })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('Delivery', { exact: true })\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByText('Delivery', { exact: true })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('Delivery', { exact: true })\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts:11:63",
+                        "location": {
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts",
+                          "column": 63,
+                          "line": 11
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  9 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m { \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 10 |\u001b[39m   test(\u001b[32m'[SHOP-1][AC-1] shell delivery offers Standard (selected) and Express, standard shipping unchanged'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 11 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByText(\u001b[32m'Delivery'\u001b[39m\u001b[33m,\u001b[39m { exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 12 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'radio'\u001b[39m))\u001b[33m.\u001b[39mtoHaveCount(\u001b[35m2\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 13 |\u001b[39m     \u001b[36mawait\u001b[39m expect(radio(page\u001b[33m,\u001b[39m \u001b[32m'Standard'\u001b[39m))\u001b[33m.\u001b[39mtoBeChecked()\u001b[33m;\u001b[39m\n \u001b[90m 14 |\u001b[39m     \u001b[36mawait\u001b[39m expect(radio(page\u001b[33m,\u001b[39m \u001b[32m'Express'\u001b[39m))\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoBeChecked()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts",
+                            "column": 63,
+                            "line": 11
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByText('Delivery', { exact: true })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('Delivery', { exact: true })\u001b[22m\n\n\n   9 |   test.beforeEach(async ({ page }) => { await page.goto('/'); });\n  10 |   test('[SHOP-1][AC-1] shell delivery offers Standard (selected) and Express, standard shipping unchanged', async ({ page }) => {\n> 11 |     await expect(page.getByText('Delivery', { exact: true })).toBeVisible();\n     |                                                               ^\n  12 |     await expect(page.getByRole('radio')).toHaveCount(2);\n  13 |     await expect(radio(page, 'Standard')).toBeChecked();\n  14 |     await expect(radio(page, 'Express')).not.toBeChecked();\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts:11:63"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T10:30:33.676Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/SHOP-1--shop-SHOP-1-expres-49319-standard-shipping-unchanged-desktop/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/SHOP-1--shop-SHOP-1-expres-49319-standard-shipping-unchanged-desktop/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts",
+                        "column": 63,
+                        "line": 11
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "076c68a815aab64a852a-ab1083cb662eda0ca5bb",
+              "file": "SHOP-1.spec.ts",
+              "line": 10,
+              "column": 3
+            },
+            {
+              "title": "[SHOP-1][AC-2] shell express costs €9.90 below and above €50 and is in the total",
+              "ok": false,
+              "tags": [
+                "shop"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5575,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('radio', { name: 'Express' })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('radio', { name: 'Express' })\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('radio', { name: 'Express' })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('radio', { name: 'Express' })\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts:24:42",
+                        "location": {
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts",
+                          "column": 42,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 22 |\u001b[39m   test(\u001b[32m'[SHOP-1][AC-2] shell express costs €9.90 below and above €50 and is in the total'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 23 |\u001b[39m     \u001b[36mawait\u001b[39m add(page\u001b[33m,\u001b[39m \u001b[32m'Notebook'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m expect(radio(page\u001b[33m,\u001b[39m \u001b[32m'Express'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \u001b[36mawait\u001b[39m radio(page\u001b[33m,\u001b[39m \u001b[32m'Express'\u001b[39m)\u001b[33m.\u001b[39mcheck()\u001b[33m;\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m expect(summaryRow(page\u001b[33m,\u001b[39m \u001b[32m'Shipping'\u001b[39m))\u001b[33m.\u001b[39mtoContainText(\u001b[32m'€9.90'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 27 |\u001b[39m     \u001b[36mawait\u001b[39m expect(summaryRow(page\u001b[33m,\u001b[39m \u001b[32m'Total'\u001b[39m))\u001b[33m.\u001b[39mtoContainText(\u001b[32m'€14.40'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts",
+                            "column": 42,
+                            "line": 24
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('radio', { name: 'Express' })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('radio', { name: 'Express' })\u001b[22m\n\n\n  22 |   test('[SHOP-1][AC-2] shell express costs €9.90 below and above €50 and is in the total', async ({ page }) => {\n  23 |     await add(page, 'Notebook');\n> 24 |     await expect(radio(page, 'Express')).toBeVisible();\n     |                                          ^\n  25 |     await radio(page, 'Express').check();\n  26 |     await expect(summaryRow(page, 'Shipping')).toContainText('€9.90');\n  27 |     await expect(summaryRow(page, 'Total')).toContainText('€14.40');\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts:24:42"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T10:30:40.261Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/SHOP-1--shop-SHOP-1-expres-d2822-ove-€50-and-is-in-the-total-desktop/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/SHOP-1--shop-SHOP-1-expres-d2822-ove-€50-and-is-in-the-total-desktop/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts",
+                        "column": 42,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "076c68a815aab64a852a-42c2adea21038c20230f",
+              "file": "SHOP-1.spec.ts",
+              "line": 22,
+              "column": 3
+            },
+            {
+              "title": "[SHOP-1][AC-3] shell empty cart ships nothing with either option",
+              "ok": false,
+              "tags": [
+                "shop"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5698,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('radio', { name: 'Express' })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('radio', { name: 'Express' })\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('radio', { name: 'Express' })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('radio', { name: 'Express' })\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts:38:42",
+                        "location": {
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts",
+                          "column": 42,
+                          "line": 38
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 36 |\u001b[39m     \u001b[36mawait\u001b[39m expect(summaryRow(page\u001b[33m,\u001b[39m \u001b[32m'Shipping'\u001b[39m))\u001b[33m.\u001b[39mtoContainText(\u001b[32m'€0.00'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 37 |\u001b[39m     \u001b[36mawait\u001b[39m expect(summaryRow(page\u001b[33m,\u001b[39m \u001b[32m'Total'\u001b[39m))\u001b[33m.\u001b[39mtoContainText(\u001b[32m'€0.00'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 38 |\u001b[39m     \u001b[36mawait\u001b[39m expect(radio(page\u001b[33m,\u001b[39m \u001b[32m'Express'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 39 |\u001b[39m     \u001b[36mawait\u001b[39m radio(page\u001b[33m,\u001b[39m \u001b[32m'Express'\u001b[39m)\u001b[33m.\u001b[39mcheck()\u001b[33m;\u001b[39m\n \u001b[90m 40 |\u001b[39m     \u001b[36mawait\u001b[39m expect(summaryRow(page\u001b[33m,\u001b[39m \u001b[32m'Shipping'\u001b[39m))\u001b[33m.\u001b[39mtoContainText(\u001b[32m'€0.00'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 41 |\u001b[39m     \u001b[36mawait\u001b[39m expect(summaryRow(page\u001b[33m,\u001b[39m \u001b[32m'Total'\u001b[39m))\u001b[33m.\u001b[39mtoContainText(\u001b[32m'€0.00'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts",
+                            "column": 42,
+                            "line": 38
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('radio', { name: 'Express' })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('radio', { name: 'Express' })\u001b[22m\n\n\n  36 |     await expect(summaryRow(page, 'Shipping')).toContainText('€0.00');\n  37 |     await expect(summaryRow(page, 'Total')).toContainText('€0.00');\n> 38 |     await expect(radio(page, 'Express')).toBeVisible();\n     |                                          ^\n  39 |     await radio(page, 'Express').check();\n  40 |     await expect(summaryRow(page, 'Shipping')).toContainText('€0.00');\n  41 |     await expect(summaryRow(page, 'Total')).toContainText('€0.00');\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts:38:42"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T10:30:46.590Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/SHOP-1--shop-SHOP-1-expres-9a8d5--nothing-with-either-option-desktop/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/SHOP-1--shop-SHOP-1-expres-9a8d5--nothing-with-either-option-desktop/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-1.spec.ts",
+                        "column": 42,
+                        "line": 38
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "076c68a815aab64a852a-3369f00c63c54faba7d0",
+              "file": "SHOP-1.spec.ts",
+              "line": 35,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "TICKET-42.spec.ts",
+      "file": "TICKET-42.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "@shop TICKET-42, integrated shell",
+          "file": "TICKET-42.spec.ts",
+          "line": 8,
+          "column": 6,
+          "specs": [
+            {
+              "title": "[TICKET-42][AC-1] shell lists the products with their prices",
+              "ok": true,
+              "tags": [
+                "shop"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 404,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T10:30:52.900Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bb2a4bcec7a19d6abb50-6f96668c3c3ad1cdb649",
+              "file": "TICKET-42.spec.ts",
+              "line": 10,
+              "column": 3
+            },
+            {
+              "title": "[TICKET-42][AC-2] shell subtotal is the sum of price times quantity",
+              "ok": true,
+              "tags": [
+                "shop"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 263,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T10:30:53.403Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bb2a4bcec7a19d6abb50-f70ca7a4582da0a2f57a",
+              "file": "TICKET-42.spec.ts",
+              "line": 18,
+              "column": 3
+            },
+            {
+              "title": "[TICKET-42][AC-3] shell shipping is free from €50 and included in the total",
+              "ok": true,
+              "tags": [
+                "shop"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 211,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T10:30:53.684Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bb2a4bcec7a19d6abb50-a0d2ab1636c1b7204ef4",
+              "file": "TICKET-42.spec.ts",
+              "line": 26,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-07T10:30:31.259Z",
+    "duration": 22693.067,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

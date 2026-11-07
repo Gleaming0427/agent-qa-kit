@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "ticket": "SHOP-1",
+  "spec_sha256": "2e56943aeeec47cba0d26b3f4c50b83fe9b28cbe8ff6ac87bb1633f4268d62c4",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "description": "the cart shows a \"Delivery\" choice with two options, \"Standard\" and \"Express\". \"Standard\" is selected at first and keeps the current shipping: €4.90 below €50, free from €50."
+    },
+    {
+      "id": "AC-2",
+      "description": "with \"Express\" selected, shipping costs €9.90 whatever the subtotal, from €50 too. The \"Shipping\" line of the order summary shows it, and the total includes it."
+    },
+    {
+      "id": "AC-3",
+      "description": "an empty cart ships nothing with either option: the \"Shipping\" line shows €0.00 and the total is €0.00."
+    }
+  ]
+}
