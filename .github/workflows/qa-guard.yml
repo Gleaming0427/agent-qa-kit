@@ -1,6 +1,8 @@
 name: QA agent kit - security, evidence and demo
 on:
   pull_request:
+    # Not on the omni-tools trial: these checks test the kit and its demo shop, not omni-tools.
+    branches-ignore: ['trial/omni-tools']
   push:
     branches: [main]
   workflow_dispatch:
