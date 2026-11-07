@@ -10,6 +10,7 @@
   - **A setup step and the project's Node.js**, found by trying the kit on a large monorepo (immich):
     - an application's `qa:setup` script runs after the install, for a step its tests need first, such as building a package of its workspace. `doctor` asks for it when the application depends on a package of the repository whose built entry is not committed, with the command to write;
     - the workflows use the Node.js version of the application's `.nvmrc` or `.node-version`, 22 without one, and refuse one older than 22.18, which the kit's scripts need (`qa/ci-node-version.sh`).
+  - **More turns for a large application.** On omni-tools, the writer reached its limit of 40 turns before writing the browser test. The repository variable `QA_MAX_TURNS` now replaces the agents' own limit in the workflows; the budget ceiling still applies, and the limits stay the same when it is unset.
   - An application at the root of its repository works: **QA amend tests** refused it, as it read the review package's path with a `./` prefix git does not write.
 - **A coverage summary for the reviewer.** Reading test code shows what is wrong in a test, not what is missing: the evaluation's missed bugs came from tests that looked right.
   - The writer's phase 1 verdict now states, for each criterion, the cases its tests use (data, expected values with their arithmetic, the wrong implementation each one rules out) and what they leave out.

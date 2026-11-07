@@ -61,6 +61,8 @@ jobs:
         if: steps.prepare.outputs.count != '0'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Repository variable: more turns for the agent on a large application (its own limit when unset).
+          QA_MAX_TURNS: ${{ vars.QA_MAX_TURNS }}
           DISABLE_AUTOUPDATER: 1
         run: bash qa/ci-verify.sh agent
       # A step of its own, without the API key: the pull request's code runs here.
