@@ -125,7 +125,7 @@ The kit does not protect against someone with write access to the repository. De
 ## Limits
 
 - Checks prove that named tests ran and gave the expected result. They can't prove the assertions match what the user wanted, so a person still reviews.
-- QA write tests, QA verify, QA amend tests and QA branch rules have each run on a real ticket, but only on two tickets, one of them in the demo. QA approval has not run on GitHub yet. The repair agent isn't measured.
+- QA write tests, QA verify, QA amend tests and QA branch rules have each run on a real ticket, but only on two tickets, one of them in the demo. QA approval and an amendment after a squash have run on a third demo ticket ([eval/results/2026-11-07-approval-trial.md](eval/results/2026-11-07-approval-trial.md)). The repair agent isn't measured.
 - The installer has run on one large project, immich, a pnpm monorepo: install and full suite, no agent ([eval/results/2026-11-07-immich.md](eval/results/2026-11-07-immich.md)).
 - The evaluation corpus is 17 tickets of one small shop: it says how the agents do there, not on a real project.
 - The visual review can miss problems or report ones that aren't there, so it only warns.

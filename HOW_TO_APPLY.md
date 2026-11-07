@@ -379,8 +379,10 @@ Limits:
 - A pull request opened with `GITHUB_TOKEN` does not trigger other workflows,
   so the QA pull request gets no checks of its own when it opens. QA write tests
   and QA amend tests set its QA approval status themselves.
-- The QA approval status has not run on GitHub yet. Its logic is tested in
-  `qa/tests/github-approval.test.ts` and `qa/tests/ci-approval.test.ts`, with a
+- The QA approval status and an amendment after a squash have run on GitHub on
+  one ticket of the demo (`eval/results/2026-11-07-approval-trial.md`). Their
+  logic is tested in `qa/tests/github-approval.test.ts`,
+  `qa/tests/ci-approval.test.ts` and `qa/tests/ci-amend.test.ts`, with a
   stand-in for the GitHub CLI.
 - A pull request can change the workflows that judge it. In a team, protect
   `.github/`, `qa/` and `.claude/` with a `CODEOWNERS` file and the ruleset
