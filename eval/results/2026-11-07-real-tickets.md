@@ -10,7 +10,13 @@ Until now the agents had only run in QA eval, on hidden tests. This trial ran th
 Both tickets ran in this repository, on trial branches (`trial/shop`, `trial/omni-tools`), so nothing reached `main`. The kit was the one of this branch (after Gleaming0427/agent-qa-kit#26). I wrote the features, as the developer; the repository's owner did the reviews.
 
 - **SHOP-1, the demo shop:** express delivery, €9.90 whatever the subtotal, also above the free-shipping threshold.
-- **OMNI-1, [omni-tools](https://github.com/iib0011/omni-tools)** (commit 9244e02, MIT), a real React application of about 860 files, copied into `trials/omni-tools` with the changes `trials/README.md` lists: a "Reverse word order" option in its text-reversal tool.
+- **OMNI-1, [omni-tools](https://github.com/iib0011/omni-tools)** (commit 9244e02, MIT), a real React application of about 860 files: a "Reverse word order" option in its text-reversal tool. It was copied into `trials/omni-tools`, changed only where the kit needs it:
+  - Playwright also runs `e2e/`, and only Chromium;
+  - the four npm scripts with their JSON reports;
+  - `/reports/` is ignored;
+  - one browser test is tagged `@smoke`.
+
+  The trial branches were deleted afterwards; the pull requests below keep the diffs.
 
 ## Results
 
