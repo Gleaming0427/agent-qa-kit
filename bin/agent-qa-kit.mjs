@@ -55,6 +55,7 @@ const KIT_FILES = [
   'qa/full-suite.sh',
   'qa/full-suite.ts',
   'qa/github-approval.ts',
+  'qa/loose-assertions.ts',
   'qa/repair-loop.sh',
   'qa/run-qa.sh',
   'qa/scenario-review.ts',

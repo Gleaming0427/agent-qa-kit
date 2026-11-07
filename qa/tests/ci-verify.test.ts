@@ -10,7 +10,7 @@ import { exportReview, prepareReview } from '../scenario-review.ts';
 // The "prepare" step of the QA verify workflow on a real git history, with a
 // stand-in for the GitHub CLI: which approval counts, and on which tests.
 const kit = resolve(import.meta.dirname, '../..');
-const KIT_FILES = ['qa/ci-verify.sh', 'qa/ci-node-version.sh', 'qa/check-scope.sh', 'qa/github-approval.ts', 'qa/scenario-review.ts',
+const KIT_FILES = ['qa/ci-verify.sh', 'qa/ci-node-version.sh', 'qa/check-scope.sh', 'qa/github-approval.ts', 'qa/scenario-review.ts', 'qa/loose-assertions.ts',
   'qa/criteria-manifest.ts', '.claude/hooks/strict-evidence.ts', '.claude/hooks/coverage.ts'];
 const TICKET = 'TICKET-43';
 const REASONS = 'Looks right.\n\nAC-1: the button does not exist yet, so the search cannot be cleared.';
