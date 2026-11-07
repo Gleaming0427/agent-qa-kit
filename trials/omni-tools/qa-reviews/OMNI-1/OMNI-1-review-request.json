@@ -4,12 +4,12 @@
   "spec_sha256": "0d038437a5ee85ac47564496702cce8a831199515b404b085fb89a0edebedf58",
   "manifest_sha256": "c6aa060486379ebc760648250ff1580e445ac859c04c4b2ac0350cb91952f8ff",
   "phase1_verdict_sha256": "103fb982e69df13fa20f2bedfb098a1cacba54ea265384b3bead85bae7f27e93",
-  "red_vitest_sha256": "fa28a5073d9a217e0ff174e3c4cd5997e06bce7d6cc8c55bedbfa752be4cf283",
-  "red_playwright_sha256": "6d40fb957aadf515a0dd20fa0b43b5f09baa654a2c16ad1c889c0e1acfb0f3ac",
+  "red_vitest_sha256": "530448f4143d29d3adf3ee8cde13455322275639d6e4bbeeba30b0902092d6f8",
+  "red_playwright_sha256": "8ae3b596fd6488d8468d7c0532bcd9b220279e0221a140508aa1188afc3ab5a2",
   "tests": [
     {
       "path": "e2e/OMNI-1.spec.ts",
-      "sha256": "61adda72dbdc2f9d5805df53b3894b696090cce24877f366df1802d33e7a317a"
+      "sha256": "c42d92b08def0f1cfbda480eabe4313037ed6593a4be9dd6a1ccbd0000b6353e"
     },
     {
       "path": "src/pages/tools/string/reverse/OMNI-1.test.ts",
@@ -34,7 +34,7 @@
         {
           "level": "shell",
           "title": "e2e/OMNI-1.spec.ts @omni OMNI-1 [OMNI-1][AC-1] reverse word order is off at first and reverses words when on",
-          "message": "Error: expect(locator).toBeVisible() failed Locator: getByLabel('Reverse word order') Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms - waiting for getByLabel('Reverse word order')"
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByLabel('Reverse word order').first() Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" getByLabel('Reverse word order').first() with timeout 5000ms - waiting for getByLabel('Reverse word order').first()"
         }
       ]
     },
@@ -50,7 +50,7 @@
         {
           "level": "shell",
           "title": "e2e/OMNI-1.spec.ts @omni OMNI-1 [OMNI-1][AC-2] with multi-line on, words of each line are reversed separately",
-          "message": "Error: expect(locator).toBeVisible() failed Locator: getByLabel('Reverse word order') Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms - waiting for getByLabel('Reverse word order')"
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByLabel('Reverse word order').first() Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" getByLabel('Reverse word order').first() with timeout 5000ms - waiting for getByLabel('Reverse word order').first()"
         }
       ]
     },
@@ -66,7 +66,7 @@
         {
           "level": "shell",
           "title": "e2e/OMNI-1.spec.ts @omni OMNI-1 [OMNI-1][AC-3] with reverse word order off, characters are reversed",
-          "message": "Error: expect(locator).toBeVisible() failed Locator: getByLabel('Reverse word order') Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" getByLabel('Reverse word order') with timeout 5000ms - waiting for getByLabel('Reverse word order')"
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByLabel('Reverse word order').first() Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" getByLabel('Reverse word order').first() with timeout 5000ms - waiting for getByLabel('Reverse word order').first()"
         }
       ]
     }
