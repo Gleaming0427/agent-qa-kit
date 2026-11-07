@@ -104,6 +104,9 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   background: var(--surface);
   color: var(--ink);
 }
+.delivery { display: flex; flex-wrap: wrap; gap: 6px 18px; border: 0; padding: 0; margin: 0 0 14px; }
+.delivery legend { width: 100%; padding: 0; margin-bottom: 6px; font-weight: 600; }
+.delivery label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 .summary { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-variant-numeric: tabular-nums; }
 .summary th { text-align: left; font-weight: 400; color: var(--muted); padding: 6px 0; }
 .summary td { text-align: right; padding: 6px 0; }

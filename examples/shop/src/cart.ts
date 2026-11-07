@@ -10,7 +10,9 @@ export const PRODUCTS: Product[] = [
 ];
 
 export const SHIPPING_CENTS = 490;
+export const EXPRESS_SHIPPING_CENTS = 990;
 export const FREE_SHIPPING_FROM_CENTS = 5000;
+export type Delivery = 'standard' | 'express';
 
 export function findProduct(productId: string, products: Product[] = PRODUCTS): Product {
   const product = products.find((item) => item.id === productId);
@@ -28,10 +30,11 @@ export function subtotalBuggy(lines: CartLine[], products: Product[] = PRODUCTS)
   return lines.reduce((sum, line) => sum + findProduct(line.productId, products).priceCents, 0);
 }
 
-// An empty cart ships nothing; from the threshold on, shipping is free.
-export function shipping(subtotalCents: number): number {
-  if (subtotalCents === 0 || subtotalCents >= FREE_SHIPPING_FROM_CENTS) return 0;
-  return SHIPPING_CENTS;
+// An empty cart ships nothing. Standard delivery is free from the threshold on; express never is.
+export function shipping(subtotalCents: number, delivery: Delivery = 'standard'): number {
+  if (subtotalCents === 0) return 0;
+  if (delivery === 'express') return EXPRESS_SHIPPING_CENTS;
+  return subtotalCents >= FREE_SHIPPING_FROM_CENTS ? 0 : SHIPPING_CENTS;
 }
 
 export function formatPrice(cents: number): string {

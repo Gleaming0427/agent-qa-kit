@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { PRODUCTS, addToCart, changeQuantity, findProduct, formatPrice, shipping, subtotal, subtotalBuggy } from './cart';
-import type { CartLine } from './cart';
+import type { CartLine, Delivery } from './cart';
 import './styles.css';
 
 export function App() {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [confirmed, setConfirmed] = useState(false);
+  const [delivery, setDelivery] = useState<Delivery>('standard');
   const computeSubtotal = import.meta.env.VITE_DEMO_BUG === '1' ? subtotalBuggy : subtotal;
   const sub = computeSubtotal(lines);
-  const ship = shipping(sub);
+  const ship = shipping(sub, delivery);
 
   const add = (productId: string) => { setConfirmed(false); setLines((current) => addToCart(current, productId)); };
   const change = (productId: string, delta: number) => setLines((current) => changeQuantity(current, productId, delta));
@@ -51,6 +52,11 @@ export function App() {
               })}
             </ul>
           ) : <p className="empty">Your cart is empty</p>}
+          <fieldset className="delivery">
+            <legend>Delivery</legend>
+            <label><input type="radio" name="delivery" value="standard" checked={delivery === 'standard'} onChange={() => setDelivery('standard')} /> Standard</label>
+            <label><input type="radio" name="delivery" value="express" checked={delivery === 'express'} onChange={() => setDelivery('express')} /> Express</label>
+          </fieldset>
           <table className="summary" aria-label="Order summary">
             <tbody>
               <tr><th scope="row">Subtotal</th><td>{formatPrice(sub)}</td></tr>
