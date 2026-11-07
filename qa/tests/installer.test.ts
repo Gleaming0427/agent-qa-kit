@@ -492,6 +492,29 @@ writeFileSync('reports/' + process.argv[2] + '.json', JSON.stringify(${JSON.stri
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+// Found on immich: testDir '.' with a testMatch regular expression. doctor applies it.
+test('doctor reads a testMatch regular expression to find the browser tests and the smoke journey', () => {
+  const dir = repo('apps/web', { smoke: false });
+  try {
+    write(dir, 'apps/web/test/medium/specs/timeline.spec.ts', "test('timeline loads @smoke', async () => {});\n");
+    write(dir, 'apps/web/src/cart.spec.ts', "it('@smoke is not a browser test here', () => {});\n");
+    const config = (match: string) => write(dir, 'apps/web/playwright.config.ts',
+      `export default { testDir: '.', testMatch: ${match}, reporter: [['json', { outputFile: 'reports/playwright.json' }]], webServer: { command: 'x', url: 'http://127.0.0.1:1' } };\n`);
+    assert.equal(cli(dir, 'init').code, 0);
+    config(String.raw`/(test\/medium\/specs|e2e)\/.*\.spec\.ts$/`);
+    let d = cli(dir, 'doctor');
+    assert.match(d.out, /ok {4}Playwright runs the browser tests in e2e\//);
+    assert.match(d.out, /ok {4}a browser test is tagged @smoke/);
+
+    config(String.raw`/test\/medium\/specs\/.*\.spec\.ts$/`);
+    d = cli(dir, 'doctor');
+    assert.match(d.out, /warn {2}Playwright's testMatch .* does not match e2e\/PROJ-1\.spec\.ts/);
+    // Only the files Playwright runs count: the unit test that says @smoke does not.
+    rmSync(join(dir, 'apps/web/test'), { recursive: true });
+    assert.match(cli(dir, 'doctor').out, /FAIL {2}No browser test in apps\/web yet/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('every script an installed file calls is installed too', () => {
   const installed = new Set(expectedFiles());
   const missing: string[] = [];

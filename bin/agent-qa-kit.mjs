@@ -759,25 +759,38 @@ function doctor(root, cwd, options) {
     ? { level: 'ok', text: `test:e2e writes ${PLAYWRIGHT_REPORT}` }
     : { level: 'warn', text: `Cannot see test:e2e writing ${PLAYWRIGHT_REPORT}: add ['json', { outputFile: '${PLAYWRIGHT_REPORT}' }] to the reporters in playwright.config, or confirm with doctor --run.` });
   let testDir = 'e2e';
+  // A testMatch written as a regular expression, which Playwright tests against absolute paths.
+  /** @type {RegExp | null} */
+  let testMatch = null;
   if (!pConfig) {
     checks.push({ level: 'warn', text: 'No playwright.config: the browser tests need one, with testDir: \'./e2e\' and a webServer that starts the application.' });
   } else {
     const dir = pText.match(/\btestDir\s*:\s*['"`]([^'"`]+)['"`]/)?.[1];
     const normalized = dir === undefined ? '' : toPosix(dir).replace(/^\.\//, '').replace(/\/+$/, '');
+    const literal = pText.match(/\btestMatch\s*:\s*\/((?:\\.|[^/\\\n])+)\/([dgimsuy]*)/);
+    try { testMatch = literal ? new RegExp(literal[1], literal[2]) : null; } catch { testMatch = null; }
+    const agentTest = join(appDir, 'e2e', 'PROJ-1.spec.ts');
+    // Without a testDir of its own, Playwright looks in the whole application (through testMatch).
+    if (normalized === '' || normalized === '.') testDir = '.';
     if (dir !== undefined && normalized !== 'e2e' && normalized !== '.' && normalized !== '') {
       testDir = normalized;
       checks.push({ level: 'warn', text: `Playwright's testDir is ${dir}: the QA agents write their browser tests in e2e/, which Playwright would not run.` });
     } else if ((normalized === '' || normalized === '.') && !/\btestMatch\s*:/.test(pText)) {
       checks.push({ level: 'warn', text: 'Playwright looks for tests in the whole application, unit tests included: set testDir: \'./e2e\'.' });
-    } else checks.push({ level: 'ok', text: 'Playwright runs the browser tests in e2e/' });
+    } else if (testMatch && !testMatch.test(agentTest)) {
+      checks.push({ level: 'warn', text: `Playwright's testMatch ${testMatch} does not match e2e/PROJ-1.spec.ts: the QA agents write their browser tests there, and Playwright would not run them.` });
+    } else {
+      checks.push({ level: 'ok', text: 'Playwright runs the browser tests in e2e/' });
+    }
     if (!/\bwebServer\s*:/.test(pText)) {
       checks.push({ level: 'warn', text: 'playwright.config has no webServer: in CI, Playwright has to start the application itself.' });
     }
   }
   const specDir = join(appDir, testDir);
-  const specs = existsSync(specDir) ? walk(specDir, (path) => /\.(spec|test)\.[cm]?[jt]sx?$/.test(path)) : [];
+  const isSpec = (/** @type {string} */ path) => (testMatch ? testMatch.test(path) : /\.(spec|test)\.[cm]?[jt]sx?$/.test(path));
+  const specs = existsSync(specDir) ? walk(specDir, isSpec) : [];
   if (!specs.length) {
-    checks.push({ level: 'fail', text: `No browser test in ${inApp(app, testDir)}/ yet. QA verify's full suite needs at least one passing test tagged @smoke, a journey that must always work.` });
+    checks.push({ level: 'fail', text: `No browser test in ${testDir === '.' ? `${inApp(app, '')}`.replace(/\/$/, '') || 'the application' : `${inApp(app, testDir)}/`} yet. QA verify's full suite needs at least one passing test tagged @smoke, a journey that must always work.` });
   } else if (!specs.some((path) => readText(path)?.includes('@smoke'))) {
     checks.push({ level: 'fail', text: 'No browser test is tagged @smoke. QA verify\'s full suite needs at least one passing smoke journey: add @smoke to the title of a test that must always work, or { tag: \'@smoke\' }.' });
   } else checks.push({ level: 'ok', text: 'a browser test is tagged @smoke' });
