@@ -53,6 +53,19 @@ the agents and the full suite run the scripts with `npm run`, which only starts 
 script of `package.json`; their allowed commands stay the same. Yarn and Bun are
 not supported.
 
+**A step after the install.** When the application needs one before its tests, for
+instance building a package of its workspace whose built files are not committed,
+put it in a `qa:setup` script of the application's `package.json`, such as
+`"qa:setup": "pnpm --filter @acme/sdk build"`. The workflows run it right after the
+install, and `doctor --run` before the tests. `doctor` asks for it when the
+application depends on such a package.
+
+**Node.js.** The workflows give the application the Node.js version its `.nvmrc`
+or `.node-version` names (`qa/ci-node-version.sh`), in its folder or above it up to
+the repository's root, and 22 when there is none. The kit's scripts need 22.18 or
+later, so an older version is refused; write a version number, such as `24` or
+`26.13.0`, or `lts/*`.
+
 The agents run on Linux and macOS (their commands go through an OS sandbox). On
 Windows, use the GitHub workflows.
 

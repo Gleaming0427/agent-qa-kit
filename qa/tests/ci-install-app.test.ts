@@ -31,7 +31,9 @@ function repo(files: Record<string, string>) {
     write(dir, `bin/${name}`, `#!/usr/bin/env bash\necho "${name} $* @ $PWD" >> "${log}"\n${body}\n`);
     chmodSync(join(dir, `bin/${name}`), 0o755);
   };
-  stub('npm', `if [[ "$1 $2" == 'install --global' ]]; then echo "\${@: -1}" | sed 's/^pnpm@//' > "${dir}/pnpm-version"; fi`);
+  stub('npm', `if [[ "$1 $2" == 'install --global' ]]; then echo "\${@: -1}" | sed 's/^pnpm@//' > "${dir}/pnpm-version"; fi
+[[ -n "\${NPM_FAILS:-}" && "$*" == "$NPM_FAILS" ]] && exit 1
+exit 0`);
   stub('npx');
   stub('pnpm', `if [[ "$1" == --version ]]; then echo "\${PNPM_ON_PATH:-$(cat "${dir}/pnpm-version" 2>/dev/null)}"; fi`);
   return { dir, root, log };
@@ -83,6 +85,31 @@ test('in a workspace, the install runs where the lockfile is and the browser in 
     rmSync(pnpmWs.dir, { recursive: true, force: true });
     rmSync(npmWs.dir, { recursive: true, force: true });
   }
+});
+
+test('qa:setup runs after the install and before the browser, in the application', () => {
+  const r = repo({ 'package.json': JSON.stringify({ name: 'm', packageManager: 'pnpm@12.16.1' }), 'pnpm-lock.yaml': LOCK,
+    'pnpm-workspace.yaml': 'packages:\n  - web\n  - packages/*\n',
+    'web/package.json': pkg({ scripts: { 'qa:setup': 'pnpm --filter @acme/sdk build' } }) });
+  try {
+    const out = install(r, 'web');
+    assert.equal(out.code, 0, out.out);
+    assert.deepEqual(calls(r).slice(2), [
+      'pnpm install --frozen-lockfile @ <repo>',
+      'npm run qa:setup @ <repo>/web',
+      'pnpm exec playwright install --with-deps chromium @ <repo>/web',
+    ]);
+  } finally { rmSync(r.dir, { recursive: true, force: true }); }
+});
+
+test('a failing qa:setup stops the install', () => {
+  const r = repo({ 'package.json': pkg({ scripts: { 'qa:setup': 'exit 1' } }), 'package-lock.json': '{}' });
+  try {
+    const out = install(r, '.', [], { NPM_FAILS: 'run qa:setup' });
+    assert.equal(out.code, 1, out.out);
+    assert.match(out.out, /::error title=Install the application::The application's qa:setup script failed/);
+    assert.ok(!calls(r).some((call) => call.startsWith('npx playwright')));
+  } finally { rmSync(r.dir, { recursive: true, force: true }); }
 });
 
 // Each refusal happens before anything is installed or downloaded.

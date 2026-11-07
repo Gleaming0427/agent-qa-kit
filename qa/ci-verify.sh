@@ -102,6 +102,17 @@ case "${1:-}" in
       fi
     done
     count="$(wc -l < "$LIST" | tr -d ' ')"
+    # The applications' Node.js version, for the steps after this one.
+    if [[ "$count" != 0 ]]; then
+      mapfile -t apps < <(cut -f2 "$LIST" | sort -u)
+      if ! bash qa/ci-node-version.sh "${apps[@]}" >> "$GITHUB_OUTPUT" 2>"$ERR"; then
+        while IFS=$'\t' read -r ticket _; do record "$ticket" prepare fail "$(<"$ERR")"; done < "$LIST"
+        ( fail "$(<"$ERR")" ) || true
+        [[ "$MODE" == advisory ]] || exit 1
+        echo "- would block: $(<"$ERR")" >> "$GITHUB_STEP_SUMMARY"
+        count=0
+      fi
+    fi
     echo "count=$count" >> "$GITHUB_OUTPUT"
     if [[ "$count" == 0 ]]; then
       echo '::notice title=QA verify::No ticket with QA tests in this pull request: nothing to verify.'

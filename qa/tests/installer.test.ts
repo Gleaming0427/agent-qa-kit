@@ -454,6 +454,44 @@ if (data) writeFileSync('reports/' + kind + '.json', JSON.stringify(data));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+// A package of the workspace whose built entry is not committed is missing after a fresh install,
+// as in CI: doctor asks for a qa:setup script, which the install step and doctor --run run.
+test('doctor asks for qa:setup when the application needs a package of the repository built, and --run runs it', () => {
+  const dir = repo('apps/web', { scripts: {
+    'test:unit': 'node fake.mjs vitest', 'test:affected': 'node fake.mjs vitest', 'test:e2e': 'node fake.mjs playwright',
+  }, extra: { dependencies: { '@acme/sdk': 'workspace:*', '@acme/ui': 'workspace:*' } } });
+  try {
+    write(dir, 'packages/sdk/package.json', JSON.stringify({ name: '@acme/sdk', exports: { '.': { types: './build/index.d.ts', default: './build/index.js' } }, scripts: { build: 'tsc' } }));
+    // Committed source as its entry: nothing to build.
+    write(dir, 'packages/ui/package.json', JSON.stringify({ name: '@acme/ui', main: 'src/index.ts', scripts: { build: 'tsc' } }));
+    write(dir, 'packages/ui/src/index.ts', 'export {};\n');
+    git(dir, 'add', '-A');
+    git(dir, 'commit', '-qm', 'workspace packages');
+    assert.equal(cli(dir, 'init').code, 0);
+    let d = cli(dir, 'doctor');
+    assert.match(d.out, /warn {2}It uses @acme\/sdk \(packages\/sdk\/build\/index\.js\) from the repository, made by a build script and not committed/);
+    assert.match(d.out, /"qa:setup": "npm run build --workspace @acme\/sdk"/, 'npm: the workspace form');
+    assert.doesNotMatch(d.out, /@acme\/ui/);
+
+    const vitest = { testResults: [{ name: 'src/cart.test.ts', assertionResults: [{ fullName: 'total', status: 'passed' }] }] };
+    const playwright = { suites: [{ title: 'smoke.spec.ts', specs: [{ title: 'checkout', tags: ['smoke'], tests: [{ status: 'expected', results: [] }] }] }], errors: [] };
+    write(dir, 'apps/web/fake.mjs', `import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+if (!existsSync('../../packages/sdk/build/index.js')) { console.error('the SDK is not built'); process.exit(1); }
+mkdirSync('reports', { recursive: true });
+writeFileSync('reports/' + process.argv[2] + '.json', JSON.stringify(${JSON.stringify({ vitest, playwright })}[process.argv[2]]));
+`);
+    write(dir, 'apps/web/build-sdk.mjs', "import { mkdirSync, writeFileSync } from 'node:fs';\nmkdirSync('../../packages/sdk/build', { recursive: true });\nwriteFileSync('../../packages/sdk/build/index.js', '');\n");
+    const pkg = JSON.parse(read(dir, 'apps/web/package.json'));
+    pkg.scripts['qa:setup'] = 'node build-sdk.mjs';
+    write(dir, 'apps/web/package.json', JSON.stringify(pkg));
+    d = cli(dir, 'doctor', '--run');
+    assert.equal(d.code, 0, d.out);
+    assert.match(d.out, /ok {4}qa:setup runs after the install: node build-sdk\.mjs/);
+    assert.match(d.out, /ok {4}npm run qa:setup\n/);
+    assert.match(d.out, /ok {4}npm run test:unit: 1 tests pass/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('every script an installed file calls is installed too', () => {
   const installed = new Set(expectedFiles());
   const missing: string[] = [];

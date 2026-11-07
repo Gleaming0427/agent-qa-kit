@@ -45,6 +45,7 @@ const KIT_FILES = [
   'qa/check-tests.ts',
   'qa/ci-amend-tests.sh',
   'qa/ci-install-app.sh',
+  'qa/ci-node-version.sh',
   'qa/ci-install-agents.sh',
   'qa/ci-verify.sh',
   'qa/ci-write-tests.sh',
@@ -575,6 +576,72 @@ function installPlan(root, appDir) {
   return { problem: 'No package-lock.json or pnpm-lock.yaml: install the application with npm or pnpm and commit the lockfile. The workflows install from it.' };
 }
 
+/** The Node.js version the workflows give the application: the same decision as
+ * qa/ci-node-version.sh, which the tests compare with this one.
+ * @param {string} root @param {string} appDir @returns {{ version: string, from: string } | { problem: string }} */
+function nodePlan(root, appDir) {
+  for (let dir = appDir; ; dir = dirname(dir)) {
+    for (const name of ['.nvmrc', '.node-version']) {
+      const text = readText(join(dir, name));
+      if (text === null) continue;
+      const from = repoPath(root, join(dir, name));
+      const line = (text.split('\n').find((l) => !/^\s*#/.test(l) && /\S/.test(l)) ?? '').replace(/\s+/g, '');
+      if (!line) return { problem: `${from} is empty: write a Node.js version in it, such as 22 or 24.11.1.` };
+      const version = line.replace(/^v/, '');
+      const match = version.match(/^(\d+)(\.(\d+))?(\.\d+)?$/);
+      if (match) {
+        const major = Number(match[1]);
+        if (major < 22 || (major === 22 && match[3] !== undefined && Number(match[3]) < 18)) {
+          return { problem: `${from} names Node.js ${line}; the kit's scripts need 22.18 or later. Use a later version in CI, or run the kit's workflows on a branch that does.` };
+        }
+      } else if (!['lts/*', 'latest', 'current', 'node'].includes(version)) {
+        return { problem: `${from} names "${line}": write a version number, such as 22 or 24.11.1 (or lts/*), so that the kit can check it is 22.18 or later.` };
+      }
+      return { version, from };
+    }
+    if (dir === root || dirname(dir) === dir) break;
+  }
+  return { version: '22', from: 'default' };
+}
+
+/** The runtime entry a package.json gives: exports, then main.
+ * @param {any} pkg @returns {string | null} */
+function entryOf(pkg) {
+  /** @param {any} value @returns {string | null} */
+  const pick = (value) => {
+    if (typeof value === 'string') return value;
+    if (!value || typeof value !== 'object') return null;
+    for (const key of ['.', 'import', 'default', 'require', 'node']) {
+      const found = pick(value[key]);
+      if (found) return found;
+    }
+    return null;
+  };
+  return pick(pkg?.exports) ?? (typeof pkg?.main === 'string' ? pkg.main : null);
+}
+
+/** Packages of the repository the application depends on whose entry is not committed but
+ * made by their build script: missing after a fresh install, as in CI.
+ * @param {string} root @param {any} pkg @returns {{ name: string, entry: string }[]} */
+function unbuiltWorkspaceDeps(root, pkg) {
+  const deps = { ...(pkg?.dependencies ?? {}), ...(pkg?.devDependencies ?? {}) };
+  /** @type {Map<string, { folder: string, pkg: any }>} */
+  const local = new Map();
+  for (const folder of packageFolders(root)) {
+    const found = readJson(join(root, folder, 'package.json'));
+    if (found && typeof found.name === 'string' && !local.has(found.name)) local.set(found.name, { folder, pkg: found });
+  }
+  const unbuilt = [];
+  for (const name of Object.keys(deps).sort()) {
+    const found = local.get(name);
+    const entry = found && typeof found.pkg.scripts?.build === 'string' ? entryOf(found.pkg) : null;
+    if (!found || !entry) continue;
+    const path = toPosix(join(found.folder, entry)).replace(/^\.\//, '');
+    if (git(root, ['ls-files', '--error-unmatch', '--', path]).status !== 0) unbuilt.push({ name, entry: path });
+  }
+  return unbuilt;
+}
+
 /** @param {string} root @param {string} cwd @param {ReturnType<typeof parseArgs>} options @returns {{ app: string | null, sections: [string, Check[]][] }} */
 function doctor(root, cwd, options) {
   /** @type {[string, Check[]][]} */
@@ -656,6 +723,23 @@ function doctor(root, cwd, options) {
       : { level: 'ok', text: `${repoPath(root, needed[0])} is committed: the workflows install the application ${how}` });
   }
 
+  // The Node.js the workflows set up for it (qa/ci-node-version.sh).
+  const node = nodePlan(root, appDir);
+  checks.push('problem' in node ? { level: 'fail', text: node.problem }
+    : { level: 'ok', text: `the workflows run it on Node.js ${node.version} (${node.from === 'default' ? 'it names none in .nvmrc or .node-version' : `from ${node.from}`})` });
+
+  // A step it needs after the install: qa:setup, which the install step runs.
+  if (typeof scripts['qa:setup'] === 'string') {
+    checks.push({ level: 'ok', text: `qa:setup runs after the install: ${scripts['qa:setup']}` });
+  } else {
+    const unbuilt = unbuiltWorkspaceDeps(root, pkg);
+    if (unbuilt.length) {
+      const pnpm = !('problem' in install) && install.manager === 'pnpm';
+      const build = unbuilt.map(({ name }) => (pnpm ? `pnpm --filter ${name} build` : `npm run build --workspace ${name}`)).join(' && ');
+      checks.push({ level: 'warn', text: `It uses ${unbuilt.map(({ name, entry }) => `${name} (${entry})`).join(', ')} from the repository, made by a build script and not committed: a fresh install, as in CI, does not have it. Add a script that builds it, which the install step runs: "qa:setup": "${build}"` });
+    }
+  }
+
   const vConfig = vitestConfig(appDir);
   const vText = readText(vConfig ?? '') ?? '';
   const unitScripts = `${scripts['test:unit'] ?? ''} ${scripts['test:affected'] ?? ''}`;
@@ -715,6 +799,11 @@ function doctor(root, cwd, options) {
   const [major, minor] = process.versions.node.split('.').map(Number);
   machine.push(major > 22 || (major === 22 && minor >= 18) ? { level: 'ok', text: `Node.js ${process.versions.node}` }
     : { level: 'warn', text: `Node.js ${process.versions.node}: the kit's scripts need 22.18 or later.` });
+  const ciNode = 'version' in node ? node.version : '';
+  const ciMajor = Number(ciNode.split('.')[0]);
+  if (Number.isInteger(ciMajor) && ciMajor > 0 && ciMajor !== major) {
+    machine.push({ level: 'warn', text: `The workflows will use Node.js ${ciNode}, this computer has ${process.versions.node}: doctor --run may not show what CI will.` });
+  }
   if (process.platform === 'win32') machine.push({ level: 'warn', text: 'The agents run on Linux or macOS. On Windows, use the GitHub workflows.' });
   const missingTools = ['bash', 'jq', 'claude'].filter((tool) => !hasCommand(tool));
   machine.push(missingTools.length ? { level: 'warn', text: `Not found: ${missingTools.join(', ')}. Only needed to run the agents on this computer.` }
@@ -761,6 +850,12 @@ function runChecks(root, app) {
   const fresh = (path, since) => { try { return statSync(path).mtimeMs >= since ? readJson(path) : null; } catch { return null; } };
   /** @type {Check[]} */
   const checks = [];
+
+  // The install step runs qa:setup after the install: so does this check, before the tests.
+  if (typeof readJson(join(appDir, 'package.json'))?.scripts?.['qa:setup'] === 'string') {
+    const setupCode = run('qa:setup');
+    checks.push(setupCode === 0 ? { level: 'ok', text: 'npm run qa:setup' } : { level: 'fail', text: `npm run qa:setup failed (code ${setupCode}).` });
+  }
 
   let since = Date.now() - 2000;
   const unitCode = run('test:unit');
