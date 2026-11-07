@@ -1,0 +1,53 @@
+{
+  "schema_version": 2,
+  "ticket": "SHOP-2",
+  "spec_sha256": "91f5f09d8fd3c5d05c6f431c477007051ff8d73bfea42913ffb8686b5927d74f",
+  "manifest_sha256": "5dc47fd9fbe096a8e1c66b76cf32dcd93836891aedce435d6792fafbefa5a992",
+  "phase1_verdict_sha256": "ee6e5b62d7b115b3d487ab5da15af8d9a2c4ed44e21be700016b72f19705b5c7",
+  "red_vitest_sha256": "ab4c9602822c78e1c03a69064f8e99bede768a998cd39fe932b2fdb690cb8b29",
+  "red_playwright_sha256": "a19bbdc1173ff037af8ea0403eb618a33981ae50fdc3e6581e682c492fc035f5",
+  "tests": [
+    {
+      "path": "e2e/SHOP-2.spec.ts",
+      "sha256": "ea3b6b2ccdf50b8f211210ec8906d50652263a4934bb1805eb8298a6b8039e8c"
+    },
+    {
+      "path": "src/SHOP-2.test.tsx",
+      "sha256": "b6beb2197b77b24733f43b6089002feb4b3e7ed51553d4dab804697d1273198c"
+    }
+  ],
+  "criteria": [
+    {
+      "id": "AC-1",
+      "description": "the cart's heading shows the number of items in brackets, counting each line's quantity: one Notebook and two Pen sets show \"Cart (3)\".",
+      "failures": [
+        {
+          "level": "mfe",
+          "title": "SHOP-2 MFE: item count in the cart heading [SHOP-2][AC-1] MFE heading counts each line quantity",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"heading\" and name \"Cart (3)\" Here are the accessible roles: main: Name \"\": <main class=\"shell\" /> -------------------------------------------------- banner: Name \"\": <header /> -------------------------------------------------- region: Name \"Shop\": <section aria-labelledby=\"shop-title\" /> Name \"Cart\": <section aria-labelledby=\"cart-title\" class=\"cart\" /> -------------------------------------------------- heading: Nam"
+        },
+        {
+          "level": "shell",
+          "title": "SHOP-2.spec.ts @shop SHOP-2, item count in the cart heading [SHOP-2][AC-1] shell heading counts each line quantity",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByRole('heading', { name: 'Cart (3)' }) Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByRole('heading', { name: 'Cart (3)' })"
+        }
+      ]
+    },
+    {
+      "id": "AC-2",
+      "description": "an empty cart's heading shows \"Cart (0)\": at first, and again once the quantity of the last item goes down to zero.",
+      "failures": [
+        {
+          "level": "mfe",
+          "title": "SHOP-2 MFE: item count in the cart heading [SHOP-2][AC-2] MFE empty cart shows Cart (0) at first and after the last item reaches zero",
+          "message": "TestingLibraryElementError: Unable to find an accessible element with the role \"heading\" and name \"Cart (0)\" Here are the accessible roles: main: Name \"\": <main class=\"shell\" /> -------------------------------------------------- banner: Name \"\": <header /> -------------------------------------------------- region: Name \"Shop\": <section aria-labelledby=\"shop-title\" /> Name \"Cart\": <section aria-labelledby=\"cart-title\" class=\"cart\" /> -------------------------------------------------- heading: Nam"
+        },
+        {
+          "level": "shell",
+          "title": "SHOP-2.spec.ts @shop SHOP-2, item count in the cart heading [SHOP-2][AC-2] shell empty cart shows Cart (0) at first and after the last item reaches zero",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByRole('heading', { name: 'Cart (0)' }) Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByRole('heading', { name: 'Cart (0)' })"
+        }
+      ]
+    }
+  ]
+}

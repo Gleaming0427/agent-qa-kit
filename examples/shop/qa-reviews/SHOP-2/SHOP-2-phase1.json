@@ -1,0 +1,72 @@
+{
+  "ticket": "SHOP-2",
+  "phase": 1,
+  "verdict": "ready",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "level": "mfe",
+      "status": "written",
+      "evidence": "[SHOP-2][AC-1] MFE test in src/SHOP-2.test.tsx; fails: heading 'Cart (3)' not found"
+    },
+    {
+      "id": "AC-1",
+      "level": "shell",
+      "status": "written",
+      "evidence": "[SHOP-2][AC-1] shell test in e2e/SHOP-2.spec.ts; fails on expect toBeVisible for heading 'Cart (3)'"
+    },
+    {
+      "id": "AC-2",
+      "level": "mfe",
+      "status": "written",
+      "evidence": "[SHOP-2][AC-2] MFE test in src/SHOP-2.test.tsx; fails: heading 'Cart (0)' not found"
+    },
+    {
+      "id": "AC-2",
+      "level": "shell",
+      "status": "written",
+      "evidence": "[SHOP-2][AC-2] shell test in e2e/SHOP-2.spec.ts; fails on expect toBeVisible for heading 'Cart (0)'"
+    }
+  ],
+  "coverage": [
+    {
+      "id": "AC-1",
+      "cases": [
+        {
+          "data": "1 Notebook added once, 1 Pen set added twice",
+          "expect": "heading 'Cart (3)' (1 + 2 = 3)",
+          "rules_out": "counting cart lines instead of quantities (would show 2)"
+        }
+      ],
+      "not_covered": [
+        "more than two distinct products",
+        "counts of 10 or more",
+        "the count after a checkout clears the cart"
+      ]
+    },
+    {
+      "id": "AC-2",
+      "cases": [
+        {
+          "data": "fresh app, no items",
+          "expect": "heading 'Cart (0)'",
+          "rules_out": "a heading that only shows the count once the cart has items"
+        },
+        {
+          "data": "Notebook added twice, then decreased twice",
+          "expect": "'Cart (2)', then 'Cart (1)', then 'Cart (0)' (2 - 1 - 1 = 0)",
+          "rules_out": "a count that counts lines (stays 1 after the first decrease) or does not update when the quantity reaches zero"
+        }
+      ],
+      "not_covered": [
+        "emptying a cart with several different products",
+        "heading after checkout",
+        "the Increase button changing the count"
+      ]
+    }
+  ],
+  "flaky_tests": [],
+  "spec_questions": [],
+  "alerts": [],
+  "cost_usd": 0.13841230000000002
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "ticket": "SHOP-2",
+  "spec_sha256": "91f5f09d8fd3c5d05c6f431c477007051ff8d73bfea42913ffb8686b5927d74f",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "description": "the cart's heading shows the number of items in brackets, counting each line's quantity: one Notebook and two Pen sets show \"Cart (3)\"."
+    },
+    {
+      "id": "AC-2",
+      "description": "an empty cart's heading shows \"Cart (0)\": at first, and again once the quantity of the last item goes down to zero."
+    }
+  ]
+}
