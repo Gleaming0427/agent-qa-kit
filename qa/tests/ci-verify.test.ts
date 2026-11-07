@@ -10,7 +10,7 @@ import { exportReview, prepareReview } from '../scenario-review.ts';
 // The "prepare" step of the QA verify workflow on a real git history, with a
 // stand-in for the GitHub CLI: which approval counts, and on which tests.
 const kit = resolve(import.meta.dirname, '../..');
-const KIT_FILES = ['qa/ci-verify.sh', 'qa/check-scope.sh', 'qa/github-approval.ts', 'qa/scenario-review.ts',
+const KIT_FILES = ['qa/ci-verify.sh', 'qa/ci-node-version.sh', 'qa/check-scope.sh', 'qa/github-approval.ts', 'qa/scenario-review.ts',
   'qa/criteria-manifest.ts', '.claude/hooks/strict-evidence.ts', '.claude/hooks/coverage.ts'];
 const TICKET = 'TICKET-43';
 const REASONS = 'Looks right.\n\nAC-1: the button does not exist yet, so the search cannot be cleared.';
@@ -72,6 +72,10 @@ function history() {
   git(work, 'checkout', '-qb', `feat/${TICKET}-edited`);
   write(app, `src/${TICKET}.test.tsx`, `test('[${TICKET}][AC-1] MFE shows the clear button', () => { /* weakened */ });\n`);
   git(work, 'commit', '-qam', 'edit an approved test');
+  git(work, 'checkout', '-qb', `feat/${TICKET}-old-node`, `feat/${TICKET}`);
+  write(work, 'app/.nvmrc', 'v20.19.0\n');
+  git(work, 'add', '-A');
+  git(work, 'commit', '-qm', 'pin an old Node.js');
   git(work, 'checkout', '-qb', `feat/${TICKET}-without-tests`, 'main');
   write(work, 'app/src/App.tsx', 'export const App = () => "Clear search";\n');
   git(work, 'commit', '-qam', 'feature without the QA tests');
@@ -115,7 +119,9 @@ function verify(h: ReturnType<typeof history>, options: {
   });
   const read = (path: string) => existsSync(path) ? readFileSync(path, 'utf8') : '';
   return { code: result.status, output: result.stdout + result.stderr, ci, temp,
-    list: read(join(temp, 'qa-verify-tickets.tsv')), count: read(join(temp, 'output')).trim(),
+    list: read(join(temp, 'qa-verify-tickets.tsv')),
+    count: read(join(temp, 'output')).match(/^count=.*$/m)?.[0] ?? '',
+    node: read(join(temp, 'output')).split('\n').filter((line) => line.startsWith('node')).join('\n'),
     record: read(join(temp, 'qa-verify-record.jsonl')).split('\n').filter(Boolean).map((line) => JSON.parse(line)),
     summary: read(join(temp, 'summary')) };
 }
@@ -127,6 +133,7 @@ test('the verify workflow accepts only the tests a collaborator approved', () =>
     assert.equal(r.code, 0, r.output);
     assert.equal(r.list, `${TICKET}\tapp\tservices\t../specs/${TICKET}.md\n`);
     assert.equal(r.count, 'count=1');
+    assert.equal(r.node, 'node=22\nnode_from=default', 'no .nvmrc: Node.js 22 for the application');
     const approval = JSON.parse(readFileSync(join(r.ci, `app/reports/${TICKET}-approved.json`), 'utf8'));
     assert.equal(approval.reviewer, '@alice');
 
@@ -198,5 +205,23 @@ test('in advisory mode the verify workflow warns where it would block, records i
     assert.deepEqual(record.map((o) => [o.mode, o.step, o.result]), [['advisory', 'prepare', 'pass'], ['advisory', 'suite', 'fail'], ['blocking', 'suite', 'fail']]);
 
     assert.equal(verify(h, { env: { QA_VERIFY_MODE: 'warn' } }).code, 1);
+  } finally { rmSync(h.dir, { recursive: true, force: true }); }
+});
+
+// The application's Node.js version comes from its .nvmrc or .node-version (qa/ci-node-version.sh).
+test('the verify workflow gives the application the Node.js it names, and refuses one the kit cannot run on', () => {
+  const h = history();
+  try {
+    let r = verify(h, { branch: `feat/${TICKET}-old-node` });
+    assert.equal(r.code, 1, r.output);
+    assert.match(r.output, /::error title=QA verify::app\/\.nvmrc names Node\.js v20\.19\.0; the kit's scripts need 22\.18 or later/);
+    assert.equal(r.count, '');
+    assert.deepEqual(r.record.map((o) => [o.ticket, o.step, o.result]), [[TICKET, 'prepare', 'pass'], [TICKET, 'prepare', 'fail']]);
+
+    r = verify(h, { branch: `feat/${TICKET}-old-node`, env: { QA_VERIFY_MODE: 'advisory' } });
+    assert.equal(r.code, 0, r.output);
+    assert.equal(r.count, 'count=0', 'nothing else runs');
+    assert.match(r.output, /::warning title=QA verify \(advisory\)::Would block: app\/\.nvmrc names Node\.js v20\.19\.0/);
+    assert.match(r.summary, /would block: app\/\.nvmrc names Node\.js/);
   } finally { rmSync(h.dir, { recursive: true, force: true }); }
 });

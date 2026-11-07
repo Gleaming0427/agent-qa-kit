@@ -47,6 +47,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash qa/ci-verify.sh prepare
+      # The kit's scripts above ran on Node.js 22; the application gets its own version from here
+      # (.nvmrc or .node-version, else 22: qa/ci-node-version.sh, chosen in the prepare step).
+      - name: Use the application's Node.js version
+        if: steps.prepare.outputs.count != '0'
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ steps.prepare.outputs.node }}
       - name: Install the application, its browser and the agent sandbox
         if: steps.prepare.outputs.count != '0'
         run: bash qa/ci-verify.sh install

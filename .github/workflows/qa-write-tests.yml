@@ -42,9 +42,13 @@ jobs:
           fetch-depth: 0
           # No token on disk while the agent and the application's code run.
           persist-credentials: false
+      # The application's Node.js: its .nvmrc or .node-version, else 22 (qa/ci-node-version.sh).
+      - name: Choose the Node.js version
+        id: node
+        run: bash qa/ci-node-version.sh "$APP" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: ${{ steps.node.outputs.node }}
       - name: Check the request
         env:
           GH_TOKEN: ${{ github.token }}

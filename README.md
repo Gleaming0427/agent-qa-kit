@@ -107,6 +107,6 @@ The kit does not protect against someone with write access to the repository. De
 
 - Checks prove that named tests ran and gave the expected result. They can't prove the assertions match what the user wanted, so a person still reviews.
 - The writer and the verifier have run in CI through QA eval. The other workflows are tested, but have not run on a real ticket yet. The repair agent isn't measured.
-- The installer is tested on the demo shop and on test repositories, not yet on other real projects.
+- The installer has run on one real project, immich, a large pnpm monorepo: install and full suite, no agent ([eval/results/2026-11-07-immich.md](eval/results/2026-11-07-immich.md)). The agents have not run on a real project yet.
 - The evaluation corpus is 17 tickets of one small shop: it says how the agents do there, not on a real project.
 - The visual review can miss problems or report ones that aren't there, so it only warns.

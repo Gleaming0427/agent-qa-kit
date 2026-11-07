@@ -13,13 +13,19 @@
 #
 # Usage: bash qa/ci-install-app.sh <application folder> [--detect]
 #   --detect  prints "<npm|pnpm> <folder of the lockfile> <pnpm version, or ->" and installs nothing
+#
+# After the install, the application's own "qa:setup" script runs when it has one: a step it
+# needs before its tests, such as building a package of its workspace.
 set -euo pipefail
 escape() { local text="${1//%/%25}"; text="${text//$'\r'/%0D}"; printf '%s' "${text//$'\n'/%0A}"; }
 fail() { echo "::error title=Install the application::$(escape "$1")"; exit 1; }
-# A top-level field of a package.json: its text, "array" for an array, nothing otherwise.
+# A top-level field of a package.json ("scripts.<name>" for a script): its text, "array" for an
+# array, nothing otherwise.
 field() {
   node -e 'try {
-    const v = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))[process.argv[2]];
+    const p = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+    const [key, name] = process.argv[2].split(/\.(.*)/s);
+    const v = name === undefined ? p[key] : (p[key] ?? {})[name];
     process.stdout.write(Array.isArray(v) ? "array" : typeof v === "string" ? v : "");
   } catch {}' "$1/package.json" "$2"
 }
@@ -83,11 +89,18 @@ fi
 echo "Installing $APP with $manager$([[ $manager == pnpm ]] && echo " $version"), from the lockfile in $lock_dir"
 if [[ "$manager" == npm ]]; then
   (cd "$lock_dir" && npm ci --no-audit --no-fund)
-  (cd "$APP" && npx playwright install --with-deps chromium)
 else
   npm install --global --no-audit --no-fund "pnpm@$version"
   installed="$(pnpm --version)"
   [[ "$installed" == "$version" ]] || fail "pnpm $version was installed, but pnpm --version says $installed: another pnpm comes first on the PATH."
   (cd "$lock_dir" && pnpm install --frozen-lockfile)
+fi
+if [[ -n "$(field "$APP" scripts.qa:setup)" ]]; then
+  echo "Running the application's qa:setup script"
+  (cd "$APP" && npm run qa:setup) || fail "The application's qa:setup script failed: see the log above."
+fi
+if [[ "$manager" == npm ]]; then
+  (cd "$APP" && npx playwright install --with-deps chromium)
+else
   (cd "$APP" && pnpm exec playwright install --with-deps chromium)
 fi
