@@ -4,12 +4,12 @@
   "spec_sha256": "91f5f09d8fd3c5d05c6f431c477007051ff8d73bfea42913ffb8686b5927d74f",
   "manifest_sha256": "5dc47fd9fbe096a8e1c66b76cf32dcd93836891aedce435d6792fafbefa5a992",
   "phase1_verdict_sha256": "ee6e5b62d7b115b3d487ab5da15af8d9a2c4ed44e21be700016b72f19705b5c7",
-  "red_vitest_sha256": "ab4c9602822c78e1c03a69064f8e99bede768a998cd39fe932b2fdb690cb8b29",
-  "red_playwright_sha256": "a19bbdc1173ff037af8ea0403eb618a33981ae50fdc3e6581e682c492fc035f5",
+  "red_vitest_sha256": "99e16045e3cfad245ed7cad7b8d548ae5b10a4adb5b670ce0ffc95515ea5c34e",
+  "red_playwright_sha256": "7f0b592ecf4d68056f85abb4849c4bee0df100f3376d23fa4391f869a5990b63",
   "tests": [
     {
       "path": "e2e/SHOP-2.spec.ts",
-      "sha256": "ea3b6b2ccdf50b8f211210ec8906d50652263a4934bb1805eb8298a6b8039e8c"
+      "sha256": "3b81641cb1f64135f4d3ef67b93e18fb66b3825b919aac46d787b2f57c66477e"
     },
     {
       "path": "src/SHOP-2.test.tsx",
@@ -29,7 +29,7 @@
         {
           "level": "shell",
           "title": "SHOP-2.spec.ts @shop SHOP-2, item count in the cart heading [SHOP-2][AC-1] shell heading counts each line quantity",
-          "message": "Error: expect(locator).toBeVisible() failed Locator: getByRole('heading', { name: 'Cart (3)' }) Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByRole('heading', { name: 'Cart (3)' })"
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByRole('heading', { name: 'Cart (3)', exact: true }) Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByRole('heading', { name: 'Cart (3)', exact: true })"
         }
       ]
     },
@@ -45,7 +45,7 @@
         {
           "level": "shell",
           "title": "SHOP-2.spec.ts @shop SHOP-2, item count in the cart heading [SHOP-2][AC-2] shell empty cart shows Cart (0) at first and after the last item reaches zero",
-          "message": "Error: expect(locator).toBeVisible() failed Locator: getByRole('heading', { name: 'Cart (0)' }) Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByRole('heading', { name: 'Cart (0)' })"
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByRole('heading', { name: 'Cart (0)', exact: true }) Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByRole('heading', { name: 'Cart (0)', exact: true })"
         }
       ]
     }

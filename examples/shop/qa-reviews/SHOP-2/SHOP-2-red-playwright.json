@@ -1,7 +1,7 @@
 {
   "config": {
-    "configFile": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/playwright.config.ts",
-    "rootDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e",
+    "configFile": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/playwright.config.ts",
+    "rootDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e",
     "forbidOnly": false,
     "fullyParallel": false,
     "globalSetup": null,
@@ -14,24 +14,24 @@
       "ci": {
         "commitHref": "https://github.com/Gleaming0427/agent-qa-kit/commit/709a7e78f4e8f023b535940d29806a0e47acc702",
         "commitHash": "709a7e78f4e8f023b535940d29806a0e47acc702",
-        "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42379649680"
+        "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42382495399"
       },
       "gitCommit": {
-        "shortHash": "709a7e7",
-        "hash": "709a7e78f4e8f023b535940d29806a0e47acc702",
-        "subject": "Trial: ticket SHOP-2 to try the QA approval status and an amendment after a squash",
-        "body": "Trial: ticket SHOP-2 to try the QA approval status and an amendment after a squash\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JJrXJC8RBAvBwnRUnMySZk\n",
+        "shortHash": "389b36c",
+        "hash": "389b36c9f0e03865787bc4381d5ebf254a07f821",
+        "subject": "test(SHOP-2): match the cart heading's exact name in the browser test",
+        "body": "test(SHOP-2): match the cart heading's exact name in the browser test\n\nWithout exact: true, Playwright compares the accessible name as a\ncase-insensitive substring: \"cart (3)\" or \"Cart (3) items\" passed the\nbrowser test, while the ticket asks for \"Cart (3)\". The unit test,\nwith Testing Library, already compares the whole name.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JJrXJC8RBAvBwnRUnMySZk\n",
         "author": {
           "name": "Claude",
           "email": "noreply@anthropic.com",
-          "time": 1794060101000
+          "time": 1794062262000
         },
         "committer": {
           "name": "Claude",
           "email": "noreply@anthropic.com",
-          "time": 1794060101000
+          "time": 1794062262000
         },
-        "branch": "trial/approval"
+        "branch": "qa/SHOP-2"
       },
       "actualWorkers": 1
     },
@@ -55,37 +55,37 @@
     "quiet": false,
     "projects": [
       {
-        "outputDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results",
+        "outputDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
           "ci": {
             "commitHref": "https://github.com/Gleaming0427/agent-qa-kit/commit/709a7e78f4e8f023b535940d29806a0e47acc702",
             "commitHash": "709a7e78f4e8f023b535940d29806a0e47acc702",
-            "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42379649680"
+            "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42382495399"
           },
           "gitCommit": {
-            "shortHash": "709a7e7",
-            "hash": "709a7e78f4e8f023b535940d29806a0e47acc702",
-            "subject": "Trial: ticket SHOP-2 to try the QA approval status and an amendment after a squash",
-            "body": "Trial: ticket SHOP-2 to try the QA approval status and an amendment after a squash\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JJrXJC8RBAvBwnRUnMySZk\n",
+            "shortHash": "389b36c",
+            "hash": "389b36c9f0e03865787bc4381d5ebf254a07f821",
+            "subject": "test(SHOP-2): match the cart heading's exact name in the browser test",
+            "body": "test(SHOP-2): match the cart heading's exact name in the browser test\n\nWithout exact: true, Playwright compares the accessible name as a\ncase-insensitive substring: \"cart (3)\" or \"Cart (3) items\" passed the\nbrowser test, while the ticket asks for \"Cart (3)\". The unit test,\nwith Testing Library, already compares the whole name.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JJrXJC8RBAvBwnRUnMySZk\n",
             "author": {
               "name": "Claude",
               "email": "noreply@anthropic.com",
-              "time": 1794060101000
+              "time": 1794062262000
             },
             "committer": {
               "name": "Claude",
               "email": "noreply@anthropic.com",
-              "time": 1794060101000
+              "time": 1794062262000
             },
-            "branch": "trial/approval"
+            "branch": "qa/SHOP-2"
           },
           "actualWorkers": 1
         },
         "id": "desktop",
         "name": "desktop",
-        "testDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e",
+        "testDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -93,37 +93,37 @@
         "timeout": 30000
       },
       {
-        "outputDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results",
+        "outputDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
           "ci": {
             "commitHref": "https://github.com/Gleaming0427/agent-qa-kit/commit/709a7e78f4e8f023b535940d29806a0e47acc702",
             "commitHash": "709a7e78f4e8f023b535940d29806a0e47acc702",
-            "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42379649680"
+            "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42382495399"
           },
           "gitCommit": {
-            "shortHash": "709a7e7",
-            "hash": "709a7e78f4e8f023b535940d29806a0e47acc702",
-            "subject": "Trial: ticket SHOP-2 to try the QA approval status and an amendment after a squash",
-            "body": "Trial: ticket SHOP-2 to try the QA approval status and an amendment after a squash\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JJrXJC8RBAvBwnRUnMySZk\n",
+            "shortHash": "389b36c",
+            "hash": "389b36c9f0e03865787bc4381d5ebf254a07f821",
+            "subject": "test(SHOP-2): match the cart heading's exact name in the browser test",
+            "body": "test(SHOP-2): match the cart heading's exact name in the browser test\n\nWithout exact: true, Playwright compares the accessible name as a\ncase-insensitive substring: \"cart (3)\" or \"Cart (3) items\" passed the\nbrowser test, while the ticket asks for \"Cart (3)\". The unit test,\nwith Testing Library, already compares the whole name.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JJrXJC8RBAvBwnRUnMySZk\n",
             "author": {
               "name": "Claude",
               "email": "noreply@anthropic.com",
-              "time": 1794060101000
+              "time": 1794062262000
             },
             "committer": {
               "name": "Claude",
               "email": "noreply@anthropic.com",
-              "time": 1794060101000
+              "time": 1794062262000
             },
-            "branch": "trial/approval"
+            "branch": "qa/SHOP-2"
           },
           "actualWorkers": 1
         },
         "id": "mobile",
         "name": "mobile",
-        "testDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e",
+        "testDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -178,47 +178,47 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 5384,
+                      "duration": 5290,
                       "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('heading', { name: 'Cart (3)' })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Cart (3)' })\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('heading', { name: 'Cart (3)' })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Cart (3)' })\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-2.spec.ts:12:67",
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('heading', { name: 'Cart (3)', exact: true })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Cart (3)', exact: true })\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('heading', { name: 'Cart (3)', exact: true })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Cart (3)', exact: true })\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e/SHOP-2.spec.ts:12:80",
                         "location": {
-                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-2.spec.ts",
-                          "column": 67,
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e/SHOP-2.spec.ts",
+                          "column": 80,
                           "line": 12
                         },
-                        "snippet": "\u001b[0m \u001b[90m 10 |\u001b[39m     \u001b[36mawait\u001b[39m click(page\u001b[33m,\u001b[39m \u001b[32m'Add Pen set to cart'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m     \u001b[36mawait\u001b[39m click(page\u001b[33m,\u001b[39m \u001b[32m'Add Pen set to cart'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 12 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'heading'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Cart (3)'\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 13 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 14 |\u001b[39m   test(\u001b[32m'[SHOP-2][AC-2] shell empty cart shows Cart (0) at first and after the last item reaches zero'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 15 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'heading'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Cart (0)'\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 10 |\u001b[39m     \u001b[36mawait\u001b[39m click(page\u001b[33m,\u001b[39m \u001b[32m'Add Pen set to cart'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 11 |\u001b[39m     \u001b[36mawait\u001b[39m click(page\u001b[33m,\u001b[39m \u001b[32m'Add Pen set to cart'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 12 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'heading'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Cart (3)'\u001b[39m\u001b[33m,\u001b[39m exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 13 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 14 |\u001b[39m   test(\u001b[32m'[SHOP-2][AC-2] shell empty cart shows Cart (0) at first and after the last item reaches zero'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 15 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'heading'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Cart (0)'\u001b[39m\u001b[33m,\u001b[39m exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
-                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-2.spec.ts",
-                            "column": 67,
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e/SHOP-2.spec.ts",
+                            "column": 80,
                             "line": 12
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('heading', { name: 'Cart (3)' })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Cart (3)' })\u001b[22m\n\n\n  10 |     await click(page, 'Add Pen set to cart');\n  11 |     await click(page, 'Add Pen set to cart');\n> 12 |     await expect(page.getByRole('heading', { name: 'Cart (3)' })).toBeVisible();\n     |                                                                   ^\n  13 |   });\n  14 |   test('[SHOP-2][AC-2] shell empty cart shows Cart (0) at first and after the last item reaches zero', async ({ page }) => {\n  15 |     await expect(page.getByRole('heading', { name: 'Cart (0)' })).toBeVisible();\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-2.spec.ts:12:67"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('heading', { name: 'Cart (3)', exact: true })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Cart (3)', exact: true })\u001b[22m\n\n\n  10 |     await click(page, 'Add Pen set to cart');\n  11 |     await click(page, 'Add Pen set to cart');\n> 12 |     await expect(page.getByRole('heading', { name: 'Cart (3)', exact: true })).toBeVisible();\n     |                                                                                ^\n  13 |   });\n  14 |   test('[SHOP-2][AC-2] shell empty cart shows Cart (0) at first and after the last item reaches zero', async ({ page }) => {\n  15 |     await expect(page.getByRole('heading', { name: 'Cart (0)', exact: true })).toBeVisible();\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e/SHOP-2.spec.ts:12:80"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-07T14:02:58.462Z",
+                      "startTime": "2026-11-07T14:38:25.268Z",
                       "annotations": [],
                       "attachments": [
                         {
                           "name": "error-context",
                           "contentType": "text/markdown",
-                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/SHOP-2--shop-SHOP-2-item-c-2bd90-g-counts-each-line-quantity-desktop/error-context.md"
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/test-results/SHOP-2--shop-SHOP-2-item-c-2bd90-g-counts-each-line-quantity-desktop/error-context.md"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/SHOP-2--shop-SHOP-2-item-c-2bd90-g-counts-each-line-quantity-desktop/trace.zip"
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/test-results/SHOP-2--shop-SHOP-2-item-c-2bd90-g-counts-each-line-quantity-desktop/trace.zip"
                         }
                       ],
                       "errorLocation": {
-                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-2.spec.ts",
-                        "column": 67,
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e/SHOP-2.spec.ts",
+                        "column": 80,
                         "line": 12
                       }
                     }
@@ -249,47 +249,47 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 5230,
+                      "duration": 5170,
                       "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('heading', { name: 'Cart (0)' })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Cart (0)' })\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('heading', { name: 'Cart (0)' })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Cart (0)' })\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-2.spec.ts:15:67",
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('heading', { name: 'Cart (0)', exact: true })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Cart (0)', exact: true })\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('heading', { name: 'Cart (0)', exact: true })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Cart (0)', exact: true })\u001b[22m\n\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e/SHOP-2.spec.ts:15:80",
                         "location": {
-                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-2.spec.ts",
-                          "column": 67,
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e/SHOP-2.spec.ts",
+                          "column": 80,
                           "line": 15
                         },
-                        "snippet": "\u001b[0m \u001b[90m 13 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 14 |\u001b[39m   test(\u001b[32m'[SHOP-2][AC-2] shell empty cart shows Cart (0) at first and after the last item reaches zero'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 15 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'heading'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Cart (0)'\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 16 |\u001b[39m     \u001b[36mawait\u001b[39m click(page\u001b[33m,\u001b[39m \u001b[32m'Add Notebook to cart'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 17 |\u001b[39m     \u001b[36mawait\u001b[39m click(page\u001b[33m,\u001b[39m \u001b[32m'Add Notebook to cart'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 18 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'heading'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Cart (2)'\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 13 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 14 |\u001b[39m   test(\u001b[32m'[SHOP-2][AC-2] shell empty cart shows Cart (0) at first and after the last item reaches zero'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 15 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'heading'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Cart (0)'\u001b[39m\u001b[33m,\u001b[39m exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 16 |\u001b[39m     \u001b[36mawait\u001b[39m click(page\u001b[33m,\u001b[39m \u001b[32m'Add Notebook to cart'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 17 |\u001b[39m     \u001b[36mawait\u001b[39m click(page\u001b[33m,\u001b[39m \u001b[32m'Add Notebook to cart'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 18 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'heading'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Cart (2)'\u001b[39m\u001b[33m,\u001b[39m exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
-                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-2.spec.ts",
-                            "column": 67,
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e/SHOP-2.spec.ts",
+                            "column": 80,
                             "line": 15
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('heading', { name: 'Cart (0)' })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Cart (0)' })\u001b[22m\n\n\n  13 |   });\n  14 |   test('[SHOP-2][AC-2] shell empty cart shows Cart (0) at first and after the last item reaches zero', async ({ page }) => {\n> 15 |     await expect(page.getByRole('heading', { name: 'Cart (0)' })).toBeVisible();\n     |                                                                   ^\n  16 |     await click(page, 'Add Notebook to cart');\n  17 |     await click(page, 'Add Notebook to cart');\n  18 |     await expect(page.getByRole('heading', { name: 'Cart (2)' })).toBeVisible();\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-2.spec.ts:15:67"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByRole('heading', { name: 'Cart (0)', exact: true })\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Cart (0)', exact: true })\u001b[22m\n\n\n  13 |   });\n  14 |   test('[SHOP-2][AC-2] shell empty cart shows Cart (0) at first and after the last item reaches zero', async ({ page }) => {\n> 15 |     await expect(page.getByRole('heading', { name: 'Cart (0)', exact: true })).toBeVisible();\n     |                                                                                ^\n  16 |     await click(page, 'Add Notebook to cart');\n  17 |     await click(page, 'Add Notebook to cart');\n  18 |     await expect(page.getByRole('heading', { name: 'Cart (2)', exact: true })).toBeVisible();\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e/SHOP-2.spec.ts:15:80"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-07T14:03:06.143Z",
+                      "startTime": "2026-11-07T14:38:31.965Z",
                       "annotations": [],
                       "attachments": [
                         {
                           "name": "error-context",
                           "contentType": "text/markdown",
-                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/SHOP-2--shop-SHOP-2-item-c-8463f--the-last-item-reaches-zero-desktop/error-context.md"
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/test-results/SHOP-2--shop-SHOP-2-item-c-8463f--the-last-item-reaches-zero-desktop/error-context.md"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/SHOP-2--shop-SHOP-2-item-c-8463f--the-last-item-reaches-zero-desktop/trace.zip"
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/test-results/SHOP-2--shop-SHOP-2-item-c-8463f--the-last-item-reaches-zero-desktop/trace.zip"
                         }
                       ],
                       "errorLocation": {
-                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/SHOP-2.spec.ts",
-                        "column": 67,
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/work/examples/shop/e2e/SHOP-2.spec.ts",
+                        "column": 80,
                         "line": 15
                       }
                     }
@@ -337,12 +337,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 270,
+                      "duration": 211,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-07T14:03:12.135Z",
+                      "startTime": "2026-11-07T14:38:37.643Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -373,12 +373,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 278,
+                      "duration": 279,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-07T14:03:12.515Z",
+                      "startTime": "2026-11-07T14:38:37.941Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -409,12 +409,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 241,
+                      "duration": 195,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-07T14:03:12.814Z",
+                      "startTime": "2026-11-07T14:38:38.233Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -434,8 +434,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-11-07T14:02:55.884Z",
-    "duration": 17234.169,
+    "startTime": "2026-11-07T14:38:22.961Z",
+    "duration": 15523.095000000001,
     "expected": 3,
     "skipped": 0,
     "unexpected": 2,

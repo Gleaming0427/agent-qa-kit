@@ -1,0 +1,16 @@
+[
+  {
+    "at": "2026-11-07T14:38:38.583Z",
+    "author": "@Gleaming0427",
+    "reason": "The browser test matched the cart heading's name as a case-insensitive substring, so \"cart (3)\" or \"Cart (3) items\" passed it; the ticket asks for \"Cart (3)\". It now needs the exact name.",
+    "files": [
+      {
+        "path": "e2e/SHOP-2.spec.ts",
+        "before": "ea3b6b2ccdf50b8f211210ec8906d50652263a4934bb1805eb8298a6b8039e8c",
+        "after": "3b81641cb1f64135f4d3ef67b93e18fb66b3825b919aac46d787b2f57c66477e"
+      }
+    ],
+    "previous_request_sha256": "728e65f8add3bb168d793a987c7b29220b07a47e83203c8c1c0a27f283756614",
+    "request_sha256": "bce8c0d9a519cab5e97264e176e2930820838fe07f3d69f407fe8f2335556715"
+  }
+]
