@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Unit tests that already pass without the feature.** Phase 1 requires every browser test to fail, but a criterion's unit tests need only one failure: a unit test that already passes is accepted without a word. On OMNI-1, 2 of the 6 unit tests passed before the feature existed:
+  - "a b c" on three lines, where reversing the letters of one-letter words gives the same result as reversing the words: a case that cannot tell a right implementation from a wrong one;
+  - a test of the default behavior, which the ticket keeps.
+
+  The test pull request now lists such tests with their criterion, read from the RED report of the review package, so that the reviewer can tell one kind from the other. Replayed on the approved package of OMNI-1, it lists those two tests. In the 27 trials of the campaigns of 5 and 7 November, no generated test passed without the feature: on the demo, the function or component a ticket adds does not exist yet, so all its tests fail. The evaluation cannot measure this case.
 - **Browser assertions that a longer number would still pass.** Playwright matches text by its part: `toContainText('× 1')` passes on "× 12", and a lookup such as `getByText('4 products')`, without `exact: true`, finds "14 products" (checked with `@playwright/test` 1.55.1). A number that starts the expected text, or a whole number that ends it, can grow on a wrong implementation without failing the test.
   - The test pull request now lists each such assertion for the reviewer, with the longer value it would accept, and what to ask for instead: `toHaveText`, `exact: true` or a regular expression such as `/(?<!\d)4 products/` (`qa/loose-assertions.ts`). Nothing is refused: another assertion may already rule that value out.
   - In the 27 browser test files the writer generated in the campaigns of 5 and 7 November, it lists 17 assertions in 7 of them, all on a count: `getByText('4 products')`, `toContainText('× 1')`, `toContainText('× 3')`.

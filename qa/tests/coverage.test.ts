@@ -91,7 +91,16 @@ test('the Stop hook sends back a phase 1 verdict without its coverage or with a 
     prepareReview({ root: ok.dir, ticket: 'TICKET-42', specPath: join(ok.dir, 'specs/TICKET-42.md') });
     assert.match(reviewMarkdown({ root: ok.dir, ticket: 'TICKET-42' }),
       /### AC-1: the subtotal[\s\S]*Unit test[\s\S]*What the tests cover[\s\S]*Rules out: a subtotal that ignores quantities[\s\S]*Not covered[\s\S]*- an empty cart[\s\S]*### How to approve/);
-    assert.doesNotMatch(reviewMarkdown({ root: ok.dir, ticket: 'TICKET-42' }), /longer number/);
+    assert.doesNotMatch(reviewMarkdown({ root: ok.dir, ticket: 'TICKET-42' }), /longer number|already pass/);
+    // A unit test that already passed before the feature existed is listed with its criterion (OMNI-1 had two).
+    writeFileSync(join(ok.dir, 'reports/TICKET-42-red-vitest.json'), JSON.stringify({ numFailedTests: 1, numPassedTests: 2, testResults: [{
+      name: join(ok.dir, 'src/Cart.test.tsx'), assertionResults: [
+        { fullName: '[TICKET-42][AC-1] MFE subtotal', status: 'failed', failureMessages: ['expected "€10.50" to be "€15.00"'] },
+        { fullName: ' Cart [TICKET-42][AC-1] MFE subtotal of an empty cart', status: 'passed', failureMessages: [] },
+        { fullName: 'Cart keeps its lines', status: 'passed', failureMessages: [] },
+      ] }] }));
+    assert.match(reviewMarkdown({ root: ok.dir, ticket: 'TICKET-42' }),
+      /### Tests that already pass without the feature\nThe kit accepts them as long as another test of the same criterion fails[^\n]*\n- AC-1, unit test `Cart \[TICKET-42\]\[AC-1\] MFE subtotal of an empty cart`\n\n### How to approve/);
     // A browser assertion that a longer number would still pass is listed for the reviewer, with that number.
     writeFileSync(join(ok.dir, 'e2e/TICKET-42.spec.ts'), "test('[TICKET-42][AC-1] shell subtotal', async ({ page }) => {\n"
       + "  await expect(page.getByRole('row', { name: 'Total' })).toContainText('€15.00');\n"
