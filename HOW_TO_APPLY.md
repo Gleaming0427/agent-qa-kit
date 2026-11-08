@@ -275,8 +275,11 @@ list first: a case the ticket needs and the tests miss does not show in the test
 code. The kit has already recomputed every expected amount written as
 `a + b = c`. It also lists the browser assertions that a longer number would
 still pass: Playwright matches text by its part, so `getByText('4 products')`
-also finds "14 products", and `toContainText('× 1')` accepts "× 12". Approve it
-with a review comment that has one line per criterion:
+also finds "14 products", and `toContainText('× 1')` accepts "× 12". And it
+lists the unit tests that already passed before the feature existed: the kit
+accepts them when another test of the criterion fails, but each one shows
+nothing about the feature. Approve it with a review comment that has one line
+per criterion:
 
 ```text
 AC-1: the Promo code field does not exist yet, so the test cannot fill it

@@ -307,6 +307,25 @@ export function importReview({ root, ticket }: { root: string; ticket: string })
   return context;
 }
 
+/** The ticket's unit tests that passed in the RED run, before the feature existed, with their criterion. */
+function passingBeforeFeature(root: string, ticket: string, ids: string[]): { id: string; title: string }[] {
+  let report: VitestReport;
+  try {
+    report = readJson<VitestReport>(redReports(root, ticket).vitest);
+  } catch {
+    return [];
+  }
+  const found: { id: string; title: string }[] = [];
+  for (const file of report.testResults ?? []) {
+    for (const item of file.assertionResults ?? []) {
+      const title = item.fullName ?? item.title ?? '';
+      if (item.status !== 'passed' || !title.includes(`[${ticket}]`)) continue;
+      for (const id of ids) if (title.includes(`[${id}]`)) found.push({ id, title });
+    }
+  }
+  return found;
+}
+
 /** Pull request text: what to check, the RED evidence, and how to approve. */
 export function reviewMarkdown({ root, ticket }: { root: string; ticket: string }): string {
   const request = readJson<ReviewRequest>(reportPath(resolve(root), ticket, 'review-request'));
@@ -328,6 +347,15 @@ export function reviewMarkdown({ root, ticket }: { root: string; ticket: string 
       return [];
     }
   });
+  // Unit tests of the ticket that already passed before the feature existed. Phase 1 accepts them as long as
+  // another unit test of the criterion fails (every browser test must fail), so only the reviewer can tell a
+  // test of behavior the ticket keeps from a case where a right and a wrong implementation give the same result.
+  const alreadyPassing = passingBeforeFeature(resolve(root), ticket, request.criteria.map(({ id }) => id));
+  const passingSection = alreadyPassing.length ? [[
+    '### Tests that already pass without the feature',
+    'The kit accepts them as long as another test of the same criterion fails, but each one shows nothing about the feature. Check that it tests behavior the ticket keeps, and is not a case where a right and a wrong implementation give the same result.',
+    ...alreadyPassing.map(({ id, title }) => `- ${id}, unit test \`${plain(title.trim())}\``),
+  ].join('\n')] : [];
   const looseSection = loose.length ? [[
     '### Assertions that also pass on a longer number',
     'Playwright finds a text by its part: `toContainText`, and a lookup by text, label or name without `exact: true`, also accept a longer text. These assertions would still pass if the page showed the longer value:',
@@ -345,6 +373,7 @@ export function reviewMarkdown({ root, ticket }: { root: string; ticket: string 
     ...log,
     'Before approving, check for each criterion that the assertions test what the ticket asks for, and that the failure below comes from the missing feature, not from a broken test or environment. Then read what the tests do not cover: a case that matters for the ticket and is missing will not show in the test code.',
     ...sections,
+    ...passingSection,
     ...looseSection,
     '### How to approve',
     'Approve this pull request with a review comment that has one line per criterion:',
