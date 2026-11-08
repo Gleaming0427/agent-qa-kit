@@ -10,6 +10,7 @@ import type { CriterionCoverage } from '../.claude/hooks/coverage.ts';
 import { cleanMessage, extractPlaywrightTests, validateEvidence } from '../.claude/hooks/strict-evidence.ts';
 import type { Level, Manifest, PlaywrightReport, Verdict, VitestReport } from '../.claude/hooks/strict-evidence.ts';
 import { buildManifest } from './criteria-manifest.ts';
+import { looseAssertions } from './loose-assertions.ts';
 
 interface ReviewedCriterion { id: string; description: string; failures: { level: Level; title: string; message: string }[] }
 export interface ReviewRequest {
@@ -319,6 +320,20 @@ export function reviewMarkdown({ root, ticket }: { root: string; ticket: string 
     ...failures.map((f) => `- **${f.level === 'mfe' ? 'Unit' : 'Browser'} test** \`${plain(f.title)}\`\n  > ${plain(f.message).slice(0, 300)}`),
     ...(Array.isArray(coverage) ? ['', ...coverageMarkdown(coverage.find((c) => c?.id === id))] : []),
   ].join('\n').trimEnd());
+  // Browser assertions a longer number would still pass: Playwright matches text by its part.
+  const loose = request.tests.filter(({ path }) => path.endsWith('.spec.ts')).flatMap(({ path }) => {
+    try {
+      return looseAssertions(readFileSync(resolve(root, path), 'utf8')).map((found) => ({ path, ...found }));
+    } catch {
+      return [];
+    }
+  });
+  const looseSection = loose.length ? [[
+    '### Assertions that also pass on a longer number',
+    'Playwright finds a text by its part: `toContainText`, and a lookup by text, label or name without `exact: true`, also accept a longer text. These assertions would still pass if the page showed the longer value:',
+    ...loose.map(({ path, line, code, accepts }) => `- \`${plain(path)}\`, line ${line}: \`${plain(code)}\` also accepts "${plain(accepts)}"`),
+    'Check that another assertion rules each longer value out, or ask for `toHaveText`, `exact: true`, or a regular expression such as `/(?<!\\d)4 products/`.',
+  ].join('\n')] : [];
   const log = amendments.length ? [[
     '### Amendments',
     'Approved tests were changed by hand. Check that each change fixes the test, not the bar: the tests must still say what the ticket asks.',
@@ -330,6 +345,7 @@ export function reviewMarkdown({ root, ticket }: { root: string; ticket: string 
     ...log,
     'Before approving, check for each criterion that the assertions test what the ticket asks for, and that the failure below comes from the missing feature, not from a broken test or environment. Then read what the tests do not cover: a case that matters for the ticket and is missing will not show in the test code.',
     ...sections,
+    ...looseSection,
     '### How to approve',
     'Approve this pull request with a review comment that has one line per criterion:',
     `\`\`\`text\n${request.criteria.map(({ id }) => `${id}: why this failure shows the feature is missing`).join('\n')}\n\`\`\``,

@@ -91,5 +91,12 @@ test('the Stop hook sends back a phase 1 verdict without its coverage or with a 
     prepareReview({ root: ok.dir, ticket: 'TICKET-42', specPath: join(ok.dir, 'specs/TICKET-42.md') });
     assert.match(reviewMarkdown({ root: ok.dir, ticket: 'TICKET-42' }),
       /### AC-1: the subtotal[\s\S]*Unit test[\s\S]*What the tests cover[\s\S]*Rules out: a subtotal that ignores quantities[\s\S]*Not covered[\s\S]*- an empty cart[\s\S]*### How to approve/);
+    assert.doesNotMatch(reviewMarkdown({ root: ok.dir, ticket: 'TICKET-42' }), /longer number/);
+    // A browser assertion that a longer number would still pass is listed for the reviewer, with that number.
+    writeFileSync(join(ok.dir, 'e2e/TICKET-42.spec.ts'), "test('[TICKET-42][AC-1] shell subtotal', async ({ page }) => {\n"
+      + "  await expect(page.getByRole('row', { name: 'Total' })).toContainText('€15.00');\n"
+      + "  await expect(page.getByText('3 items')).toBeVisible();\n});\n");
+    assert.match(reviewMarkdown({ root: ok.dir, ticket: 'TICKET-42' }),
+      /- an empty cart[\s\S]*### Assertions that also pass on a longer number\nPlaywright finds a text by its part[^\n]*\n- `e2e\/TICKET-42\.spec\.ts`, line 3: `getByText\('3 items'\)` also accepts "13 items"\nCheck that another assertion[^\n]*`\/\(\?<!\\d\)4 products\/`\.\n\n### How to approve/);
   } finally { rmSync(ok.dir, { recursive: true, force: true }); }
 });

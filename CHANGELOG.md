@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Browser assertions that a longer number would still pass.** Playwright matches text by its part: `toContainText('× 1')` passes on "× 12", and a lookup such as `getByText('4 products')`, without `exact: true`, finds "14 products" (checked with `@playwright/test` 1.55.1). A number that starts the expected text, or a whole number that ends it, can grow on a wrong implementation without failing the test.
+  - The test pull request now lists each such assertion for the reviewer, with the longer value it would accept, and what to ask for instead: `toHaveText`, `exact: true` or a regular expression such as `/(?<!\d)4 products/` (`qa/loose-assertions.ts`). Nothing is refused: another assertion may already rule that value out.
+  - In the 27 browser test files the writer generated in the campaigns of 5 and 7 November, it lists 17 assertions in 7 of them, all on a count: `getByText('4 products')`, `toContainText('× 1')`, `toContainText('× 3')`.
+  - Not listed: a number protected by the text around it (`'€4.90'`, `'Cart (3)'`), a negative assertion, and the case and longer-text matches of other lookups, which would list most of the tests' assertions. The lookup of SHOP-2 that the trial of 7 November amended, `name: 'Cart (3)'`, is one of them.
 - **Fewer turns lost to refused commands.** Each tool call the guard refuses costs the agent a turn. In the campaign of 5 November (15 trials), it refused 16 calls of the writer and 41 of the verifier:
   - 12 of the writer's were its three test commands chained with `;`, their output cut with `| tail` or `| head`;
   - 23 of the verifier's were `cat` on a file, often tried again after the refusal, and 12 a test command cut with `| tail`.
