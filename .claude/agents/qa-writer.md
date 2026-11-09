@@ -46,7 +46,14 @@ For EVERY manifest criterion:
    the ticket names, but the markup does not have yet, is found by its label
    (`getByLabelText` with Testing Library, `getByLabel` with Playwright),
    never by a role you assume: the ticket does not say whether it is a
-   textbox, a searchbox, a spinbutton or a combobox.
+   textbox, a searchbox, a spinbutton or a combobox. A value the ticket gives
+   without the text around it, such as a total or a count, is checked as part
+   of the text of the element that shows it (`toHaveTextContent` with Testing
+   Library, `toContainText` with Playwright), never as an element whose whole
+   text you assume (Testing Library's `getByText` matches the whole text):
+   the ticket does not say which words surround the value. When a longer
+   number would still contain it, bound it with a regular expression, such
+   as `/(?<!\d)3 items/`.
 7. Run `npm run test:summary -- --run @<mfe>`: it runs `npm run test:affected`,
    then `npm run test:e2e -- --grep @<mfe>`, and prints the condensed results of
    both, in one command. For each criterion, the NEW MFE assertion AND the NEW browser scenario must
