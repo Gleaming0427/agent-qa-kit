@@ -1,0 +1,1053 @@
+{
+  "schema": "agent-qa-kit/eval-history-campaign",
+  "schema_version": 1,
+  "id": "gh-42653321823",
+  "label": "value as part of the text, smoke, run 47",
+  "role": "campaign",
+  "source": {
+    "kind": "github-actions",
+    "repository": "Gleaming0427/agent-qa-kit",
+    "run_id": 42653321823,
+    "run_number": 47,
+    "branch": "claude/magical-feynman-bhdsbc",
+    "started_at": "2026-11-09T16:17:51Z",
+    "url": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/42653321823"
+  },
+  "agent": {
+    "id": "50bf08082158",
+    "commit": "a0d03fa506f04f1cd0b39088c8e009262d08bdf7",
+    "writer": {
+      "prompt": "9ee1763142ca38c1e07fd2deddbd3b8f8d2793cf",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "verifier": {
+      "prompt": "c11630a8056c1d8839a02bf13d39de0ee0471198",
+      "model": "haiku",
+      "effort": "low"
+    },
+    "hooks": "02fa8a1e347c2a3539a009b2bc8d06cf2b66ea22",
+    "settings": "fa45c7c17cacbb243404cb5653f32ad6964c5814",
+    "scripts": "d085e0758e7d",
+    "claude_code": "2.1.303"
+  },
+  "environment": {
+    "corpus": {
+      "EVAL-1": "9a4bff9f70ad3edb6b3bbe20c255c35d7d5f1052",
+      "EVAL-2": "7e939c0530d42967fdcaafd879bd0377059240f7",
+      "EVAL-8": "950ea1e3090dc95126761ee58575900e218fccf1",
+      "EVAL-9": "4aec13167d373ec743f8aed445e46662ad848498",
+      "EVAL-10": "d0484d94b90c7ccc12480d807086379ac358f975",
+      "EVAL-15": "71150edefc09a90dc9a24d7cd75031b809616b6c"
+    },
+    "app": "aca2b6e2add49ca19aadc670b33d28708887be2d",
+    "harness": "3066787e94b1",
+    "harness_commit": "a0d03fa506f04f1cd0b39088c8e009262d08bdf7"
+  },
+  "config": {
+    "tickets": [
+      "EVAL-1",
+      "EVAL-2",
+      "EVAL-8",
+      "EVAL-9",
+      "EVAL-10",
+      "EVAL-15"
+    ],
+    "selection": "smoke",
+    "trials": 18,
+    "trials_per_ticket": 3,
+    "trials_mode": "uniform",
+    "verify": true,
+    "dry_run": false,
+    "inferred": []
+  },
+  "scoring": {
+    "kind": "original",
+    "commit": "a0d03fa506f04f1cd0b39088c8e009262d08bdf7",
+    "scorer": "939a3d87c514",
+    "run_id": 42653321823,
+    "corrections": []
+  },
+  "provenance": {
+    "file": "sources/eval-report-42653321823.json",
+    "sha256": "32507a00d4af16808a55d6c861c591dfdbb431a30a7aa5c0132d2e5020a325da",
+    "artifact": {
+      "id": 13692900826,
+      "name": "eval-report",
+      "digest": "sha256:d2f25644f000d27019910453944d3fec03d3e479e7674794473d25e5a44c3b9f"
+    },
+    "doc": "eval/results/2026-11-09-field-by-label.md"
+  },
+  "notes": [
+    "The writer also checks a value the ticket gives as part of the text of the element that shows it, on the smoke selection (EVAL-1, EVAL-2, EVAL-8, EVAL-9, EVAL-10, EVAL-15): 18 of 18 trials successful. Every EVAL-8 trial checked the bar's total with toHaveTextContent or toContainText."
+  ],
+  "missing": {},
+  "observations": [
+    {
+      "key": "EVAL-1#1",
+      "ticket": "EVAL-1",
+      "kind": "feature",
+      "trial": 1,
+      "started_at": "2026-11-09T16:19:45.447Z",
+      "finished_at": "2026-11-09T16:32:32.567Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "discount-includes-shipping",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "any-code-accepted",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.100836,
+      "duration_ms": 50154,
+      "turns": 10,
+      "wall_clock_ms": 137221,
+      "tokens": {
+        "input": 26,
+        "output": 7265,
+        "cache_read": 281378,
+        "cache_creation": 31473
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "4222323af435e34b58c3c3ffc264609a2c0cd295537531534ad233b1193b0326"
+    },
+    {
+      "key": "EVAL-1#2",
+      "ticket": "EVAL-1",
+      "kind": "feature",
+      "trial": 2,
+      "started_at": "2026-11-09T16:19:51.204Z",
+      "finished_at": "2026-11-09T16:32:45.386Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "discount-includes-shipping",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "any-code-accepted",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.098099,
+      "duration_ms": 49222,
+      "turns": 10,
+      "wall_clock_ms": 133236,
+      "tokens": {
+        "input": 26,
+        "output": 7020,
+        "cache_read": 281087,
+        "cache_creation": 31147
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "a0f4646e8552e63faf13005a9e8cfc9bab8335555f9825c0da1d72a58b3402e0"
+    },
+    {
+      "key": "EVAL-1#3",
+      "ticket": "EVAL-1",
+      "kind": "feature",
+      "trial": 3,
+      "started_at": "2026-11-09T16:20:02.556Z",
+      "finished_at": "2026-11-09T16:33:03.425Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "discount-includes-shipping",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "any-code-accepted",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.123354,
+      "duration_ms": 82474,
+      "turns": 13,
+      "wall_clock_ms": 186693,
+      "tokens": {
+        "input": 38,
+        "output": 9691,
+        "cache_read": 413185,
+        "cache_creation": 35474
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "3c7dcba4636a4e2970446268fedc95b85ced556baad34649fc1d929e66c06f1e"
+    },
+    {
+      "key": "EVAL-2#1",
+      "ticket": "EVAL-2",
+      "kind": "feature",
+      "trial": 1,
+      "started_at": "2026-11-09T16:21:34.138Z",
+      "finished_at": "2026-11-09T16:33:31.831Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "removes-first-line",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "totals-not-updated",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.094646,
+      "duration_ms": 44503,
+      "turns": 10,
+      "wall_clock_ms": 122235,
+      "tokens": {
+        "input": 24,
+        "output": 6646,
+        "cache_read": 258110,
+        "cache_creation": 30613
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "c21d09a03ba9eb39a90194431f62e858cc0d3735950cc3cfde423bf6bc7f40db"
+    },
+    {
+      "key": "EVAL-2#2",
+      "ticket": "EVAL-2",
+      "kind": "feature",
+      "trial": 2,
+      "started_at": "2026-11-09T16:21:23.730Z",
+      "finished_at": "2026-11-09T16:34:03.496Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "removes-first-line",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "totals-not-updated",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.092221,
+      "duration_ms": 43954,
+      "turns": 10,
+      "wall_clock_ms": 115914,
+      "tokens": {
+        "input": 24,
+        "output": 5768,
+        "cache_read": 257856,
+        "cache_creation": 30405
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "1a2ef0e773cf0db35ee77cf1a63cc7346a7bcc827857f5f677acf2f16a24dad4"
+    },
+    {
+      "key": "EVAL-2#3",
+      "ticket": "EVAL-2",
+      "kind": "feature",
+      "trial": 3,
+      "started_at": "2026-11-09T16:22:09.757Z",
+      "finished_at": "2026-11-09T16:34:10.424Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "removes-first-line",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": false
+        },
+        {
+          "id": "totals-not-updated",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.109425,
+      "duration_ms": 57781,
+      "turns": 10,
+      "wall_clock_ms": 152735,
+      "tokens": {
+        "input": 26,
+        "output": 7357,
+        "cache_read": 282967,
+        "cache_creation": 32611
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "8b6e25b5feb25ab2e4a5587868d6c51d5708416c0e1ab99a259e14f9aef44251"
+    },
+    {
+      "key": "EVAL-8#1",
+      "ticket": "EVAL-8",
+      "kind": "feature",
+      "trial": 1,
+      "started_at": "2026-11-09T16:20:40.779Z",
+      "finished_at": "2026-11-09T16:33:13.066Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "bar-hidden-on-phones",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "bar-shows-subtotal",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.121148,
+      "duration_ms": 55826,
+      "turns": 13,
+      "wall_clock_ms": 158936,
+      "tokens": {
+        "input": 30,
+        "output": 8949,
+        "cache_read": 337739,
+        "cache_creation": 38126
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "a173b38e7c3a8a43f299ef4c9081ed8da5d689584091c6aa4eba16eedad5b078"
+    },
+    {
+      "key": "EVAL-8#2",
+      "ticket": "EVAL-8",
+      "kind": "feature",
+      "trial": 2,
+      "started_at": "2026-11-09T16:20:52.221Z",
+      "finished_at": "2026-11-09T16:33:36.186Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "bar-hidden-on-phones",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "bar-shows-subtotal",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.111827,
+      "duration_ms": 55298,
+      "turns": 10,
+      "wall_clock_ms": 159448,
+      "tokens": {
+        "input": 30,
+        "output": 9155,
+        "cache_read": 331194,
+        "cache_creation": 37653
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "38e5c13968a872a942b9c576a0858e357a31d71d45125e58d1a58ec58accbd11"
+    },
+    {
+      "key": "EVAL-8#3",
+      "ticket": "EVAL-8",
+      "kind": "feature",
+      "trial": 3,
+      "started_at": "2026-11-09T16:23:46.387Z",
+      "finished_at": "2026-11-09T16:35:51.943Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "bar-hidden-on-phones",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "bar-shows-subtotal",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.114516,
+      "duration_ms": 56053,
+      "turns": 10,
+      "wall_clock_ms": 145124,
+      "tokens": {
+        "input": 30,
+        "output": 8758,
+        "cache_read": 330248,
+        "cache_creation": 36127
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "c8ddc0259ef12bc855d3a93dd23019e7109bcc0ffab98738ce3c1dbe8545c05c"
+    },
+    {
+      "key": "EVAL-9#1",
+      "ticket": "EVAL-9",
+      "kind": "ambiguous",
+      "trial": 1,
+      "started_at": "2026-11-09T16:18:37.878Z",
+      "finished_at": "2026-11-09T16:25:14.987Z",
+      "status": "ok",
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": false,
+      "policy_ok": true,
+      "has_tests": false,
+      "invented": false,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 0,
+        "total": 2
+      },
+      "bugs": [],
+      "verifier": {
+        "gold": "not_run",
+        "bug": "not_run",
+        "bug_faithful": "not_run"
+      },
+      "cost_usd": 0.040349,
+      "duration_ms": 12349,
+      "turns": 4,
+      "wall_clock_ms": 14161,
+      "tokens": {
+        "input": 8,
+        "output": 1648,
+        "cache_read": 60552,
+        "cache_creation": 7119
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "729bce3ea4c51f241d89b2b0f42f0270afe2d7a8cf978c82befc88ce287886f9"
+    },
+    {
+      "key": "EVAL-9#2",
+      "ticket": "EVAL-9",
+      "kind": "ambiguous",
+      "trial": 2,
+      "started_at": "2026-11-09T16:18:44.751Z",
+      "finished_at": "2026-11-09T16:25:24.506Z",
+      "status": "ok",
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": false,
+      "policy_ok": true,
+      "has_tests": false,
+      "invented": false,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 0,
+        "total": 2
+      },
+      "bugs": [],
+      "verifier": {
+        "gold": "not_run",
+        "bug": "not_run",
+        "bug_faithful": "not_run"
+      },
+      "cost_usd": 0.032355,
+      "duration_ms": 8475,
+      "turns": 4,
+      "wall_clock_ms": 10870,
+      "tokens": {
+        "input": 6,
+        "output": 996,
+        "cache_read": 60556,
+        "cache_creation": 6531
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "96e44362b7bd4d87ac4e1a0382c1bb91cf075213f915df467631769f79b4ace4"
+    },
+    {
+      "key": "EVAL-9#3",
+      "ticket": "EVAL-9",
+      "kind": "ambiguous",
+      "trial": 3,
+      "started_at": "2026-11-09T16:18:40.315Z",
+      "finished_at": "2026-11-09T16:25:17.269Z",
+      "status": "ok",
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": false,
+      "policy_ok": true,
+      "has_tests": false,
+      "invented": false,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 0,
+        "total": 2
+      },
+      "bugs": [],
+      "verifier": {
+        "gold": "not_run",
+        "bug": "not_run",
+        "bug_faithful": "not_run"
+      },
+      "cost_usd": 0.032475,
+      "duration_ms": 10608,
+      "turns": 4,
+      "wall_clock_ms": 12832,
+      "tokens": {
+        "input": 6,
+        "output": 1009,
+        "cache_read": 60560,
+        "cache_creation": 6527
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "2f1d4e118249821edf8272a94ed2c8b3592d1cd86a48bdb4c28f505e2b3a4d8a"
+    },
+    {
+      "key": "EVAL-10#1",
+      "ticket": "EVAL-10",
+      "kind": "adversarial",
+      "trial": 1,
+      "started_at": "2026-11-09T16:18:41.931Z",
+      "finished_at": "2026-11-09T16:31:33.420Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 2,
+        "total": 2
+      },
+      "bugs": [
+        {
+          "id": "wrong-count",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.070049,
+      "duration_ms": 29797,
+      "turns": 9,
+      "wall_clock_ms": 86077,
+      "tokens": {
+        "input": 28,
+        "output": 4923,
+        "cache_read": 302242,
+        "cache_creation": 29257
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "2a41ba401291a5edce77e94d34df7bc82bf53a1193ba35ec5b441b6fe48cf715"
+    },
+    {
+      "key": "EVAL-10#2",
+      "ticket": "EVAL-10",
+      "kind": "adversarial",
+      "trial": 2,
+      "started_at": "2026-11-09T16:18:30.390Z",
+      "finished_at": "2026-11-09T16:31:31.395Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 2,
+        "total": 2
+      },
+      "bugs": [
+        {
+          "id": "wrong-count",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.11751,
+      "duration_ms": 37402,
+      "turns": 9,
+      "wall_clock_ms": 111685,
+      "tokens": {
+        "input": 28,
+        "output": 6142,
+        "cache_read": 248789,
+        "cache_creation": 61934
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "f54acac4a5820e4e23604f860ee04a7ff152021b4c40657eb2221ad2797d46a7"
+    },
+    {
+      "key": "EVAL-10#3",
+      "ticket": "EVAL-10",
+      "kind": "adversarial",
+      "trial": 3,
+      "started_at": "2026-11-09T16:18:47.844Z",
+      "finished_at": "2026-11-09T16:31:38.003Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 2,
+        "total": 2
+      },
+      "bugs": [
+        {
+          "id": "wrong-count",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.07567,
+      "duration_ms": 35889,
+      "turns": 9,
+      "wall_clock_ms": 109324,
+      "tokens": {
+        "input": 26,
+        "output": 5476,
+        "cache_read": 278656,
+        "cache_creation": 29201
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "f1210970cc99362029ca928565f9590ba191c2a1477e384cd517f8a5eeec4693"
+    },
+    {
+      "key": "EVAL-15#1",
+      "ticket": "EVAL-15",
+      "kind": "feature",
+      "trial": 1,
+      "started_at": "2026-11-09T16:19:31.079Z",
+      "finished_at": "2026-11-09T16:31:52.167Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "case-sensitive",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "no-empty-message",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.09082,
+      "duration_ms": 49257,
+      "turns": 10,
+      "wall_clock_ms": 130858,
+      "tokens": {
+        "input": 26,
+        "output": 6195,
+        "cache_read": 281599,
+        "cache_creation": 30423
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "6e5510c9179f6c79d18577180bac44c9b3ce27de134e7463292fe61064c29d81"
+    },
+    {
+      "key": "EVAL-15#2",
+      "ticket": "EVAL-15",
+      "kind": "feature",
+      "trial": 2,
+      "started_at": "2026-11-09T16:19:27.618Z",
+      "finished_at": "2026-11-09T16:31:43.995Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "case-sensitive",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "no-empty-message",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.090386,
+      "duration_ms": 40926,
+      "turns": 10,
+      "wall_clock_ms": 123652,
+      "tokens": {
+        "input": 28,
+        "output": 6603,
+        "cache_read": 309575,
+        "cache_creation": 32021
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "5fc6ac08b5f7abb33c90d9e575a351daccd22b627e6c3e454e0c99f48c1d56cb"
+    },
+    {
+      "key": "EVAL-15#3",
+      "ticket": "EVAL-15",
+      "kind": "feature",
+      "trial": 3,
+      "started_at": "2026-11-09T16:19:28.088Z",
+      "finished_at": "2026-11-09T16:31:49.689Z",
+      "status": "ok",
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "success": true,
+      "red_valid": true,
+      "policy_ok": true,
+      "has_tests": true,
+      "invented": true,
+      "false_positives": 0,
+      "flaky": 0,
+      "f2p": {
+        "ok": 4,
+        "total": 4
+      },
+      "bugs": [
+        {
+          "id": "case-sensitive",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "no-empty-message",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct"
+      },
+      "cost_usd": 0.087072,
+      "duration_ms": 39702,
+      "turns": 10,
+      "wall_clock_ms": 120270,
+      "tokens": {
+        "input": 26,
+        "output": 5688,
+        "cache_read": 284802,
+        "cache_creation": 33012
+      },
+      "guard_blocks": 0,
+      "corpus_exposed": false,
+      "isolation_findings": 0,
+      "fingerprint": "12ad16f89e77212e6aa6e534ed5ce8621eaf3c7dcf47aa52ba063568cfeec6cb"
+    }
+  ]
+}

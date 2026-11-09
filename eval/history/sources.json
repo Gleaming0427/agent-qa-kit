@@ -897,6 +897,74 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 42653321823,
+      "run_number": 47,
+      "branch": "claude/magical-feynman-bhdsbc",
+      "started_at": "2026-11-09T16:17:51Z",
+      "commit": "a0d03fa506f04f1cd0b39088c8e009262d08bdf7",
+      "label": "value as part of the text, smoke, run 47",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 42653321823,
+        "commit": "a0d03fa506f04f1cd0b39088c8e009262d08bdf7"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-42653321823.json",
+        "sha256": "32507a00d4af16808a55d6c861c591dfdbb431a30a7aa5c0132d2e5020a325da",
+        "artifact": {
+          "id": 13692900826,
+          "name": "eval-report",
+          "digest": "sha256:d2f25644f000d27019910453944d3fec03d3e479e7674794473d25e5a44c3b9f"
+        }
+      },
+      "doc": "eval/results/2026-11-09-field-by-label.md",
+      "notes": [
+        "The writer also checks a value the ticket gives as part of the text of the element that shows it, on the smoke selection (EVAL-1, EVAL-2, EVAL-8, EVAL-9, EVAL-10, EVAL-15): 18 of 18 trials successful. Every EVAL-8 trial checked the bar's total with toHaveTextContent or toContainText."
+      ],
+      "inputs": {
+        "tickets": "smoke",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 42653327754,
+      "run_number": 48,
+      "branch": "claude/magical-feynman-bhdsbc",
+      "started_at": "2026-11-09T16:17:53Z",
+      "commit": "a0d03fa506f04f1cd0b39088c8e009262d08bdf7",
+      "label": "value as part of the text, EVAL-8, run 48",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 42653327754,
+        "commit": "a0d03fa506f04f1cd0b39088c8e009262d08bdf7"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-42653327754.json",
+        "sha256": "c69ffe9726a2f28935b1e5f312d494da30674ef6537d3374d841fb8b3844b1d3",
+        "artifact": {
+          "id": 13692172481,
+          "name": "eval-report",
+          "digest": "sha256:36e2a734f2acfebdc0e23630cf3ea4408cb5101a517ea85bcf4726242f1a0585"
+        }
+      },
+      "doc": "eval/results/2026-11-09-field-by-label.md",
+      "notes": [
+        "The same agent on EVAL-8, 3 trials, run with the smoke selection so that EVAL-8 has 6 trials: 3 of 3 successful, each checking the bar's total with toHaveTextContent or toContainText."
+      ],
+      "inputs": {
+        "tickets": "EVAL-8",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }

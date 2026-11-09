@@ -1,6 +1,6 @@
-# A field found by its label, 9 November 2026
+# A field found by its label, a value checked as part of a text, 9 November 2026
 
-The campaign of every ticket on main after Gleaming0427/agent-qa-kit#40 found one weakness of the writer: on EVAL-15, it looked up a field the ticket names by a role it assumed. This note gives that campaign, the change to the writer's instructions, the campaigns that measured it, and the release decision.
+The campaign of every ticket on main after Gleaming0427/agent-qa-kit#40 found a weakness of the writer on EVAL-15: it looked up a field the ticket names by a role it assumed. The fix was measured, and the measurement found a second weakness of the same kind on EVAL-8: a value the ticket gives was looked up as an element whose whole text the writer assumed. This note gives the campaigns, the two changes to the writer's instructions and the release decisions.
 
 ## Every ticket on main (run 42)
 
@@ -17,43 +17,61 @@ Run 42588473594, 17 tickets, 3 trials each, with the verifier, on main at `5bbe2
 
 The two failed trials: EVAL-1 missed a bug in one trial, and EVAL-15 failed on the correct implementation in one. Its release decision was **review**: EVAL-15 3/3 → 2/3 against the release baseline ("D clean"). The follow-up it asked for (run 42596342131, EVAL-15, 3 trials) gave 1/3.
 
-## What failed on EVAL-15
+## First change: a field found by its label
 
 EVAL-15 asks for a "Search products" field above the product list. The reference implementation renders it as `<input type="search" aria-label="Search products" …>`, whose role is `searchbox`.
 
-In runs 42 and 43, 3 of the 6 trials looked up the field with `getByRole('textbox', { name: 'Search products' })`: their tests failed on the correct implementation. The 3 others used `getByLabelText('Search products')` (Testing Library) or `getByLabel('Search products')` (Playwright), and passed. So did every EVAL-15 trial of the campaign "rule 5, run 35".
+In runs 42 and 43, 3 of the 6 trials looked up the field with `getByRole('textbox', { name: 'Search products' })`: their tests failed on the correct implementation. The 3 others used `getByLabelText('Search products')` (Testing Library) or `getByLabel('Search products')` (Playwright), and passed. So did every EVAL-15 trial of the campaign "rule 5, run 35". The ticket names the field, not its kind.
 
-The ticket names the field, not its kind: it does not say whether it is a textbox, a searchbox, a spinbutton or a combobox.
+The writer's step 6 now says: a field the ticket names, but the markup does not have yet, is found by its label, never by a role it assumes. Checked with the demo's Testing Library and Playwright 1.55.1 on the reference markup: the label finds the field, the `textbox` role does not.
 
-## What changed
+Measured at `20a763b`:
+- run 42598786785, EVAL-15, 6 trials: 6/6, all by the label;
+- run 42598796372, the smoke selection then (EVAL-3, EVAL-8, EVAL-9, EVAL-10, EVAL-12, EVAL-17): 17/18;
+- run 42610044168, EVAL-8, 3 trials, the follow-up the smoke run's release decision asked for: 2/3.
 
-The writer's step 6 now says: a field the ticket names, but the markup does not have yet, is found by its label (`getByLabelText` with Testing Library, `getByLabel` with Playwright), never by a role it assumes. Checked with the demo's Testing Library and Playwright 1.55.1 on the reference markup: the label finds the field, the `textbox` role does not.
+## Second change: a value checked as part of the element's text
 
-Nothing else in the agent changed: between the two versions, the history records a change of the writer's prompt only.
+The two EVAL-8 failures of runs 45 and 46 had the same cause. EVAL-8 asks for a bar fixed at the bottom of a phone screen that shows the order total and a "Checkout" button. Both unit tests looked up the bar's total as an element whose whole text is the amount (`getAllByText('€9.40')`, exact by default in Testing Library). The reference shows it as "Total €9.40", in one element, so the lookup found only the order summary's cell. The four other trials checked the bar's text with `toHaveTextContent`, which matches a part of it, and passed.
 
-## Measured
+Before these changes, EVAL-8 had 9/9 in its last three campaigns (runs 38, 40 and 42). Earlier, it failed in some trials of "Pilot", "C", "D clean", "smoke, run 32" and "rule 5". The two failures of "rule 5", the only ones whose trials were read for this note, had other causes: a total computed wrong, and two "Checkout" buttons expected where the reference hides the cart's on phones.
 
-Three campaigns on the branch, at `20a763b`:
-- run 42598786785: EVAL-15, 6 trials;
-- run 42598796372: the smoke selection (EVAL-3, EVAL-8, EVAL-9, EVAL-10, EVAL-12, EVAL-17), 3 trials each;
-- run 42610044168: EVAL-8, 3 trials, the follow-up the release decision of the smoke run asked for.
+The writer's step 6 now also says: a value the ticket gives without the text around it, such as a total or a count, is checked as part of the text of the element that shows it (`toHaveTextContent` with Testing Library, `toContainText` with Playwright), never as an element whose whole text it assumes; when a longer number would still contain it, it is bounded with a regular expression. Checked with the demo's Testing Library on the reference markup of EVAL-8: `getAllByText('€9.40')` finds only the order summary's cell; `toHaveTextContent('€9.40')` on the bar's container ("Total €9.40Checkout") passes, and so does the bounded expression.
 
-**EVAL-15.** All 6 trials looked up the field by its label; none used a `textbox` or `searchbox` role. 6/6 successful, 12/12 bugs detected, no test failing on the correct implementation. Before the change: 3/6. With 6 trials on each side, the difference is not significant (Fisher's exact test, two-sided p ≈ 0.18).
+Measured at `a0d03fa`:
+- run 42653321823, the smoke selection now (EVAL-1, EVAL-2, EVAL-8, EVAL-9, EVAL-10, EVAL-15): 18/18;
+- run 42653327754, EVAL-8, 3 trials, run alongside so that EVAL-8 has 6 trials: 3/3.
 
-**EVAL-8.** 4/6 successful (2/3 in each run). The two failed trials failed for the same reason: their unit test looked up the bar's total as an element whose whole text is "€9.40" (`getAllByText('€9.40')`, exact by default), and the reference shows it as "Total €9.40", in one element. The four other trials checked the bar's text with `toHaveTextContent`, which matches a part of it, and passed. Before the change, EVAL-8 had 9/9 in its last three campaigns (runs 38, 40 and 42). Earlier, it failed in some trials of "Pilot", "C", "D clean", "smoke, run 32" and "rule 5". The two failures of "rule 5", the only ones whose trials were read for this note, had other causes: a total computed wrong, and two "Checkout" buttons expected where the reference hides the cart's on phones. The new sentence is about fields; the bar is not one, and these trials do not show whether it changed how the writer looked up the total.
+| | Runs 47 and 48 |
+|---|---|
+| Successful trials | 21/21 |
+| Injected bugs detected | 33/33 |
+| No generated test fails on the correct implementation | 18/18 trials |
+| Verifier: pass on the correct implementation / fail on a buggy one | 18/18, 18/18 |
+| Agent or API errors | 0/21 |
+| Guard refusals | writer 0; verifier 1 (`echo` to note that it stopped, EVAL-1) |
+| Cost | $1.60 + $0.37 = $1.97, $0.094 per trial |
 
-**The other tickets** of the smoke run: 3/3 each. Guard refusals: 3 for the writer, all on EVAL-17 (`sed -i` twice, `npx node -e` once), 0 for the verifier. Cost of the three campaigns: $0.57 + $1.71 + $0.36 = $2.64.
+- **EVAL-8**: 6/6. Each trial checked the bar's total with `toHaveTextContent` or `toContainText`; none used `getAllByText` with an amount. With the first change only: 4/6. With 6 trials on each side, the difference is not significant (Fisher's exact test, two-sided p ≈ 0.45).
+- **EVAL-15**: 3/3, all by the label. With the label instruction, in both versions of the prompt: 9/9, against 3/6 before (two-sided p ≈ 0.044, on one ticket).
+- **EVAL-2**: 3/3, but in one trial the bug "removes-first-line" (AC-1) was caught by AC-2 tests only: the AC-1 test removed the cart's first line each time, which is the line the bug removes. The same happened in runs 40 and 42, before these changes.
 
-## Release decision
+## Release decisions
 
-With the three campaigns as one candidate, against the release baseline ("D clean"): **review**. 6 tickets are comparable, as the policy needs; no regression is confirmed; cost per trial −8.0%. The one rule that did not pass is `unstable_worse`: EVAL-8 detected 5 of 6 of each bug, against 3 of 3.
+The last version (`a0d03fa`, runs 47 and 48 as one candidate):
 
-Against main (runs 42 and 43), the version this change starts from, also **review**: 7 comparable tickets; EVAL-15 3/6 → 6/6 (unstable, better), EVAL-8 3/3 → 4/6 (unstable, worse), the others unchanged; cost per trial +4.7%. The sign tests detect no difference: with 2 tickets that changed, no result could reach p < 0.05.
+| Against | Comparable tickets | Changes | Cost per trial | Decision |
+|---|---|---|---|---|
+| "D clean", the release baseline | 6 | EVAL-1 1/3 → 3/3, EVAL-8 2/3 → 6/6, the 4 others pass in both | −6.3% | **accepted** |
+| main (runs 42 and 43) | 6 | EVAL-1 2/3 → 3/3, EVAL-15 3/6 → 3/3, the 4 others pass in both | +3.3% | **accepted** |
 
-EVAL-8 already had its one follow-up. The policy asks a person to read its trials and decide whether the agent has a weakness to fix or a variation to accept.
+Every rule passed in both. The sign tests detect no difference: with 2 tickets that changed, no result could reach p < 0.05. Against main, the history records a change of the writer's prompt only.
+
+The intermediate version (`20a763b`, runs 44, 45 and 46) was **review** against both, for EVAL-8 alone.
 
 ## Limits
 
-- 6 trials on EVAL-15 and 6 on EVAL-8 for the new version: neither the gain on EVAL-15 nor the loss on EVAL-8 is significant.
-- Only 7 of the 17 tickets ran with the new version.
-- The cause found on EVAL-8, a total looked up as an exact text that the ticket does not give, is of the same kind as EVAL-15's: a guess about markup that does not exist yet. The instruction does not cover it.
+- The last version ran on 6 of the 17 tickets, 3 trials each (6 on EVAL-8). The intermediate version, whose instructions it extends, ran on EVAL-3, EVAL-12 and EVAL-17 with 3/3 each. The others did not run after the changes.
+- No change on a single ticket is significant except EVAL-15's, at p ≈ 0.044 with 15 trials; the policy decides on no p-value alone.
+- Both changes are about a guess on markup that does not exist yet. Other guesses of the same kind, such as a landmark role or the number of buttons, are not covered.
+- Cost of the five campaigns on the branch: $4.61.
