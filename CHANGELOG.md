@@ -1,45 +1,11 @@
 # Changelog
 
-## Unreleased
+## v0.3.0, 9 November 2026
 
-- **A field the ticket names is found by its label.** In the campaign of every ticket on main (run 42588473594: 49 of 51 trials successful) and its follow-up on EVAL-15, 3 of the 6 EVAL-15 trials looked up the "Search products" field with `getByRole('textbox', …)`. The reference renders it as `<input type="search">`, whose role is `searchbox`, so their tests failed on the correct implementation.
-  - The writer's instructions now say to find a field the ticket names, but the markup does not have yet, by its label (`getByLabelText`, `getByLabel`), never by a role it assumes.
-  - Measured on the branch: EVAL-15 6/6, all by the label. But EVAL-8 fell to 4/6: two trials looked up the checkout bar's total as an element whose whole text is "€9.40" (`getAllByText`), and the reference shows "Total €9.40" in one element. The release decision was review.
-- **A value the ticket gives is checked as part of the element's text.** The writer's instructions now say to check a value such as a total or a count with `toHaveTextContent` or `toContainText` on the element that shows it, never as an element whose whole text it assumes, and to bound it with a regular expression when a longer number would still contain it.
-  - Measured on the smoke selection (EVAL-1, EVAL-2, EVAL-8, EVAL-9, EVAL-10, EVAL-15) and 3 more trials of EVAL-8: 21 of 21 trials successful, 33/33 bugs detected; EVAL-8 6/6, EVAL-15 3/3.
-  - The release decision is **accepted**, against "D clean" (cost per trial −6.3%) and against main (+3.3%). No change on a ticket is significant except EVAL-15's (9/9 with the label instruction, 3/6 before). The last version ran on 6 of the 17 tickets (`eval/results/2026-11-09-field-by-label.md`).
-- **The campaigns of 9 November in the history**: runs 42 to 48, 31 campaigns in all.
-- **Unit tests that already pass without the feature.** Phase 1 requires every browser test to fail, but a criterion's unit tests need only one failure: a unit test that already passes is accepted without a word. On OMNI-1, 2 of the 6 unit tests passed before the feature existed:
-  - "a b c" on three lines, where reversing the letters of one-letter words gives the same result as reversing the words: a case that cannot tell a right implementation from a wrong one;
-  - a test of the default behavior, which the ticket keeps.
+Since v0.2.0 the kit installs into an application's repository with one command. It was tried outside its demo: an install on immich, a pnpm workspace of 12 projects, and two real tickets end to end, one on the demo shop and one on omni-tools, a React app of about 860 files. The test pull request now tells its reviewer what the tests cover, which of their assertions or tests could pass on a wrong implementation, and what the approval is missing. The writer's prompt is that of runs 47 and 48 of 9 November, accepted against the release baseline "D clean" on the 6 tickets they ran; the baseline is still "D clean" (`eval/release-baseline.json`).
 
-  The test pull request now lists such tests with their criterion, read from the RED report of the review package, so that the reviewer can tell one kind from the other. Replayed on the approved package of OMNI-1, it lists those two tests. In the 27 trials of the campaigns of 5 and 7 November, no generated test passed without the feature: on the demo, the function or component a ticket adds does not exist yet, so all its tests fail. The evaluation cannot measure this case.
-- **Browser assertions that a longer number would still pass.** Playwright matches text by its part: `toContainText('× 1')` passes on "× 12", and a lookup such as `getByText('4 products')`, without `exact: true`, finds "14 products" (checked with `@playwright/test` 1.55.1). A number that starts the expected text, or a whole number that ends it, can grow on a wrong implementation without failing the test.
-  - The test pull request now lists each such assertion for the reviewer, with the longer value it would accept, and what to ask for instead: `toHaveText`, `exact: true` or a regular expression such as `/(?<!\d)4 products/` (`qa/loose-assertions.ts`). Nothing is refused: another assertion may already rule that value out.
-  - In the 27 browser test files the writer generated in the campaigns of 5 and 7 November, it lists 17 assertions in 7 of them, all on a count: `getByText('4 products')`, `toContainText('× 1')`, `toContainText('× 3')`.
-  - Not listed: a number protected by the text around it (`'€4.90'`, `'Cart (3)'`), a negative assertion, and the case and longer-text matches of other lookups, which would list most of the tests' assertions. The lookup of SHOP-2 that the trial of 7 November amended, `name: 'Cart (3)'`, is one of them.
-- **Fewer turns lost to refused commands.** Each tool call the guard refuses costs the agent a turn. In the campaign of 5 November (15 trials), it refused 16 calls of the writer and 41 of the verifier:
-  - 12 of the writer's were its three test commands chained with `;`, their output cut with `| tail` or `| head`;
-  - 23 of the verifier's were `cat` on a file, often tried again after the refusal, and 12 a test command cut with `| tail`.
+### Installing the kit
 
-  Now:
-  - `npm run test:summary -- --run @<mfe>` runs the unit tests, then the browser tests of the feature area, and prints the summary of both: one command for a test cycle. When a run writes no report, it shows the end of that run's output. The writer's instructions use it.
-  - The guard's refusals say what to do instead: one command per call, the Read, Glob and Grep tools rather than `cat`, `ls` or `find`, a folder for Grep. The reasons the evaluation counts refusals by stay the same, except for Grep from the project root.
-  - Glob may search from the project root, as it already did with no path. Grep still may not: it would read files such as `.env`.
-  - The verifier's instructions now say, as the writer's did, that shell commands such as `cat` are refused. The writer, which had that line, never tried `cat` in the campaign.
-  - Measured on the smoke selection (run 42401051963), on the 5 tickets shared with the campaign of 5 November: writer refusals 16 → 1, verifier refusals 41 → 0, writer turns 11.3 → 9.0 on average, cost per trial $0.111 → $0.094; every score at 100%. The release decision asks for every ticket before a release (`eval/results/2026-11-07-guard-refusals.md`).
-- **An amendment after a squash-merged test pull request.** On omni-tools, the test pull request was squash-merged: `feat/OMNI-1` got a copy of the tests, not the commits of `qa/OMNI-1`, so the amendment's pull request added the same files again and could not be merged on GitHub.
-  - QA amend tests now finds how the latest test pull request was merged. When its copy on `feat/<TICKET>` holds only the tests, it records it on `qa/<TICKET>` with a merge commit that changes no file, and the amendment merges cleanly.
-  - Replayed on the trial's commits, the amendment then merges into the same files as the merge made by hand.
-  - When the copy also holds other changes, it warns instead: recording it would undo them on `feat/<TICKET>`. HOW_TO_APPLY.md gives the commands to merge by hand, checked on the same commits.
-  - The test pull request's text recommends **Create a merge commit**.
-  - Tried on GitHub on a demo ticket, SHOP-2: after a squash, the amendment's pull request showed only the amendment and merged with no conflict (`eval/results/2026-11-07-approval-trial.md`).
-- **A QA approval status on the test pull request.** On two real tickets, both test pull requests were merged before they were approved, and one was first approved with no text. Nothing said so until QA verify ran on the developer's pull request.
-  - The test pull request now has a **QA approval** status next to its merge button. It stays red until a collaborator approves its latest commit with a reason per criterion, and says what is missing. It turns green once the approval is the one QA verify will accept.
-  - QA write tests and QA amend tests set it when they open the pull request, which triggers no workflow of its own. The new **QA approval** workflow updates it after each review and each push by a person (`qa/ci-approval.sh`). No AI and no application code runs there.
-  - It does not prevent the merge, and QA verify still checks the approval. The pull request's text now says to approve first, then merge.
-  - The installer copies the new workflow and script.
-  - Tried on GitHub on a demo ticket, SHOP-2: red when the pull request opened, still red after an approval with no text, green after one with a line per criterion (`eval/results/2026-11-07-approval-trial.md`).
 - **An installer.** `npx github:Gleaming0427/agent-qa-kit init`, in the repository of an application, installs the kit; `doctor` checks what the workflows need. Until now the files had to be copied by hand.
   - It finds the application (Vitest and Playwright in its `package.json`), copies the agents, hooks, `qa/` scripts and the four workflows set to that application and to the remote's default branch, adds the missing npm scripts without changing existing ones, and has git ignore `reports/`.
   - It plans before writing: a file that exists and differs is a conflict, and nothing is written. `.agent-qa-kit.json` records a digest of each file, so that running `init` again upgrades the files nobody changed. `--force` only replaces files committed with no local change.
@@ -50,19 +16,68 @@
     - the workflows use the Node.js version of the application's `.nvmrc` or `.node-version`, 22 without one, and refuse one older than 22.18, which the kit's scripts need (`qa/ci-node-version.sh`).
   - **More turns for a large application.** On omni-tools, the writer reached its limit of 40 turns before writing the browser test. The repository variable `QA_MAX_TURNS` now replaces the agents' own limit in the workflows; the budget ceiling still applies, and the limits stay the same when it is unset.
   - An application at the root of its repository works: **QA amend tests** refused it, as it read the review package's path with a `./` prefix git does not write.
+
+### QA workflow
+
 - **A coverage summary for the reviewer.** Reading test code shows what is wrong in a test, not what is missing: the evaluation's missed bugs came from tests that looked right.
   - The writer's phase 1 verdict now states, for each criterion, the cases its tests use (data, expected values with their arithmetic, the wrong implementation each one rules out) and what they leave out.
   - The Stop hook sends back a verdict without it, and one whose arithmetic does not add up (`.claude/hooks/coverage.ts`).
   - The review pull request shows the summary under each criterion.
   - Verdicts approved before this change stay valid.
+- **Browser assertions that a longer number would still pass.** Playwright matches text by its part: `toContainText('× 1')` passes on "× 12", and a lookup such as `getByText('4 products')`, without `exact: true`, finds "14 products" (checked with `@playwright/test` 1.55.1). A number that starts the expected text, or a whole number that ends it, can grow on a wrong implementation without failing the test.
+  - The test pull request now lists each such assertion for the reviewer, with the longer value it would accept, and what to ask for instead: `toHaveText`, `exact: true` or a regular expression such as `/(?<!\d)4 products/` (`qa/loose-assertions.ts`). Nothing is refused: another assertion may already rule that value out.
+  - In the 27 browser test files the writer generated in the campaigns of 5 and 7 November, it lists 17 assertions in 7 of them, all on a count: `getByText('4 products')`, `toContainText('× 1')`, `toContainText('× 3')`.
+  - Not listed: a number protected by the text around it (`'€4.90'`, `'Cart (3)'`), a negative assertion, and the case and longer-text matches of other lookups, which would list most of the tests' assertions. The lookup of SHOP-2 that the trial of 7 November amended, `name: 'Cart (3)'`, is one of them.
+- **Unit tests that already pass without the feature.** Phase 1 requires every browser test to fail, but a criterion's unit tests need only one failure: a unit test that already passes is accepted without a word. On OMNI-1, 2 of the 6 unit tests passed before the feature existed:
+  - "a b c" on three lines, where reversing the letters of one-letter words gives the same result as reversing the words: a case that cannot tell a right implementation from a wrong one;
+  - a test of the default behavior, which the ticket keeps.
+
+  The test pull request now lists such tests with their criterion, read from the RED report of the review package, so that the reviewer can tell one kind from the other. Replayed on the approved package of OMNI-1, it lists those two tests. In the 27 trials of the campaigns of 5 and 7 November, no generated test passed without the feature: on the demo, the function or component a ticket adds does not exist yet, so all its tests fail. The evaluation cannot measure this case.
+- **A QA approval status on the test pull request.** On two real tickets, both test pull requests were merged before they were approved, and one was first approved with no text. Nothing said so until QA verify ran on the developer's pull request.
+  - The test pull request now has a **QA approval** status next to its merge button. It stays red until a collaborator approves its latest commit with a reason per criterion, and says what is missing. It turns green once the approval is the one QA verify will accept.
+  - QA write tests and QA amend tests set it when they open the pull request, which triggers no workflow of its own. The new **QA approval** workflow updates it after each review and each push by a person (`qa/ci-approval.sh`). No AI and no application code runs there.
+  - It does not prevent the merge, and QA verify still checks the approval. The pull request's text now says to approve first, then merge.
+  - The installer copies the new workflow and script.
+  - Tried on GitHub on a demo ticket, SHOP-2: red when the pull request opened, still red after an approval with no text, green after one with a line per criterion (`eval/results/2026-11-07-approval-trial.md`).
 - **Amending approved tests.** A wrong approved test had no clean way out: the repair agent may not touch it, and QA verify refuses a test edited on the developer's branch. Now:
   - a person fixes it on `qa/<TICKET>`, then runs the new **QA amend tests** workflow with the reason;
   - no agent runs: every test of the ticket must still fail for the right reason on the application without the feature;
   - the amendment is logged with its author and reason in the review package, and the tests need a new approval;
   - QA verify lists the amendments in its summary.
+- **An amendment after a squash-merged test pull request.** On omni-tools, the test pull request was squash-merged: `feat/OMNI-1` got a copy of the tests, not the commits of `qa/OMNI-1`, so the amendment's pull request added the same files again and could not be merged on GitHub.
+  - QA amend tests now finds how the latest test pull request was merged. When its copy on `feat/<TICKET>` holds only the tests, it records it on `qa/<TICKET>` with a merge commit that changes no file, and the amendment merges cleanly.
+  - Replayed on the trial's commits, the amendment then merges into the same files as the merge made by hand.
+  - When the copy also holds other changes, it warns instead: recording it would undo them on `feat/<TICKET>`. HOW_TO_APPLY.md gives the commands to merge by hand, checked on the same commits.
+  - The test pull request's text recommends **Create a merge commit**.
+  - Tried on GitHub on a demo ticket, SHOP-2: after a squash, the amendment's pull request showed only the amendment and merged with no conflict (`eval/results/2026-11-07-approval-trial.md`).
 - **An advisory mode for QA verify.** The repository variable `QA_VERIFY_MODE=advisory` makes every failure a warning that says it would have blocked, and lets the check pass.
   - In both modes, each run records the outcome of each step, ticket by ticket, in a `qa-verify-record` artifact.
   - `node qa/verify-record.ts` reads these records and lists the failures for a person to label as false blocks or real problems. It says when the check can block: enough pull requests, no false block, nothing left unlabeled.
+
+### The QA agents
+
+- **Fewer turns lost to refused commands.** Each tool call the guard refuses costs the agent a turn. In the campaign of 5 November (15 trials), it refused 16 calls of the writer and 41 of the verifier:
+  - 12 of the writer's were its three test commands chained with `;`, their output cut with `| tail` or `| head`;
+  - 23 of the verifier's were `cat` on a file, often tried again after the refusal, and 12 a test command cut with `| tail`.
+
+  Now:
+  - `npm run test:summary -- --run @<mfe>` runs the unit tests, then the browser tests of the feature area, and prints the summary of both: one command for a test cycle. When a run writes no report, it shows the end of that run's output. The writer's instructions use it.
+  - The guard's refusals say what to do instead: one command per call, the Read, Glob and Grep tools rather than `cat`, `ls` or `find`, a folder for Grep. The reasons the evaluation counts refusals by stay the same, except for Grep from the project root.
+  - Glob may search from the project root, as it already did with no path. Grep still may not: it would read files such as `.env`.
+  - The verifier's instructions now say, as the writer's did, that shell commands such as `cat` are refused. The writer, which had that line, never tried `cat` in the campaign.
+  - Measured on the smoke selection (run 42401051963), on the 5 tickets shared with the campaign of 5 November: writer refusals 16 → 1, verifier refusals 41 → 0, writer turns 11.3 → 9.0 on average, cost per trial $0.111 → $0.094; every score at 100%. The release decision asks for every ticket before a release (`eval/results/2026-11-07-guard-refusals.md`).
+- **A field the ticket names is found by its label.** In the campaign of every ticket on main (run 42588473594: 49 of 51 trials successful) and its follow-up on EVAL-15, 3 of the 6 EVAL-15 trials looked up the "Search products" field with `getByRole('textbox', …)`. The reference renders it as `<input type="search">`, whose role is `searchbox`, so their tests failed on the correct implementation.
+  - The writer's instructions now say to find a field the ticket names, but the markup does not have yet, by its label (`getByLabelText`, `getByLabel`), never by a role it assumes.
+  - Measured on the branch: EVAL-15 6/6, all by the label. But EVAL-8 fell to 4/6: two trials looked up the checkout bar's total as an element whose whole text is "€9.40" (`getAllByText`), and the reference shows "Total €9.40" in one element. The release decision was review.
+- **A value the ticket gives is checked as part of the element's text.** The writer's instructions now say to check a value such as a total or a count with `toHaveTextContent` or `toContainText` on the element that shows it, never as an element whose whole text it assumes, and to bound it with a regular expression when a longer number would still contain it.
+  - Measured on the smoke selection (EVAL-1, EVAL-2, EVAL-8, EVAL-9, EVAL-10, EVAL-15) and 3 more trials of EVAL-8: 21 of 21 trials successful, 33/33 bugs detected; EVAL-8 6/6, EVAL-15 3/3.
+  - The release decision is **accepted**, against "D clean" (cost per trial −6.3%) and against main (+3.3%). No change on a ticket is significant except EVAL-15's (9/9 with the label instruction, 3/6 before). The last version ran on 6 of the 17 tickets (`eval/results/2026-11-09-field-by-label.md`).
+
+### Evaluating the agents
+
+- **The campaigns of 9 November in the history**: runs 42 to 48, 31 campaigns in all.
+
+The results of each campaign and analysis are in [eval/results](eval/results).
 
 ## v0.2.0, 4 November 2026
 

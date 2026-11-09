@@ -4,7 +4,7 @@
 
 AI agents write code, and other AI agents review it. Nobody checks that the app still works for the person using it. This kit adds that check. A QA agent writes the tests from the ticket before the code exists, a person approves them once, and scripts decide whether they pass, not the agent.
 
-Version 0.2.0, experimental. Changes: [CHANGELOG.md](CHANGELOG.md).
+Version 0.3.0, experimental. Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## How it works
 
