@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **A field the ticket names is found by its label.** In the campaign of every ticket on main (run 42588473594: 49 of 51 trials successful) and its follow-up on EVAL-15, 3 of the 6 EVAL-15 trials looked up the "Search products" field with `getByRole('textbox', …)`. The reference renders it as `<input type="search">`, whose role is `searchbox`, so their tests failed on the correct implementation.
+  - The writer's instructions now say to find a field the ticket names, but the markup does not have yet, by its label (`getByLabelText`, `getByLabel`), never by a role it assumes.
+  - Measured on the branch: EVAL-15 6/6 (3/6 before), all by the label; the smoke selection 17/18; EVAL-8 4/6 over the smoke run and its follow-up (3/3 in run 42). Neither change is significant with 6 trials.
+  - The two EVAL-8 failures looked up the checkout bar's total as the exact text "€9.40", which the reference shows as "Total €9.40": a guess about markup that does not exist yet, which the new instruction does not cover.
+  - The release decision is **review**, against "D clean" and against main: EVAL-8 already had its follow-up, and the policy asks a person to decide (`eval/results/2026-11-09-field-by-label.md`).
+- **The campaigns of 9 November in the history**: runs 42 to 46, 29 campaigns in all.
 - **Unit tests that already pass without the feature.** Phase 1 requires every browser test to fail, but a criterion's unit tests need only one failure: a unit test that already passes is accepted without a word. On OMNI-1, 2 of the 6 unit tests passed before the feature existed:
   - "a b c" on three lines, where reversing the letters of one-letter words gives the same result as reversing the words: a case that cannot tell a right implementation from a wrong one;
   - a test of the default behavior, which the ticket keeps.

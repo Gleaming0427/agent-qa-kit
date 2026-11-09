@@ -532,5 +532,24 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 1.7145
+  },
+  {
+    "id": "gh-42610044168",
+    "label": "follow-up of field by its label, EVAL-8, run 46",
+    "role": "campaign",
+    "started_at": "2026-11-09T11:33:56Z",
+    "commit": "20a763b",
+    "agent": "fb5656fa4845",
+    "writer_prompt": "d5c1883",
+    "scoring": "original at 20a763b",
+    "tickets": 1,
+    "trials": 3,
+    "agent_errors": 0,
+    "successes": 2,
+    "bugs_detected": "6/6",
+    "trials_with_false_positives": 1,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 0.3568
   }
 ]
