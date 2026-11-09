@@ -1,0 +1,508 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-09T11:42:21.449Z",
+  "campaign": {
+    "trials": 3,
+    "tickets": 1,
+    "trials_per_ticket": 3,
+    "first_start": "2026-11-09T11:34:43.594Z",
+    "last_finish": "2026-11-09T11:42:09.262Z",
+    "span_ms": 445668,
+    "effective_parallelism": 0.91
+  },
+  "metrics": {
+    "success": {
+      "successes": 2,
+      "n": 3,
+      "rate": 0.6666666666666666,
+      "low": 0.2076596008020477,
+      "high": 0.9385080552796037,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "red_valid": {
+      "successes": 3,
+      "n": 3,
+      "rate": 1,
+      "low": 0.4385029682449546,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "no_false_positive": {
+      "successes": 2,
+      "n": 3,
+      "rate": 0.6666666666666666,
+      "low": 0.2076596008020477,
+      "high": 0.9385080552796037,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "no_flaky_test": {
+      "successes": 3,
+      "n": 3,
+      "rate": 1,
+      "low": 0.4385029682449546,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "fail_to_pass": {
+      "successes": 10,
+      "n": 12,
+      "rate": 0.8333333333333334,
+      "low": 0.5519691377470266,
+      "high": 0.9530348578161463,
+      "clustered_se": null,
+      "unit": "criterion x level units"
+    },
+    "bug_detection": {
+      "successes": 6,
+      "n": 6,
+      "rate": 1,
+      "low": 0.6096657120978346,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "injected bugs"
+    },
+    "bug_attribution": {
+      "successes": 6,
+      "n": 6,
+      "rate": 1,
+      "low": 0.6096657120978346,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "detected bugs"
+    },
+    "policy_ok": {
+      "successes": 3,
+      "n": 3,
+      "rate": 1,
+      "low": 0.4385029682449546,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "no_invention_on_ambiguity": {
+      "successes": 0,
+      "n": 0,
+      "rate": null,
+      "low": null,
+      "high": null,
+      "clustered_se": null,
+      "unit": "trials"
+    },
+    "verifier_gold_correct": {
+      "successes": 2,
+      "n": 3,
+      "rate": 0.6666666666666666,
+      "low": 0.2076596008020477,
+      "high": 0.9385080552796037,
+      "clustered_se": null,
+      "unit": "verifier runs on the correct implementation"
+    },
+    "verifier_bug_correct": {
+      "successes": 3,
+      "n": 3,
+      "rate": 1,
+      "low": 0.4385029682449546,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "verifier runs on a buggy implementation"
+    },
+    "verifier_bug_faithful": {
+      "successes": 3,
+      "n": 3,
+      "rate": 1,
+      "low": 0.4385029682449546,
+      "high": 1,
+      "clustered_se": null,
+      "unit": "verifier runs on a buggy implementation"
+    },
+    "agent_error": {
+      "successes": 0,
+      "n": 3,
+      "rate": 0,
+      "low": 5.551115123125783e-17,
+      "high": 0.5614970317550454,
+      "clustered_se": null,
+      "unit": "trials"
+    }
+  },
+  "reliability": {
+    "k": 3,
+    "pass_at_1": 0.6667,
+    "pass_at_k": 1,
+    "pass_hat_k": 0
+  },
+  "cost_usd": {
+    "total": 0.3568,
+    "mean_per_trial": 0.1189,
+    "p50": 0.1066,
+    "p95": 0.1424
+  },
+  "tokens": {
+    "n": 3,
+    "input": 80,
+    "output": 22963,
+    "cache_read": 837941,
+    "cache_creation": 131617,
+    "mean_total_per_trial": 330867
+  },
+  "runner_time_s": {
+    "agent": {
+      "n": 3,
+      "total": 168.5,
+      "p50": 55.7,
+      "p95": 57.8
+    },
+    "score": {
+      "n": 3,
+      "total": 139.9,
+      "p50": 43.5,
+      "p95": 52.1
+    },
+    "verify": {
+      "n": 3,
+      "total": 97.1,
+      "p50": 35.4,
+      "p95": 41.3
+    }
+  },
+  "phase1_duration_s": {
+    "n": 3,
+    "p50": 53.5,
+    "p95": 55.7,
+    "max": 55.9
+  },
+  "phase1_turns": {
+    "n": 3,
+    "p50": 10,
+    "p95": 10
+  },
+  "guard_blocks": {
+    "total": 0,
+    "trials": 3,
+    "trials_with_blocks": 0,
+    "mean_per_trial": 0,
+    "reasons": {},
+    "trials_missing_subagent_transcripts": 0
+  },
+  "checks": {
+    "trials_with_transcript": 3,
+    "tool_calls": {
+      "Read": 15,
+      "Glob": 3,
+      "Write": 6,
+      "Bash": 3
+    },
+    "unavailable_tool_calls": 0,
+    "unavailable_by_tool": {},
+    "corpus_exposed_trials": [],
+    "corpus_examples": [],
+    "models": {
+      "claude-haiku-5-5": 3,
+      "claude-sonnet-5-5": 3
+    },
+    "split_runner_trials": 3,
+    "scoring_sandbox": {
+      "bwrap": 3
+    },
+    "isolation_flagged_trials": []
+  },
+  "tickets": [
+    {
+      "ticket": "EVAL-8",
+      "kind": "feature",
+      "trials": 3,
+      "successes": 2,
+      "pass_hat_k": 0,
+      "red_valid": 3,
+      "f2p": "10/12",
+      "bugs_detected": "6/6",
+      "false_positive_trials": 1,
+      "mean_cost_usd": 0.1189
+    }
+  ],
+  "trials": [
+    {
+      "ticket": "EVAL-8",
+      "trial": 1,
+      "kind": "feature",
+      "success": false,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 0,
+      "guard_block_reasons": {},
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 1
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 22,
+        "output": 7250,
+        "cache_read": 220746,
+        "cache_creation": 47774
+      },
+      "isolation_findings": 0,
+      "scoring_sandbox": "bwrap",
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": false
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": false
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [
+        "EVAL-8 MFE: checkout bar [EVAL-8][AC-1] MFE bar shows the order total next to a Checkout button once the cart has items",
+        "EVAL-8 MFE: checkout bar [EVAL-8][AC-2] MFE bar total equals the order total including shipping, and follows changes"
+      ],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "bar-hidden-on-phones",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "bar-shows-subtotal",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "wrong",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.146429,
+      "phase1_duration_ms": 55909,
+      "phase1_turns": 10,
+      "wall_clock_ms": 121252,
+      "runner_ms": {
+        "agent": 58078,
+        "score": 43451,
+        "verify": 19723
+      },
+      "started_at": "2026-11-09T11:34:43.594Z",
+      "finished_at": "2026-11-09T11:41:47.357Z"
+    },
+    {
+      "ticket": "EVAL-8",
+      "trial": 2,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 0,
+      "guard_block_reasons": {},
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 1
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 28,
+        "output": 8165,
+        "cache_read": 303966,
+        "cache_creation": 34348
+      },
+      "isolation_findings": 0,
+      "scoring_sandbox": "bwrap",
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "bar-hidden-on-phones",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "bar-shows-subtotal",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.106581,
+      "phase1_duration_ms": 53461,
+      "phase1_turns": 10,
+      "wall_clock_ms": 134542,
+      "runner_ms": {
+        "agent": 55701,
+        "score": 43421,
+        "verify": 35420
+      },
+      "started_at": "2026-11-09T11:34:49.143Z",
+      "finished_at": "2026-11-09T11:42:09.262Z"
+    },
+    {
+      "ticket": "EVAL-8",
+      "trial": 3,
+      "kind": "feature",
+      "success": true,
+      "red_valid": true,
+      "agent_error": false,
+      "policy_ok": true,
+      "has_tests": true,
+      "asked_question": true,
+      "invented": true,
+      "guard_blocks": 0,
+      "guard_block_reasons": {},
+      "subagents_without_transcript": 0,
+      "tool_calls": {
+        "Read": 5,
+        "Glob": 1,
+        "Write": 2,
+        "Bash": 1
+      },
+      "unavailable_tools": {},
+      "corpus_exposures": 0,
+      "corpus_calls": [],
+      "corpus_in_context": 0,
+      "models": [
+        "claude-haiku-5-5",
+        "claude-sonnet-5-5"
+      ],
+      "tokens": {
+        "input": 30,
+        "output": 7548,
+        "cache_read": 313229,
+        "cache_creation": 49495
+      },
+      "isolation_findings": 0,
+      "scoring_sandbox": "bwrap",
+      "f2p": [
+        {
+          "criterion": "AC-1",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-1",
+          "level": "shell",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "mfe",
+          "ok": true
+        },
+        {
+          "criterion": "AC-2",
+          "level": "shell",
+          "ok": true
+        }
+      ],
+      "false_positives": [],
+      "flaky": [],
+      "bugs": [
+        {
+          "id": "bar-hidden-on-phones",
+          "criterion": "AC-1",
+          "detected": true,
+          "attributed": true
+        },
+        {
+          "id": "bar-shows-subtotal",
+          "criterion": "AC-2",
+          "detected": true,
+          "attributed": true
+        }
+      ],
+      "verifier": {
+        "gold": "correct",
+        "bug": "correct",
+        "bug_faithful": "correct",
+        "bug_detected_by_tests": true
+      },
+      "cost_usd": 0.103747,
+      "phase1_duration_ms": 52309,
+      "phase1_turns": 10,
+      "wall_clock_ms": 149687,
+      "runner_ms": {
+        "agent": 54677,
+        "score": 53023,
+        "verify": 41987
+      },
+      "started_at": "2026-11-09T11:34:44.595Z",
+      "finished_at": "2026-11-09T11:42:05.609Z"
+    }
+  ]
+}

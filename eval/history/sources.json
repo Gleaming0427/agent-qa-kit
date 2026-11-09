@@ -727,6 +727,244 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 42588473594,
+      "run_number": 42,
+      "branch": "main",
+      "started_at": "2026-11-09T08:47:13Z",
+      "commit": "5bbe246153de5407adde6652ee6ba2ee9114bd51",
+      "label": "every ticket, run 42",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 42588473594,
+        "commit": "5bbe246153de5407adde6652ee6ba2ee9114bd51"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-42588473594.json",
+        "sha256": "cadd4235be55d6faa3aef0743455528ed5e7780bc56edb859e901424360054c5",
+        "artifact": {
+          "id": 13662052637,
+          "name": "eval-report",
+          "digest": "sha256:49f072c0d00f10cb78e3c3935c7f7d10de3116891c6d56a32ef7e04b72eb8303"
+        }
+      },
+      "doc": "eval/results/2026-11-09-field-by-label.md",
+      "notes": [
+        "Every ticket on main after #40. Run 41 (42467417000), stopped by a low credit balance after 45 of 51 trials, is not recorded. EVAL-15 failed on the correct implementation in 1 of 3 trials: the writer looked up the search field by the textbox role."
+      ],
+      "inputs": {
+        "tickets": "all",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 42596342131,
+      "run_number": 43,
+      "branch": "main",
+      "started_at": "2026-11-09T09:49:32Z",
+      "commit": "5bbe246153de5407adde6652ee6ba2ee9114bd51",
+      "label": "follow-up of run 42, EVAL-15, run 43",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 42596342131,
+        "commit": "5bbe246153de5407adde6652ee6ba2ee9114bd51"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-42596342131.json",
+        "sha256": "1728a0c5d3ad85d5b1f8a7163579a9dc6db647756f7f1e2c7bcf8e84efca280a",
+        "artifact": {
+          "id": 13663842747,
+          "name": "eval-report",
+          "digest": "sha256:dd6a284c1cae0fea61c85279681aae6f0a751fe2083e0802401816f057ded5b4"
+        }
+      },
+      "doc": "eval/results/2026-11-09-field-by-label.md",
+      "notes": [
+        "The follow-up the release decision of run 42 asked for: EVAL-15, 3 trials, same agent. 2 of the 3 trials looked up the search field by the textbox role and failed on the correct implementation."
+      ],
+      "inputs": {
+        "tickets": "EVAL-15",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 42598786785,
+      "run_number": 44,
+      "branch": "claude/magical-feynman-bhdsbc",
+      "started_at": "2026-11-09T10:09:20Z",
+      "commit": "20a763b142e67fac9cde167179f879e459f882cd",
+      "label": "field by its label, EVAL-15, run 44",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 42598786785,
+        "commit": "20a763b142e67fac9cde167179f879e459f882cd"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-42598786785.json",
+        "sha256": "1391cf1901fadb8fc44184733cae71df1caafc279bc6d55df649243d25615b91",
+        "artifact": {
+          "id": 13663969824,
+          "name": "eval-report",
+          "digest": "sha256:98ad45b5cb4910f472cc99aaec098d5b045ec40423260a37d475a34a49c4021e"
+        }
+      },
+      "doc": "eval/results/2026-11-09-field-by-label.md",
+      "notes": [
+        "The writer finds a field the ticket names by its label, not by an assumed role: EVAL-15, 6 trials. All 6 looked up the search field by its label; none failed on the correct implementation."
+      ],
+      "inputs": {
+        "tickets": "EVAL-15",
+        "trials": "6",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 42598796372,
+      "run_number": 45,
+      "branch": "claude/magical-feynman-bhdsbc",
+      "started_at": "2026-11-09T10:09:25Z",
+      "commit": "20a763b142e67fac9cde167179f879e459f882cd",
+      "label": "field by its label, smoke, run 45",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 42598796372,
+        "commit": "20a763b142e67fac9cde167179f879e459f882cd"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-42598796372.json",
+        "sha256": "8dc82c11b23b18d6cb29f34afa7aeac60359130a187e0be3b6f51ce7e4121d37",
+        "artifact": {
+          "id": 13666570002,
+          "name": "eval-report",
+          "digest": "sha256:07d5333ccca80d85d2e5dc36c8856f338e2a7c60bad0129ab2e0cc91aa2665ca"
+        }
+      },
+      "doc": "eval/results/2026-11-09-field-by-label.md",
+      "notes": [
+        "The same agent on the smoke selection. EVAL-8 failed on the correct implementation in 1 of 3 trials: its unit test expected the bar's total as the exact text '€9.40', which the reference shows as 'Total €9.40'. The release decision asked for a rerun of EVAL-8."
+      ],
+      "inputs": {
+        "tickets": "smoke",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 42610044168,
+      "run_number": 46,
+      "branch": "claude/magical-feynman-bhdsbc",
+      "started_at": "2026-11-09T11:33:56Z",
+      "commit": "20a763b142e67fac9cde167179f879e459f882cd",
+      "label": "follow-up of field by its label, EVAL-8, run 46",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 42610044168,
+        "commit": "20a763b142e67fac9cde167179f879e459f882cd"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-42610044168.json",
+        "sha256": "7feda70bd11600a2ad2e8d6c1119caf80f60bacc3b244c6715465d328c4320b8",
+        "artifact": {
+          "id": 13670327614,
+          "name": "eval-report",
+          "digest": "sha256:3988454df33cf8fd4e4f3d805b0783408e0fb03011d97ae85ac47eb2686036aa"
+        }
+      },
+      "doc": "eval/results/2026-11-09-field-by-label.md",
+      "notes": [
+        "The follow-up the release decision of run 45 asked for: EVAL-8, 3 trials, same agent. 1 of the 3 trials failed on the correct implementation, for the same reason as in run 45: the bar's total looked up as the exact text '€9.40'."
+      ],
+      "inputs": {
+        "tickets": "EVAL-8",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 42653321823,
+      "run_number": 47,
+      "branch": "claude/magical-feynman-bhdsbc",
+      "started_at": "2026-11-09T16:17:51Z",
+      "commit": "a0d03fa506f04f1cd0b39088c8e009262d08bdf7",
+      "label": "value as part of the text, smoke, run 47",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 42653321823,
+        "commit": "a0d03fa506f04f1cd0b39088c8e009262d08bdf7"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-42653321823.json",
+        "sha256": "32507a00d4af16808a55d6c861c591dfdbb431a30a7aa5c0132d2e5020a325da",
+        "artifact": {
+          "id": 13692900826,
+          "name": "eval-report",
+          "digest": "sha256:d2f25644f000d27019910453944d3fec03d3e479e7674794473d25e5a44c3b9f"
+        }
+      },
+      "doc": "eval/results/2026-11-09-field-by-label.md",
+      "notes": [
+        "The writer also checks a value the ticket gives as part of the text of the element that shows it, on the smoke selection (EVAL-1, EVAL-2, EVAL-8, EVAL-9, EVAL-10, EVAL-15): 18 of 18 trials successful. Every EVAL-8 trial checked the bar's total with toHaveTextContent or toContainText."
+      ],
+      "inputs": {
+        "tickets": "smoke",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 42653327754,
+      "run_number": 48,
+      "branch": "claude/magical-feynman-bhdsbc",
+      "started_at": "2026-11-09T16:17:53Z",
+      "commit": "a0d03fa506f04f1cd0b39088c8e009262d08bdf7",
+      "label": "value as part of the text, EVAL-8, run 48",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 42653327754,
+        "commit": "a0d03fa506f04f1cd0b39088c8e009262d08bdf7"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-42653327754.json",
+        "sha256": "c69ffe9726a2f28935b1e5f312d494da30674ef6537d3374d841fb8b3844b1d3",
+        "artifact": {
+          "id": 13692172481,
+          "name": "eval-report",
+          "digest": "sha256:36e2a734f2acfebdc0e23630cf3ea4408cb5101a517ea85bcf4726242f1a0585"
+        }
+      },
+      "doc": "eval/results/2026-11-09-field-by-label.md",
+      "notes": [
+        "The same agent on EVAL-8, 3 trials, run with the smoke selection so that EVAL-8 has 6 trials: 3 of 3 successful, each checking the bar's total with toHaveTextContent or toContainText."
+      ],
+      "inputs": {
+        "tickets": "EVAL-8",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }

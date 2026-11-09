@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **A field the ticket names is found by its label.** In the campaign of every ticket on main (run 42588473594: 49 of 51 trials successful) and its follow-up on EVAL-15, 3 of the 6 EVAL-15 trials looked up the "Search products" field with `getByRole('textbox', …)`. The reference renders it as `<input type="search">`, whose role is `searchbox`, so their tests failed on the correct implementation.
+  - The writer's instructions now say to find a field the ticket names, but the markup does not have yet, by its label (`getByLabelText`, `getByLabel`), never by a role it assumes.
+  - Measured on the branch: EVAL-15 6/6, all by the label. But EVAL-8 fell to 4/6: two trials looked up the checkout bar's total as an element whose whole text is "€9.40" (`getAllByText`), and the reference shows "Total €9.40" in one element. The release decision was review.
+- **A value the ticket gives is checked as part of the element's text.** The writer's instructions now say to check a value such as a total or a count with `toHaveTextContent` or `toContainText` on the element that shows it, never as an element whose whole text it assumes, and to bound it with a regular expression when a longer number would still contain it.
+  - Measured on the smoke selection (EVAL-1, EVAL-2, EVAL-8, EVAL-9, EVAL-10, EVAL-15) and 3 more trials of EVAL-8: 21 of 21 trials successful, 33/33 bugs detected; EVAL-8 6/6, EVAL-15 3/3.
+  - The release decision is **accepted**, against "D clean" (cost per trial −6.3%) and against main (+3.3%). No change on a ticket is significant except EVAL-15's (9/9 with the label instruction, 3/6 before). The last version ran on 6 of the 17 tickets (`eval/results/2026-11-09-field-by-label.md`).
+- **The campaigns of 9 November in the history**: runs 42 to 48, 31 campaigns in all.
 - **Unit tests that already pass without the feature.** Phase 1 requires every browser test to fail, but a criterion's unit tests need only one failure: a unit test that already passes is accepted without a word. On OMNI-1, 2 of the 6 unit tests passed before the feature existed:
   - "a b c" on three lines, where reversing the letters of one-letter words gives the same result as reversing the words: a case that cannot tell a right implementation from a wrong one;
   - a test of the default behavior, which the ticket keeps.
