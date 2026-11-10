@@ -116,7 +116,7 @@ On omni-tools, QA verify blocked the correct code once: an approved browser test
 
 These are ceilings passed to the CLI, not prices. Measured costs are in the tables above. An evaluation run of every ticket cost $4.84 on 9 November, a smoke run $1.60 to $1.73. QA eval estimates the cost before it starts and refuses to go above `max_cost_usd`.
 
-The variables `QA_BUDGET_USD`, `QA_MODEL`, `QA_EFFORT` and `QA_REPAIR_*` change budgets, models and effort. On a large application, `QA_MAX_TURNS` gives the agents more turns than their own limit (40 for the writer, 25 for the verifier).
+On a large application, the repository variable `QA_MAX_TURNS` gives the agents more turns than their own limit (40 for the writer, 25 for the verifier). When the scripts run on a developer machine, `QA_BUDGET_USD`, `QA_MODEL`, `QA_EFFORT` and `QA_REPAIR_*` change budgets, models and effort.
 
 ## Security
 
@@ -131,7 +131,7 @@ The kit does not protect against someone with write access to the repository. De
 ## Limits
 
 - Checks prove that named tests ran and gave the expected result. They can't prove the assertions match what the user wanted, so a person still reviews.
-- QA write tests, QA verify, QA amend tests and QA branch rules have run on two real tickets, one of them in the demo. QA approval and an amendment after a squash merge have run on a third demo ticket ([details](eval/results/2026-11-07-approval-trial.md)). The repair agent isn't measured.
+- QA write tests, QA verify and QA amend tests have run on two real tickets, one of them in the demo. QA approval and an amendment after a squash merge have run on a third demo ticket ([details](eval/results/2026-11-07-approval-trial.md)). The repair agent isn't measured.
 - The installer has run on one large project, immich, a pnpm monorepo: install and full suite, no agent ([details](eval/results/2026-11-07-immich.md)).
 - The corpus is 17 tickets of one small shop: it says how the agents do there, not on a real project. The v0.3.0 writer was measured on 6 of them.
 - The visual review can miss problems or report ones that aren't there, so it only warns.
