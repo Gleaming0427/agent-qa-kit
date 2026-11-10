@@ -2,7 +2,7 @@
 
 **Prove that AI-written code works for the user before it is accepted.**
 
-AI agents write code, and other AI agents review it. Nobody checks that the app still works for the person using it. This kit adds that check. A QA agent writes the tests from the ticket before the code exists, a person approves them once, and scripts decide whether they pass, not the agent.
+AI agents write code, and other AI agents review it. Nobody checks that the app still works for the person using it. This kit adds that check: a QA agent writes the tests from the ticket before the code exists, a person approves them once, and scripts, not the agent, decide whether they pass.
 
 Version 0.3.0, experimental. Changes: [CHANGELOG.md](CHANGELOG.md).
 
@@ -18,35 +18,83 @@ Version 0.3.0, experimental. Changes: [CHANGELOG.md](CHANGELOG.md).
  3. Developer      builds the feature (a person or an agent)
         │
  4. QA verifier    runs the frozen tests, with no write access
-        │          ↺ on failure, a repair agent fixes the app, never the tests
+        │          ↺ optional, locally: a repair agent fixes the app, never the tests
  5. Checker        compares the verdict with the real test reports,
                    then reruns the whole suite
 ```
 
 Tests written after the code tend to confirm what was built, bugs included. Tests written from the ticket, and seen failing first, describe what was asked.
 
-The reviewer gets more than the test code. For each criterion, the writer lists the cases its tests use, the mistake each case rules out, and what the tests leave out. Reading code shows what is wrong in a test, not what is missing.
+The person who approves the tests sees, on the test pull request:
+- for each criterion, the cases the tests use, the mistake each case rules out, and what the tests leave out;
+- the browser assertions that a longer number would still pass (`getByText('4 products')` also finds "14 products"), and the unit tests that already pass without the feature;
+- a **QA approval** status, red until the approval gives a reason per criterion.
 
-## Results so far
+## Use it on your app
 
-I measure the agents on 17 small tickets for a demo shop. Each ticket has hidden tests and a few planted bugs. The agent runs on its own CI runner and never sees them. Details and stats are in [eval/results](eval/results).
+You need:
+- a GitHub repository whose app uses Vitest and Playwright, with npm or pnpm, and Node.js 22.18 or later;
+- an Anthropic API key with credit, as the repository secret `ANTHROPIC_API_KEY`: the agents call Claude with it (see [Cost](#cost)).
 
-- **Baseline:** 45 of 48 trials pass, and 86 of 87 planted bugs are caught. 2 trials of 45 had a test that fails on a correct implementation. About $0.11 per trial.
-- **A blind spot it found:** on a promo code ticket, the agent missed a bug in 8 of 15 trials. The tests looked fine. They just always used a cart big enough for free shipping, and the bug only shows when you pay shipping. I would have approved those tests.
-- **A fix I dropped:** asking for more test cases caught that bug, but false positives went from 2 to 5 in 48 trials. Most were totals the agent got wrong when working them out by hand.
-- **A fix I kept:** the agent now lists what its tests don't cover, and a hook recomputes every amount it writes. On six tickets that gave:
-  - 22 of 23 trials passed;
-  - the promo bug was caught 5 times out of 5;
-  - no false positive in 20 trials;
-  - about 11% more per trial.
+In the app's repository:
 
-  The one miss was listed in its own "not covered" section, so a reviewer would have seen it.
+```bash
+npx github:Gleaming0427/agent-qa-kit init
+```
 
-These are small samples, 3 to 5 trials per ticket. Treat them as signals, not proof.
+`init` copies the agents, their checks and five GitHub workflows, and adds the npm scripts they call if they are missing. If a file is already there and differs, it writes nothing and says which. It then lists what is still missing, such as a browser test tagged `@smoke` or a committed lockfile, and the GitHub settings to make. `npx github:Gleaming0427/agent-qa-kit doctor --run` runs the tests the way the workflows will.
 
-### Two real tickets, end to end
+A ticket is a Markdown file in `specs/`, one line per acceptance criterion (`- AC-1: …`). There is no Jira connection.
 
-The whole workflow, as a team would run it: the writer's tests, a person's review, the developer's pull request, QA verify. One ticket on the demo shop, one on [omni-tools](https://github.com/iib0011/omni-tools), a real React app of about 860 files. Details: [eval/results/2026-11-07-real-tickets.md](eval/results/2026-11-07-real-tickets.md).
+| Workflow | Runs | Calls a model |
+|---|---|---|
+| QA write tests | by hand, with a ticket key; the tests arrive as a pull request | yes, the writer |
+| QA approval | on each review of that pull request, and each push to it | no |
+| QA verify | on pull requests into the default branch (`--branch` to change it); one that names a ticket with approved tests gets its tests checked, the verifier and the full suite, the others pass | yes, the verifier |
+| QA amend tests | by hand, to fix an approved test that turns out to be wrong, with a reason; the tests need a new approval | no |
+| QA branch rules | on every pull request: a `qa/` branch may only change tests, and no other branch may change the tests of a ticket that has a `qa/` branch | no |
+
+Start QA verify with the repository variable `QA_VERIFY_MODE=advisory`: it only warns, and keeps a record of what it would have blocked. `node qa/verify-record.ts` says when it can block.
+
+The repair agent is not in a workflow: `qa/repair-loop.sh` runs it locally, at most twice, and verifies again after each repair.
+
+Setup, commands and maintenance: [HOW_TO_APPLY.md](HOW_TO_APPLY.md).
+
+## Try the demo
+
+Nothing here calls a model, so no API key is needed. It needs Node.js 22.18+ (22.x or 24.x), npm, Bash and `jq`.
+
+```bash
+npm ci
+npm run check          # the kit's own tests
+
+cd examples/shop
+npm ci
+npx playwright install chromium
+npm run test:smoke     # a fixed journey, on desktop and mobile
+npm run demo:unit      # the test cycle, in Vitest
+npm run demo:e2e       # the same cycle, in Playwright
+```
+
+The demo is a small React shop that can switch a bug on and off. The test cycle runs the same tests three times: they fail with the bug on, pass with it off, and fail again when it is back on. It shows the cycle, not a run of the agents.
+
+## What has been measured
+
+**On a corpus of 17 small tickets for the demo shop.** Each ticket has hidden tests, a reference implementation and a few planted bugs. The agents run on their own CI runner and never see them. A trial is one run of the agents on one ticket. On a feature ticket, it succeeds when the tests fail before the feature, none fails on the reference implementation, every planted bug is caught, and the agent changed only test files.
+
+| Version | Date | Tickets | Trials successful | Planted bugs caught | Trials with a test failing on correct code | Cost per trial |
+|---|---|---|---|---|---|---|
+| "D clean", the release baseline | 3 Nov | 16 | 45/48 | 86/87 | 2/45 | $0.11 |
+| main, before the fixes of v0.3.0 | 9 Nov | 17 | 49/51 | 93/96 | 1/48 | $0.095 |
+| v0.3.0 | 9 Nov | 6 | 21/21 | 33/33 | 0/18 | $0.094 |
+
+What the evaluation found:
+- **A blind spot.** On a promo code ticket, the "D clean" writer missed a bug in 8 of 15 trials: its tests always used a cart big enough for free shipping, and the bug only shows when shipping is paid. Asking for more test cases caught it, but tests failing on correct code went from 2 to 5 trials in 48, so that change was dropped. The coverage summary was kept: on six tickets, the bug was caught 5 times out of 5, no test failed on correct code in 20 trials, for about 11% more per trial.
+- **Guesses about markup that does not exist yet.** The writer looked up a search field by a role it assumed, and a total as an element whose whole text it assumed; both made correct code fail. In v0.3.0 it finds a field by its label and checks a value as part of the element's text.
+
+These are small samples, 3 to 6 trials per ticket: signals, not proof. Results: [eval/results](eval/results). Method: [eval/README.md](eval/README.md).
+
+**On two real tickets, end to end**: the writer's tests, a person's review, the developer's pull request, QA verify. One ticket on the demo shop, one on [omni-tools](https://github.com/iib0011/omni-tools), a React app of about 860 files ([details](eval/results/2026-11-07-real-tickets.md)).
 
 | | Demo shop: express delivery | omni-tools: reverse the word order |
 |---|---|---|
@@ -55,62 +103,20 @@ The whole workflow, as a team would run it: the writer's tests, a person's revie
 | Full suite | 9 unit, 8 browser tests | 705 unit, 9 browser tests |
 | Model calls | $0.17 | $1.44 |
 
-What went wrong on omni-tools, and what it changed:
-- The writer ran out of turns on a codebase much bigger than the demo. `QA_MAX_TURNS` now raises the limit.
-- On the next run it couldn't render the component in a unit test. Instead of passing off broken evidence, it stopped and asked how to test it. The answer went into the ticket.
-- QA verify blocked the correct code. The approved browser tests looked for a checkbox the page shows four times. Nobody caught it in review, because the option didn't exist yet. The tests were fixed through QA amend tests, approved again, and QA verify passed.
-
-It also showed that the human step is easy to get wrong. Both test pull requests were merged before they were approved, and one was first approved without the reasons QA verify needs. The test pull request now has a **QA approval** status that stays red until its approval is complete, and says what is missing. A squash merge also blocked the amendment. QA amend tests now handles it when the squash holds only the tests.
-
-## Try the demo
-
-Needs Node.js 22.18+ (22.x or 24.x), npm, Bash and `jq`. No AI calls.
-
-```bash
-npm ci
-npm run check
-
-cd examples/shop
-npm ci
-npx playwright install chromium
-npm run test:smoke    # fixed desktop and mobile journey
-npm run demo:unit     # RED -> GREEN -> REGRESSION in Vitest
-npm run demo:e2e      # the same cycle in Playwright
-```
-
-The demo is a small React shop that can switch a bug on and off. It shows the test cycle, not a run of the agents.
-
-## Use it on your app
-
-In your app's repository (Node.js 22.18+, Vitest and Playwright, npm or pnpm):
-
-```bash
-npx github:Gleaming0427/agent-qa-kit init
-```
-
-It copies the agents, their checks and five GitHub workflows, and adds the npm scripts they call if they are missing. If a file is already there and differs, it writes nothing and says which. Then it lists what is still missing, for instance a browser test tagged `@smoke` or a committed lockfile, and the GitHub settings to make. `doctor --run` runs your tests the way the workflows will.
-
-Tickets are Markdown files in `specs/`, with no Jira connection. These GitHub workflows do the work:
-
-- **QA write tests:** started by hand with a ticket key. The writer's tests arrive as a pull request, and approving it is the human review.
-- **QA approval:** keeps a status on that pull request, red until a collaborator approves its latest commit with a reason per criterion. Approve first, then merge.
-- **QA verify:** runs on pull requests into `main`. When one names a ticket with QA tests, it checks they are the approved ones, then runs the verifier and the full suite. Otherwise it passes without calling a model.
-  - Start it with `QA_VERIFY_MODE=advisory` to only warn. It keeps a record of what it would have blocked, and `node qa/verify-record.ts` tells you when it has earned the right to block.
-- **QA amend tests:** for an approved test that turns out to be wrong. You fix it, give a reason, and it gets logged and approved again.
-- **QA eval:** measures the agents on the corpus (`eval/`). You don't need it to use the kit.
-
-Setup, commands and maintenance: [HOW_TO_APPLY.md](HOW_TO_APPLY.md). The evaluation method: [eval/README.md](eval/README.md).
+On omni-tools, QA verify blocked the correct code once: an approved browser test looked for a checkbox the page shows four times. The test was fixed with QA amend tests, approved again, and QA verify passed. Both test pull requests were also merged before they were approved, which is why the QA approval status exists.
 
 ## Cost
 
-| Agent | Model | Budget ceiling per run |
+| Agent | Model | Budget ceiling |
 |---|---|---|
-| Writer | Sonnet, medium effort | $1.00 |
-| Verifier | Haiku, low effort | $0.20, up to 3 runs per approved baseline |
-| Repair | Sonnet, medium effort | $1.00, at most 2 repairs |
-| Visual review (optional, warnings only) | Opus | about $0.17 at most |
+| Writer | Sonnet, medium effort | $1.00 per run |
+| Verifier | Haiku, low effort | $0.20 per run; up to 3 runs with the repair loop |
+| Repair | Sonnet, medium effort | $1.00 per repair, at most 2 |
+| Visual review, in the demo's CI (warnings only) | Opus | about $0.17 at most |
 
-Those are ceilings passed to the CLI, not prices. In practice a writer and verifier trial costs $0.10 to $0.14 on the corpus. An evaluation smoke run costs $2 to $3, and a full run about $6. QA eval estimates the cost before it starts and refuses to go above `max_cost_usd`. Budgets, models and effort can be changed with `QA_BUDGET_USD`, `QA_MODEL`, `QA_EFFORT` and the `QA_REPAIR_*` variables. On a large application, the repository variable `QA_MAX_TURNS` gives the agents more turns than their own limit (40 for the writer, 25 for the verifier).
+These are ceilings passed to the CLI, not prices. Measured costs are in the tables above. An evaluation run of every ticket cost $4.84 on 9 November, a smoke run $1.60 to $1.73. QA eval estimates the cost before it starts and refuses to go above `max_cost_usd`.
+
+The variables `QA_BUDGET_USD`, `QA_MODEL`, `QA_EFFORT` and `QA_REPAIR_*` change budgets, models and effort. On a large application, `QA_MAX_TURNS` gives the agents more turns than their own limit (40 for the writer, 25 for the verifier).
 
 ## Security
 
@@ -125,7 +131,7 @@ The kit does not protect against someone with write access to the repository. De
 ## Limits
 
 - Checks prove that named tests ran and gave the expected result. They can't prove the assertions match what the user wanted, so a person still reviews.
-- QA write tests, QA verify, QA amend tests and QA branch rules have each run on a real ticket, but only on two tickets, one of them in the demo. QA approval and an amendment after a squash have run on a third demo ticket ([eval/results/2026-11-07-approval-trial.md](eval/results/2026-11-07-approval-trial.md)). The repair agent isn't measured.
-- The installer has run on one large project, immich, a pnpm monorepo: install and full suite, no agent ([eval/results/2026-11-07-immich.md](eval/results/2026-11-07-immich.md)).
-- The evaluation corpus is 17 tickets of one small shop: it says how the agents do there, not on a real project.
+- QA write tests, QA verify, QA amend tests and QA branch rules have run on two real tickets, one of them in the demo. QA approval and an amendment after a squash merge have run on a third demo ticket ([details](eval/results/2026-11-07-approval-trial.md)). The repair agent isn't measured.
+- The installer has run on one large project, immich, a pnpm monorepo: install and full suite, no agent ([details](eval/results/2026-11-07-immich.md)).
+- The corpus is 17 tickets of one small shop: it says how the agents do there, not on a real project. The v0.3.0 writer was measured on 6 of them.
 - The visual review can miss problems or report ones that aren't there, so it only warns.
