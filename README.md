@@ -135,3 +135,7 @@ The kit does not protect against someone with write access to the repository. De
 - The installer has run on one large project, immich, a pnpm monorepo: install and full suite, no agent ([details](eval/results/2026-11-07-immich.md)).
 - The corpus is 17 tickets of one small shop: it says how the agents do there, not on a real project. The v0.3.0 writer was measured on 6 of them.
 - The visual review can miss problems or report ones that aren't there, so it only warns.
+
+## License
+
+MIT: you may use, copy, modify and distribute the kit, provided the copyright notice and the license are kept. It comes with no warranty. See [LICENSE](LICENSE).

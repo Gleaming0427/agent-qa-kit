@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **An MIT license.** The kit had none, so nobody could reuse it. `LICENSE` now holds the MIT license, and `package.json` says so.
+
 ## v0.3.0, 9 November 2026
 
 Since v0.2.0 the kit installs into an application's repository with one command. It was tried outside its demo: an install on immich, a pnpm workspace of 12 projects, and two real tickets end to end, one on the demo shop and one on omni-tools, a React app of about 860 files. The test pull request now tells its reviewer what the tests cover, which of their assertions or tests could pass on a wrong implementation, and what the approval is missing. The release baseline is still "D clean" (`eval/release-baseline.json`).
