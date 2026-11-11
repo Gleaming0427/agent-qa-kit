@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
@@ -14,6 +14,7 @@ function project(verifications: number[]) {
   for (const dir of ['qa', 'bin', 'specs', 'reports', '.claude/agents', 'node_modules/vitest']) mkdirSync(join(root, dir), { recursive: true });
   copyFileSync(join(kit, 'qa/repair-loop.sh'), join(root, 'qa/repair-loop.sh'));
   copyFileSync(join(kit, 'qa/tooling-integrity.ts'), join(root, 'qa/tooling-integrity.ts'));
+  copyFileSync(join(kit, 'qa/kit-integrity.sh'), join(root, 'qa/kit-integrity.sh'));
   writeFileSync(join(root, 'node_modules/vitest/index.js'), 'export const expect = realExpect;\n');
   copyFileSync(join(kit, '.claude/agents/qa-repairer.md'), join(root, '.claude/agents/qa-repairer.md'));
   copyFileSync(join(kit, '.claude/repair-settings.json'), join(root, '.claude/repair-settings.json'));
@@ -27,6 +28,7 @@ echo "verify $*" >> calls
 mkdir -p node_modules/.vite/deps && echo "$RANDOM" > node_modules/.vite/deps/_metadata.json
 # Code planted by a repair runs with the tests.
 [[ -f src/patch-on-test ]] && echo 'export const expect = () => ({});' > node_modules/vitest/index.js
+[[ -f src/patch-kit-on-test ]] && echo '// patched' >> qa/summary.ts
 exit "$code"
 `);
   writeFileSync(join(root, 'qa/summary.ts'), "console.log('  ✗ [TICKET-42][AC-2] search is case insensitive\\n    expected Alpha, received nothing');\n");
@@ -34,10 +36,13 @@ exit "$code"
   writeFileSync(join(root, 'qa/check-tests.ts'), '');
   writeFileSync(join(root, 'bin/claude'), `#!/usr/bin/env bash
 printf '%s' "$2" > "repair-request-$(ls repair-request-* 2>/dev/null | wc -l | tr -d ' ')"
+while [[ $# -gt 0 ]]; do [[ "$1" == --settings ]] && printf '%s' "$2" > repair-settings-used.json; shift; done
 echo "repair" >> calls
 [[ "\${FAKE_TAMPER:-0}" == 1 ]] && touch tests-changed
 [[ "\${FAKE_TAMPER_DEPS:-0}" == 1 ]] && echo 'export const expect = () => ({});' > node_modules/vitest/index.js
 [[ "\${FAKE_PLANT:-0}" == 1 ]] && mkdir -p src && touch src/patch-on-test
+[[ "\${FAKE_TAMPER_KIT:-0}" == 1 ]] && echo '// the repair'"'"'s tests ran this' >> qa/summary.ts
+[[ "\${FAKE_PLANT_KIT:-0}" == 1 ]] && mkdir -p src && touch src/patch-kit-on-test
 jq -n '{result: "{\\"needs_human\\": false}", total_cost_usd: 0.4, is_error: false}'
 `);
   chmodSync(join(root, 'bin/claude'), 0o755);
@@ -103,4 +108,23 @@ test('with one allowed verification, nothing is repaired', () => inProject([1], 
   const r = run(root, { QA_MAX_VERIFY_ATTEMPTS: '1' });
   assert.equal(r.code, 1);
   assert.deepEqual(r.calls.map((c) => c.split(' ')[0]), ['verify']);
+}));
+test('a repair whose commands changed the kit stops the loop before any script of the kit runs', () => inProject([1, 0], (root) => {
+  const r = run(root, { FAKE_TAMPER_KIT: '1' });
+  assert.equal(r.code, 3);
+  assert.deepEqual(r.calls.map((c) => c.split(' ')[0]), ['verify', 'repair']);
+  assert.match(r.output, /the kit's own files changed during the repair \(qa\/summary\.ts\)/);
+}));
+test('code planted by a repair that changes the kit while the tests run stops the loop', () => inProject([1, 1, 0], (root) => {
+  const r = run(root, { FAKE_PLANT_KIT: '1' });
+  assert.equal(r.code, 3);
+  assert.deepEqual(r.calls.map((c) => c.split(' ')[0]), ['verify', 'repair', 'verify']);
+  assert.match(r.output, /the kit's own files changed during the verification \(qa\/summary\.ts\)/);
+}));
+test('the repair agent starts with the kit\'s folders read-only in the sandbox', () => inProject([1, 0], (root) => {
+  const r = run(root);
+  assert.equal(r.code, 0);
+  const settings = JSON.parse(readFileSync(join(root, 'repair-settings-used.json'), 'utf8'));
+  assert.deepEqual(settings.sandbox.filesystem.denyWrite.sort(), [join(root, '.claude'), join(root, 'qa')].map((p) => realpathSync(p)).sort());
+  assert.equal(settings.sandbox.enabled, true, 'the other sandbox settings are kept');
 }));

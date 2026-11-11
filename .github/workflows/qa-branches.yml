@@ -12,6 +12,21 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
+      # The rules as the base branch has them: a pull request cannot loosen the check that judges it.
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.base_ref }}
+          path: base-kit
+          sparse-checkout: qa
+          persist-credentials: false
+      - name: Pick the rules
+        run: |
+          if [ -f base-kit/qa/check-scope.sh ]; then
+            echo "QA_SCOPE=$PWD/base-kit/qa/check-scope.sh" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=QA branch rules::The base branch has no kit yet (a first install): this run uses the pull request's own copy of the rules."
+            echo "QA_SCOPE=$PWD/qa/check-scope.sh" >> "$GITHUB_ENV"
+          fi
       - name: Fetch the base branch and every qa/ branch
         env:
           BASE: ${{ github.base_ref }}
@@ -20,9 +35,9 @@ jobs:
         if: startsWith(github.head_ref, 'qa/')
         env:
           BASE: ${{ github.base_ref }}
-        run: bash qa/check-scope.sh scope "origin/$BASE"
+        run: bash "$QA_SCOPE" scope "origin/$BASE"
       - name: Tests of a ticket with a qa/ branch stay frozen
         env:
           BASE: ${{ github.base_ref }}
           PR_TITLE: ${{ github.event.pull_request.title }}
-        run: bash qa/check-scope.sh pr "origin/$BASE" "$GITHUB_HEAD_REF" "$PR_TITLE"
+        run: bash "$QA_SCOPE" pr "origin/$BASE" "$GITHUB_HEAD_REF" "$PR_TITLE"

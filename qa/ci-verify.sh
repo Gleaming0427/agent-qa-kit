@@ -8,15 +8,24 @@
 #   agent    the QA verifier agent checks each ticket (needs ANTHROPIC_API_KEY)
 #   suite    the full suite, in a step of its own without the API key, since the
 #            pull request's code runs there
+# The kit's scripts run from KIT (this script's folder); the pull request's code is the checkout in
+# REPO (QA_REPO_DIR, else KIT). The workflow runs them from a copy of the base branch's kit that the
+# job cannot change (qa/ci-trusted-kit.sh), so that a pull request is not judged by its own scripts;
+# QA_KIT_FROM says where the copy came from: "base" or "pull-request".
 # QA_VERIFY_MODE is "blocking" (the default: a failure fails the check) or "advisory":
 # every check still runs, a failure becomes a warning that says it would have
 # blocked, and the check passes. Either way, each step's outcome for each ticket is
 # appended to QA_VERIFY_RECORD (JSON lines): the track record that tells when the
 # check can block (node qa/verify-record.ts).
+# QA_VERIFY_TOOLING is "warn" (the default) or "block": what to do when the pull request changes how its
+# own tests run (qa/check-tooling.ts). Blocking asks for that change to be made in a pull request of its
+# own; like any other failure, it only warns in advisory mode.
 set -euo pipefail
 KIT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$KIT"
+REPO="${QA_REPO_DIR:-$KIT}"
+cd "$REPO"
 MODE="${QA_VERIFY_MODE:-blocking}"
+TOOLING="${QA_VERIFY_TOOLING:-warn}"
 RECORD="${QA_VERIFY_RECORD:-$RUNNER_TEMP/qa-verify-record.jsonl}"
 # Workflow commands need %, CR and LF escaped.
 escape() { local text="${1//%/%25}"; text="${text//$'\r'/%0D}"; printf '%s' "${text//$'\n'/%0A}"; }
@@ -37,11 +46,15 @@ if [[ "$MODE" != blocking && "$MODE" != advisory ]]; then
   echo "::error title=QA verify::QA_VERIFY_MODE must be blocking or advisory, got \"$MODE\"."
   exit 1
 fi
+if [[ "$TOOLING" != warn && "$TOOLING" != block ]]; then
+  echo "::error title=QA verify::QA_VERIFY_TOOLING must be warn or block, got \"$TOOLING\"."
+  exit 1
+fi
 # One JSON line per ticket and step: the evidence for letting the check block, or not yet.
 record() {
   jq -nc --arg ticket "$1" --arg step "$2" --arg result "$3" --arg detail "$4" --arg mode "$MODE" \
     --arg pr "${PR_NUMBER:-}" --arg sha "${HEAD_SHA:-}" --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-    --arg agent "$(git -C "$KIT" rev-parse --short HEAD:.claude 2>/dev/null || echo unknown)" \
+    --arg agent "$(cat "$KIT/.claude-tree" 2>/dev/null || git -C "$KIT" rev-parse --short HEAD:.claude 2>/dev/null || echo unknown)" \
     '{at: $at, mode: $mode, pr: $pr, sha: $sha, ticket: $ticket, step: $step, result: $result, detail: $detail, agent: $agent}' >> "$RECORD"
 }
 
@@ -50,7 +63,7 @@ prepare_ticket() {
   local ticket="$1"
   pulls="$RUNNER_TEMP/$ticket-pulls.json"; reviews="$RUNNER_TEMP/$ticket-reviews.json"
   gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/pulls?state=all&per_page=100&head=${GITHUB_REPOSITORY%%/*}:qa/$ticket" > "$pulls"
-  pull="$(node qa/github-approval.ts pull "$ticket" "$GITHUB_REPOSITORY" "$pulls" 2>"$ERR")" || fail "$ticket: $(<"$ERR")"
+  pull="$(node "$KIT/qa/github-approval.ts" pull "$ticket" "$GITHUB_REPOSITORY" "$pulls" 2>"$ERR")" || fail "$ticket: $(<"$ERR")"
   if [[ "$pull" == null ]]; then echo "$ticket: no QA pull request, nothing to verify."; return 0; fi
   number="$(jq -r .number <<<"$pull")"
 
@@ -59,14 +72,14 @@ prepare_ticket() {
   app="$(dirname "$(dirname "$(dirname "$context")")")"
 
   gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/pulls/$number/reviews?per_page=100" > "$reviews"
-  approval="$(node qa/github-approval.ts approval "$ticket" "$GITHUB_REPOSITORY" "$pulls" "$reviews" 2>"$ERR")" || fail "$ticket: $(<"$ERR")"
+  approval="$(node "$KIT/qa/github-approval.ts" approval "$ticket" "$GITHUB_REPOSITORY" "$pulls" "$reviews" 2>"$ERR")" || fail "$ticket: $(<"$ERR")"
   sha="$(jq -r .head_sha <<<"$approval")"; reviewer="$(jq -r .reviewer <<<"$approval")"
   jq -r .body <<<"$approval" > "$RUNNER_TEMP/$ticket-review.md"
 
   # The tests and their review package must be exactly the approved ones.
   git fetch --quiet --no-tags origin "+refs/pull/$number/head:refs/remotes/origin/qa-approved/$ticket"
   [[ "$(git rev-parse "origin/qa-approved/$ticket")" == "$sha" ]] || fail "$ticket: pull request #$number changed during the check; run it again."
-  bash qa/check-scope.sh frozen "origin/$BASE_REF" "origin/qa-approved/$ticket" \
+  bash "$KIT/qa/check-scope.sh" frozen "origin/$BASE_REF" "origin/qa-approved/$ticket" \
     || fail "$ticket: the tests or their review package differ from the version approved in #$number."
 
   context_json="$(cd "$app" && node "$KIT/qa/scenario-review.ts" import "$ticket" 2>"$ERR")" \
@@ -87,6 +100,39 @@ prepare_ticket() {
   fi
 }
 
+# What the pull request changes in the way its own tests run, and in the kit itself (qa/check-tooling.ts).
+# The approved tests are frozen; the scripts, configuration and setup files they run on are not. In
+# warn mode this only says so, loudly; in block mode a change to the test setup fails the check.
+check_tooling() {
+  local report setup kit_n kit_files where
+  report="$(node "$KIT/qa/check-tooling.ts" "origin/$BASE_REF" HEAD 2>"$ERR")" || {
+    echo "::warning title=QA verify::$(escape "Could not look for changes to the test setup of this pull request: $(<"$ERR")")"
+    return 0
+  }
+  setup="$(jq -r '[.changes[] | select(.kind == "setup") | "\(.file) (\(.why))"] | (.[:10] | join("; ")) + (if length > 10 then "; and \(length - 10) more" else "" end)' <<<"$report")"
+  kit_n="$(jq '[.changes[] | select(.kind == "kit")] | length' <<<"$report")"
+  kit_files="$(jq -r '[.changes[] | select(.kind == "kit") | .file] | .[:5] | join(", ")' <<<"$report")"
+  if [[ -n "$setup" ]]; then
+    if [[ "$TOOLING" == block ]]; then
+      fail "This pull request changes how its own tests run: $setup. Make that change in a pull request of its own, then verify this one."
+    fi
+    echo "::warning title=QA verify (test setup)::$(escape "This pull request changes how its own tests run: $setup. A pass says nothing about those files: read that diff yourself. To make this block, set the repository variable QA_VERIFY_TOOLING to block.")"
+    echo "- **Test setup changed**: $setup. Read that diff yourself: the tests that passed ran on it." >> "$GITHUB_STEP_SUMMARY"
+    while IFS=$'\t' read -r ticket _; do record "$ticket" prepare pass "tooling changed: $setup"; done < "$LIST"
+  fi
+  if (( kit_n > 0 )); then
+    case "${QA_KIT_FROM:-}" in
+      base) where="This run used the kit of $BASE_REF, so the change only takes effect once the pull request is merged: review it as code that will judge the next ones."
+            echo "::notice title=QA verify (kit)::$(escape "This pull request changes $kit_n file(s) of the kit ($kit_files). $where")" ;;
+      pull-request) where="This run used the pull request's own copy of the kit, since the base branch has no kit that can run from a copy yet: nothing checked these scripts, so review them."
+            echo "::warning title=QA verify (kit)::$(escape "This pull request changes $kit_n file(s) of the kit ($kit_files). $where")" ;;
+      *)    where="This run used the kit as this pull request has it: nothing checked these scripts, so review them."
+            echo "::warning title=QA verify (kit)::$(escape "This pull request changes $kit_n file(s) of the kit ($kit_files). $where")" ;;
+    esac
+    echo "- **Kit changed** ($kit_n file(s): $kit_files). $where" >> "$GITHUB_STEP_SUMMARY"
+  fi
+}
+
 case "${1:-}" in
   prepare)
     : > "$LIST"
@@ -102,10 +148,19 @@ case "${1:-}" in
       fi
     done
     count="$(wc -l < "$LIST" | tr -d ' ')"
+    if [[ "$count" != 0 ]]; then
+      code=0; rm -f "$REFUSAL"
+      ( check_tooling ) || code=$?
+      if (( code != 0 )); then
+        while IFS=$'\t' read -r ticket _; do record "$ticket" prepare fail "tooling: $(cat "$REFUSAL" 2>/dev/null || echo "exit $code")"; done < "$LIST"
+        [[ "$MODE" == advisory ]] || exit 1
+        echo "- would block: $(cat "$REFUSAL" 2>/dev/null)" >> "$GITHUB_STEP_SUMMARY"
+      fi
+    fi
     # The applications' Node.js version, for the steps after this one.
     if [[ "$count" != 0 ]]; then
       mapfile -t apps < <(cut -f2 "$LIST" | sort -u)
-      if ! bash qa/ci-node-version.sh "${apps[@]}" >> "$GITHUB_OUTPUT" 2>"$ERR"; then
+      if ! bash "$KIT/qa/ci-node-version.sh" "${apps[@]}" >> "$GITHUB_OUTPUT" 2>"$ERR"; then
         while IFS=$'\t' read -r ticket _; do record "$ticket" prepare fail "$(<"$ERR")"; done < "$LIST"
         ( fail "$(<"$ERR")" ) || true
         [[ "$MODE" == advisory ]] || exit 1
@@ -123,9 +178,9 @@ case "${1:-}" in
   install)
     mapfile -t apps < <(cut -f2 "$LIST" | sort -u)
     for app in "${apps[@]}"; do
-      bash qa/ci-install-app.sh "$app"
+      bash "$KIT/qa/ci-install-app.sh" "$app"
     done
-    bash qa/ci-install-agents.sh
+    bash "$KIT/qa/ci-install-agents.sh"
     ;;
 
   agent|suite)

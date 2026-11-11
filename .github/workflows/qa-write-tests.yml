@@ -38,16 +38,23 @@ jobs:
       TICKET: ${{ inputs.ticket }}
       MFE: ${{ inputs.mfe }}
       APP: ${{ inputs.app }}
+      # The kit runs from a copy that the agent's tests cannot change, not from the checkout.
+      QA_KIT: /opt/qa-kit
+      QA_REPO_DIR: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           # No token on disk while the agent and the application's code run.
           persist-credentials: false
+      # Before any code of the application runs: the agent's tests and the application's scripts can
+      # write in the checkout, and the kit's scripts run again afterwards, with the API key or a token.
+      - name: Copy the kit where the agent's code cannot change it
+        run: bash qa/ci-trusted-kit.sh .
       # The application's Node.js: its .nvmrc or .node-version, else 22 (qa/ci-node-version.sh).
       - name: Choose the Node.js version
         id: node
-        run: bash qa/ci-node-version.sh "$APP" >> "$GITHUB_OUTPUT"
+        run: bash "$QA_KIT/qa/ci-node-version.sh" "$APP" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ steps.node.outputs.node }}
@@ -55,22 +62,22 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           HAS_API_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
-        run: bash qa/ci-write-tests.sh check
+        run: bash "$QA_KIT/qa/ci-write-tests.sh" check
       - name: Install the application, its browser and the agent sandbox
         run: |
-          bash qa/ci-install-app.sh "$APP"
-          bash qa/ci-install-agents.sh
+          bash "$QA_KIT/qa/ci-install-app.sh" "$APP"
+          bash "$QA_KIT/qa/ci-install-agents.sh"
       - name: Write the tests; each must fail for the right reason (phase 1)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           # Repository variable: more turns for the agent on a large application (its own limit when unset).
           QA_MAX_TURNS: ${{ vars.QA_MAX_TURNS }}
           DISABLE_AUTOUPDATER: 1
-        run: bash qa/ci-write-tests.sh write
+        run: bash "$QA_KIT/qa/ci-write-tests.sh" write
       - name: Open the pull request for the human review
         env:
           GH_TOKEN: ${{ github.token }}
-        run: bash qa/ci-write-tests.sh publish
+        run: bash "$QA_KIT/qa/ci-write-tests.sh" publish
       - name: Upload the QA reports (even on failure)
         if: always()
         uses: actions/upload-artifact@v6
