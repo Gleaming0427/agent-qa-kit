@@ -29,9 +29,12 @@ SRC="$(cd "$SRC" && pwd -P)"
 link="$(find "$SRC/qa" "$SRC/.claude" -type l -print -quit)"
 [[ -z "$link" ]] || fail "the kit holds a symbolic link, which would escape the copy: ${link#"$SRC"/}"
 
+# The nearest folder that exists above the destination decides whether root is needed to make it.
+parent="$(dirname "$DEST")"
+while [[ ! -d "$parent" && "$parent" != / ]]; do parent="$(dirname "$parent")"; done
 as_root=()
-if [[ ! -w "$(dirname "$DEST")" && $EUID -ne 0 ]]; then
-  command -v sudo >/dev/null 2>&1 || fail "cannot write to $(dirname "$DEST"): run as root or install sudo, or set QA_TRUSTED_KIT to a folder you can write to"
+if [[ ! -w "$parent" && $EUID -ne 0 ]]; then
+  command -v sudo >/dev/null 2>&1 || fail "cannot write to $parent: run as root or install sudo, or set QA_TRUSTED_KIT to a folder you can write to"
   as_root=(sudo)
 fi
 run() { "${as_root[@]+"${as_root[@]}"}" "$@"; }
