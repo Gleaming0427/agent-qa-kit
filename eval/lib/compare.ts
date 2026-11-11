@@ -61,6 +61,8 @@ export interface SideSummary {
   corpus_exposed_trials: number;
   isolation_flagged_trials: number;
   mean_cost_usd: number | null;
+  /** The cost of the comparable trials over their successes: what one success cost. Null without a success. */
+  cost_per_success_usd: number | null;
   duration_p50_s: number | null;
   mean_tokens: number | null;
   min_trials_per_ticket: number | null;
@@ -127,6 +129,7 @@ function summary(side: Side, tickets: string[]): SideSummary {
   const tokens = inScope.flatMap((o) => (o.tokens ? [o.tokens.input + o.tokens.output + o.tokens.cache_read + o.tokens.cache_creation] : []));
   const durations = inScope.flatMap((o) => (o.duration_ms === null ? [] : [o.duration_ms / 1000]));
   const round = (x: number | null, d = 4) => (x === null ? null : Math.round(x * 10 ** d) / 10 ** d);
+  const successes = inScope.filter((o) => o.success).length;
   return {
     label: side.label,
     campaigns: side.campaigns.map((c) => `${c.id} (${c.label})`),
@@ -134,7 +137,7 @@ function summary(side: Side, tickets: string[]): SideSummary {
     trials: all.length,
     agent_errors: all.length - ok.length,
     scoring_errors: all.filter((o) => o.status === 'scoring_error').length,
-    success: wilson(inScope.filter((o) => o.success).length, inScope.length),
+    success: wilson(successes, inScope.length),
     bug_detection: wilson(bugs.filter((b) => b.detected).length, bugs.length),
     no_false_positive: wilson(withTests.filter((o) => o.false_positives === 0).length, withTests.length),
     // Rules about the new version's behavior look at all its trials, not only the comparable tickets.
@@ -142,6 +145,7 @@ function summary(side: Side, tickets: string[]): SideSummary {
     corpus_exposed_trials: all.filter((o) => o.corpus_exposed).length,
     isolation_flagged_trials: all.filter((o) => (o.isolation_findings ?? 0) > 0).length,
     mean_cost_usd: round(mean(inScope.map((o) => o.cost_usd))),
+    cost_per_success_usd: successes ? round(inScope.reduce((n, o) => n + o.cost_usd, 0) / successes) : null,
     duration_p50_s: round(percentile(durations, 50), 1),
     mean_tokens: tokens.length ? Math.round(mean(tokens)!) : null,
     min_trials_per_ticket: perTicket.length ? Math.min(...perTicket) : null,
@@ -343,6 +347,7 @@ export function toMarkdown(c: Comparison, policy: Policy): string {
     ...(a.scoring_errors || b.scoring_errors ? [`| Scoring runner sent nothing back (all trials) | ${a.scoring_errors}/${a.trials} | ${b.scoring_errors}/${b.trials} |`] : []),
     `| Trials that saw the corpus | ${a.corpus_exposed_trials} | ${b.corpus_exposed_trials} |`,
     `| Mean cost per trial (by ticket) | ${c.measurements.cost.a === null ? 'n/a' : `$${c.measurements.cost.a.toFixed(4)}`} | ${c.measurements.cost.b === null ? 'n/a' : `$${c.measurements.cost.b.toFixed(4)}`} (${c.measurements.cost.relative_change === null ? 'n/a' : `${c.measurements.cost.relative_change >= 0 ? '+' : ''}${(c.measurements.cost.relative_change * 100).toFixed(1)}%`}) |`,
+    `| Cost per successful trial | ${a.cost_per_success_usd === null ? 'no success' : `$${a.cost_per_success_usd.toFixed(4)}`} | ${b.cost_per_success_usd === null ? 'no success' : `$${b.cost_per_success_usd.toFixed(4)}`} |`,
     `| Phase 1 duration, p50 | ${a.duration_p50_s ?? 'n/a'} s | ${b.duration_p50_s ?? 'n/a'} s |`,
     `| Tokens per trial, mean | ${a.mean_tokens ?? 'not recorded'} | ${b.mean_tokens ?? 'not recorded'} |`,
     '',

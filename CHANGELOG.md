@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Evaluation
+
+- **An evaluation before a change of the agents is merged.** The "QA eval required" workflow (`eval/required.ts`) reads, with git, what the agents see or can do: the writer's and the verifier's prompt, model, effort and tools, their settings, the hooks, the launcher (`qa/run-qa.sh`, `qa/kit-integrity.sh`, `qa/criteria-manifest.ts`) and the Claude Code version. A pull request that changes one of them fails until the history holds a campaign of the same agents, and then applies that campaign's release decision; the label `qa-eval-waived` lets a change that needs none through, with a warning. No model call. It runs the base branch's copy of `eval/`.
+- **Cost per success.** The campaign report gives the cost of all the trials over the number that succeeded, for the campaign and for each ticket, and the comparison of two versions shows it for each side: a version that succeeds less often at the same cost per trial costs more per success.
+
 ## v0.3.1, 11 November 2026
 
 Since v0.3.0 the kit's own scripts are out of reach of the code they judge, and the kit has run for the first time on a GitHub-hosted runner with a ticket (QA write tests, then QA verify, on a demo ticket), which found two defects that the kit's stand-ins could not show. A review of the kit's security found five gaps; all five are closed, each with regression tests. The agents' prompts and settings files are unchanged; the sandbox now also keeps the kit's folders read-only when an agent starts, and the repair agent's guard denies more. The campaigns of v0.3.0 were not run again: they still describe the writer and the verifier, whose prompts did not change. Run `npx github:Gleaming0427/agent-qa-kit init` again to upgrade.

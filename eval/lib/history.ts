@@ -147,6 +147,8 @@ function show(kit: string, commit: string, path: string): string | null {
   return gitOut(kit, 'show', `${commit}:${path}`);
 }
 const frontmatter = (text: string | null, key: string) => text?.match(new RegExp(`^${key}:\\s*(\\S+)`, 'm'))?.[1] ?? null;
+/** The version of Claude Code the workflows install, from the text of qa/ci-install-agents.sh. */
+export const claudeCodeVersion = (installer: string | null) => installer?.match(/CLAUDE_CODE_VERSION:-([^}"]+)/)?.[1] ?? null;
 
 /** Whether the commit and every path the history reads are in the local repository. */
 export function hasCommit(kit: string, commit: string): boolean {
@@ -159,7 +161,7 @@ export function agentVersion(kit: string, commit: string): AgentVersion {
   const verifier = show(kit, commit, '.claude/agents/qa-verifier.md');
   // qa/ without the kit's own tests, which do not change what the agent does.
   const scripts = (gitOut(kit, 'ls-tree', '-r', commit, '--', 'qa') ?? '').split('\n').filter((l) => l && !/\tqa\/(tests\/|test-[^/]*\.sh$)/.test(l));
-  const claudeCode = show(kit, commit, 'qa/ci-install-agents.sh')?.match(/CLAUDE_CODE_VERSION:-([^}"]+)/)?.[1] ?? null;
+  const claudeCode = claudeCodeVersion(show(kit, commit, 'qa/ci-install-agents.sh'));
   const parts = {
     writer: { prompt: object(kit, commit, '.claude/agents/qa-writer.md'), model: frontmatter(writer, 'model'), effort: frontmatter(writer, 'effort') },
     verifier: { prompt: object(kit, commit, '.claude/agents/qa-verifier.md'), model: frontmatter(verifier, 'model'), effort: frontmatter(verifier, 'effort') },

@@ -143,6 +143,25 @@ test('the campaign report gives pass@1, pass@k, pass^k and per-ticket rows', () 
   assert.match(toMarkdown(report), /Phase 1 duration\*\* \(5 runs\)/);
 });
 
+test('the cost of one success counts the trials that failed', () => {
+  // Each trial costs $0.12. EVAL-1 succeeds 3 times out of 3, EVAL-2 once out of 3, EVAL-3 never.
+  const scores = [
+    ...[1, 2, 3].map((trial) => scoreTrial(record({ trial }))),
+    ...[1, 2, 3].map((trial) => scoreTrial(record({ ticket: 'EVAL-2', trial, changed_non_test_files: trial === 1 ? [] : ['src/App.tsx'] }))),
+    ...[1, 2, 3].map((trial) => scoreTrial(record({ ticket: 'EVAL-3', trial, changed_non_test_files: ['src/App.tsx'] }))),
+  ];
+  const report = aggregate(scores);
+  assert.equal(report.cost_usd.successes, 4);
+  assert.equal(report.cost_usd.per_success, 0.27, '9 trials at $0.12 for 4 successes');
+  assert.deepEqual(report.tickets.map((row) => [row.ticket, row.mean_cost_usd, row.cost_per_success_usd]), [['EVAL-1', 0.12, 0.12], ['EVAL-2', 0.12, 0.36], ['EVAL-3', 0.12, null]]);
+  const md = toMarkdown(report);
+  assert.match(md, /Per successful trial: \$0\.2700 \(4 of 9 trials succeeded; the cost of the others is included\)/);
+  assert.match(md, /\| EVAL-2 \|.*\| \$0\.1200 \| \$0\.3600 \|/);
+  assert.match(md, /\| EVAL-3 \|.*\| \$0\.1200 \| no success \|/);
+  // No success at all: no cost per success, and the report says so.
+  assert.match(toMarkdown(aggregate(scores.slice(6))), /No trial succeeded: no cost per success\./);
+});
+
 test('the report warns first about a sight of the corpus and about missing tools', () => {
   const tools = (over: Partial<NonNullable<AgentRun['tools']>> = {}) => ({ calls: { Read: 5 }, unavailable: {}, corpus: [], ...over });
   const scores = [
