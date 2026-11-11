@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "ticket": "TICKET-44",
+  "spec_sha256": "d612079451af2e55f39b2944bbe0f5908e2ab80998cb52d60f3477b5d20c7798",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "description": "the cart shows a \"Promo code\" field and an \"Apply\" button; applying the code WELCOME10 takes 10% off the subtotal, shown on a \"Discount\" line, and the total includes it. Shipping is still computed on the subtotal before the discount."
+    },
+    {
+      "id": "AC-2",
+      "description": "applying an unknown code shows the message \"Invalid code\" and leaves the total unchanged."
+    }
+  ]
+}

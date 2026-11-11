@@ -1,0 +1,79 @@
+{
+  "ticket": "TICKET-44",
+  "phase": 1,
+  "verdict": "ready",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "level": "mfe",
+      "status": "written",
+      "evidence": "[TICKET-44][AC-1] MFE tests in src/TICKET-44.test.tsx (2 tests)"
+    },
+    {
+      "id": "AC-1",
+      "level": "shell",
+      "status": "written",
+      "evidence": "[TICKET-44][AC-1] shell tests in e2e/TICKET-44.spec.ts (2 tests)"
+    },
+    {
+      "id": "AC-2",
+      "level": "mfe",
+      "status": "written",
+      "evidence": "[TICKET-44][AC-2] MFE test in src/TICKET-44.test.tsx"
+    },
+    {
+      "id": "AC-2",
+      "level": "shell",
+      "status": "written",
+      "evidence": "[TICKET-44][AC-2] shell test in e2e/TICKET-44.spec.ts"
+    }
+  ],
+  "coverage": [
+    {
+      "id": "AC-1",
+      "cases": [
+        {
+          "data": "Backpack 49.00 + Notebook 4.50, then WELCOME10",
+          "expect": "subtotal 49.00 + 4.50 = 53.50; discount 53.50 × 10% = 5.35; shipping Free (53.50 ≥ 50); total 53.50 − 5.35 + 0 = 48.15",
+          "rules_out": "shipping computed on the discounted subtotal (48.15 < 50 would charge 4.90, total 53.05); a discount not included in the total (53.50)"
+        },
+        {
+          "data": "2 notebooks at 4.50 + 1 pen set at 6.00, then WELCOME10",
+          "expect": "subtotal 2 × 4.50 + 6.00 = 15.00; discount 1.50; shipping 4.90; total 15.00 − 1.50 + 4.90 = 18.40",
+          "rules_out": "a discount computed on one unit or ignoring quantities; a discount that removes shipping (13.50); a total that leaves out the discount (19.90)"
+        }
+      ],
+      "not_covered": [
+        "the code in lowercase or with surrounding spaces",
+        "applying the code to an empty cart",
+        "changing the cart after the code is applied",
+        "applying the code twice",
+        "the exact sign or format of the Discount line (only the amount is checked)",
+        "a discount amount with a fractional cent"
+      ]
+    },
+    {
+      "id": "AC-2",
+      "cases": [
+        {
+          "data": "Backpack (total 49.00 + 4.90 = 53.90), then the unknown code BOGUS99",
+          "expect": "message 'Invalid code' is shown; total stays 53.90; no Discount row appears",
+          "rules_out": "an implementation that gives no message, one that changes the total, or one that shows a zero Discount line"
+        }
+      ],
+      "not_covered": [
+        "an empty code",
+        "an invalid code applied after a valid one (is the earlier discount kept?)",
+        "the message disappearing after a later valid code",
+        "a near-miss code such as WELCOME11"
+      ]
+    }
+  ],
+  "flaky_tests": [],
+  "spec_questions": [
+    "Does a code in lowercase (welcome10) count as valid?",
+    "What happens to an applied discount when the cart changes afterwards, or when an invalid code follows a valid one?"
+  ],
+  "alerts": [],
+  "cost_usd": 0.1365817
+}

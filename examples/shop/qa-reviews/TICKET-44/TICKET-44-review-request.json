@@ -1,0 +1,63 @@
+{
+  "schema_version": 2,
+  "ticket": "TICKET-44",
+  "spec_sha256": "d612079451af2e55f39b2944bbe0f5908e2ab80998cb52d60f3477b5d20c7798",
+  "manifest_sha256": "42f1c8f1fa8575be3610415449a41cdaf207774b21af3b28c1b5fb78ee62cc4c",
+  "phase1_verdict_sha256": "53d1fc560f93ca2e86050c4110cc86e71b8e70a69f57c286d1c149f72d392425",
+  "red_vitest_sha256": "7faae2b179a28e9747cc331e527167add0242f7fe56c3a23d8f4bc3b653ff88a",
+  "red_playwright_sha256": "736481b7738ad25150bc0f1f75c2881f32f84651c31e9132c9721676d8eccd35",
+  "tests": [
+    {
+      "path": "e2e/TICKET-44.spec.ts",
+      "sha256": "a0e9e7f1845a37deb3acc291fb4fd7fef02dd5347d1b2a8f42706c4074be42d8"
+    },
+    {
+      "path": "src/TICKET-44.test.tsx",
+      "sha256": "0630d0aab59e17178e3be95f7280aaa6f6553b2a7db98e450ab924f5475d537a"
+    }
+  ],
+  "criteria": [
+    {
+      "id": "AC-1",
+      "description": "the cart shows a \"Promo code\" field and an \"Apply\" button; applying the code WELCOME10 takes 10% off the subtotal, shown on a \"Discount\" line, and the total includes it. Shipping is still computed on the subtotal before the discount.",
+      "failures": [
+        {
+          "level": "mfe",
+          "title": "TICKET-44 MFE: promo code [TICKET-44][AC-1] MFE WELCOME10 takes 10% off the subtotal, shipping stays on the undiscounted subtotal",
+          "message": "TestingLibraryElementError: Unable to find a label with the text of: Promo code Ignored nodes: comments, script, style <body> <div> <main class=\"shell\" > <header> <span class=\"brand\" > Demo Shop </span> <span class=\"env\" > QA sandbox · no real payments </span> </header> <div class=\"layout\" > <section aria-labelledby=\"shop-title\" > <h1 id=\"shop-title\" > Shop </h1> <p class=\"subtitle\" > Pick a few items and check out in a safe, local demo. </p> <ul aria-label=\"Products\" class=\"products\" > <li> <st"
+        },
+        {
+          "level": "mfe",
+          "title": "TICKET-44 MFE: promo code [TICKET-44][AC-1] MFE discount on a cart that pays shipping, on a quantity above one",
+          "message": "TestingLibraryElementError: Unable to find a label with the text of: Promo code Ignored nodes: comments, script, style <body> <div> <main class=\"shell\" > <header> <span class=\"brand\" > Demo Shop </span> <span class=\"env\" > QA sandbox · no real payments </span> </header> <div class=\"layout\" > <section aria-labelledby=\"shop-title\" > <h1 id=\"shop-title\" > Shop </h1> <p class=\"subtitle\" > Pick a few items and check out in a safe, local demo. </p> <ul aria-label=\"Products\" class=\"products\" > <li> <st"
+        },
+        {
+          "level": "shell",
+          "title": "TICKET-44.spec.ts @shop TICKET-44, promo code [TICKET-44][AC-1] shell WELCOME10 takes 10% off, shipping stays on the undiscounted subtotal",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByLabel('Promo code') Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByLabel('Promo code')"
+        },
+        {
+          "level": "shell",
+          "title": "TICKET-44.spec.ts @shop TICKET-44, promo code [TICKET-44][AC-1] shell discount on a cart that pays shipping",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByLabel('Promo code') Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByLabel('Promo code')"
+        }
+      ]
+    },
+    {
+      "id": "AC-2",
+      "description": "applying an unknown code shows the message \"Invalid code\" and leaves the total unchanged.",
+      "failures": [
+        {
+          "level": "mfe",
+          "title": "TICKET-44 MFE: promo code [TICKET-44][AC-2] MFE an unknown code shows \"Invalid code\" and leaves the total unchanged",
+          "message": "TestingLibraryElementError: Unable to find a label with the text of: Promo code Ignored nodes: comments, script, style <body> <div> <main class=\"shell\" > <header> <span class=\"brand\" > Demo Shop </span> <span class=\"env\" > QA sandbox · no real payments </span> </header> <div class=\"layout\" > <section aria-labelledby=\"shop-title\" > <h1 id=\"shop-title\" > Shop </h1> <p class=\"subtitle\" > Pick a few items and check out in a safe, local demo. </p> <ul aria-label=\"Products\" class=\"products\" > <li> <st"
+        },
+        {
+          "level": "shell",
+          "title": "TICKET-44.spec.ts @shop TICKET-44, promo code [TICKET-44][AC-2] shell an unknown code shows \"Invalid code\" and leaves the total unchanged",
+          "message": "Error: expect(locator).toBeVisible() failed Locator: getByLabel('Promo code') Expected: visible Received: <element(s) not found> Timeout: 5000ms Call log: - Expect \"toBeVisible\" with timeout 5000ms - waiting for getByLabel('Promo code')"
+        }
+      ]
+    }
+  ]
+}
