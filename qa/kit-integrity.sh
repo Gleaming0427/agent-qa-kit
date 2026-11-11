@@ -16,7 +16,11 @@
 #       added to the sandbox's denyWrite list, as absolute paths: the commands an agent starts cannot
 #       write there. Pass the kit's folder and the project's.
 #   kit_manifest DIR...
-#       Prints one line per file below the folders given: path, executable bit and sha256 of the content.
+#       Prints one line per file below the folders given: path, executable bit and sha256 of the content
+#       (a link, its target). Folders are not listed: an empty one changes nothing, and Claude Code
+#       creates some by itself when it starts a session in a project (.claude/.cc-writes, .claude/agents
+#       and .claude/commands, seen on a GitHub-hosted runner with Claude Code 2.1.303), which a first
+#       version of this check took for tampering. A file created inside a new folder is still listed.
 #   kit_changes BEFORE DIR...
 #       Compares the folders with a manifest taken earlier. Prints up to five paths that differ and
 #       returns 1 when anything does. Taken before the agent and after it, it shows a change that the
@@ -44,7 +48,7 @@ kit_manifest() {
     const walk = (dir, key) => {
       for (const name of fs.readdirSync(dir)) {
         const full = path.join(dir, name), here = key + "/" + name, stat = fs.lstatSync(full);
-        if (stat.isDirectory()) { lines.push(here + "/\t-\t-"); walk(full, here); }
+        if (stat.isDirectory()) walk(full, here);
         else if (stat.isSymbolicLink()) lines.push(here + "\tlink\t" + fs.readlinkSync(full));
         else if (stat.isFile()) lines.push(here + "\t" + (stat.mode & 0o111 ? "x" : "-") + "\t" + createHash("sha256").update(fs.readFileSync(full)).digest("hex"));
         else lines.push(here + "\tother\t-");
@@ -52,9 +56,7 @@ kit_manifest() {
     };
     for (const dir of process.argv.slice(1)) {
       if (!fs.existsSync(dir)) continue;
-      const key = path.basename(dir);
-      lines.push(key + "/\t-\t-");
-      walk(dir, key);
+      walk(dir, path.basename(dir));
     }
     console.log(lines.sort().join("\n"));
   ' "$@"
