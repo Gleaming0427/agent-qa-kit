@@ -6,9 +6,13 @@
 #   write    the QA writer agent writes the tests; they must fail for the right reason
 #   publish  commits the tests and their review package on qa/<TICKET>, then opens
 #            the pull request into feat/<TICKET>: its approval is the human review
+# The kit's scripts run from KIT (this script's folder); the application is in the checkout, REPO
+# (QA_REPO_DIR, else KIT). The workflow runs them from a copy that the job cannot change
+# (qa/ci-trusted-kit.sh): the agent's tests and the application's code run in between.
 set -euo pipefail
 KIT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$KIT"
+REPO="${QA_REPO_DIR:-$KIT}"
+cd "$REPO"
 # Workflow commands need %, CR and LF escaped.
 escape() { local text="${1//%/%25}"; text="${text//$'\r'/%0D}"; printf '%s' "${text//$'\n'/%0A}"; }
 fail() { echo "::error title=QA write tests::$(escape "$1")"; exit 1; }
@@ -24,7 +28,7 @@ case "${1:-}" in
       || fail "No application in \"${APP:-}\": give the folder of its package.json, relative to the repository."
     [[ "$GITHUB_REF_TYPE" == branch ]] || fail 'Run the workflow from a branch, usually main.'
     [[ -f "$SPEC" ]] || fail "$SPEC is missing on $GITHUB_REF_NAME: commit the ticket's acceptance criteria first."
-    node qa/criteria-manifest.ts "$TICKET" "$SPEC" "$RUNNER_TEMP/criteria.json" >/dev/null \
+    node "$KIT/qa/criteria-manifest.ts" "$TICKET" "$SPEC" "$RUNNER_TEMP/criteria.json" >/dev/null \
       || fail "$SPEC has no valid acceptance criteria: write one line per criterion, such as \"- AC-1: ...\"."
     [[ "${HAS_API_KEY:-}" == true ]] || fail 'Add an ANTHROPIC_API_KEY repository secret: the QA writer agent needs it.'
     if branch_exists "qa/$TICKET"; then
@@ -35,14 +39,14 @@ case "${1:-}" in
 
   write)
     code=0
-    QA_PROJECT_DIR="$KIT/$APP" bash qa/run-qa.sh "$TICKET" 1 "$SPEC" "$MFE" || code=$?
+    QA_PROJECT_DIR="$REPO/$APP" bash "$KIT/qa/run-qa.sh" "$TICKET" 1 "$SPEC" "$MFE" || code=$?
     case "$code" in
       0) ;;
       2) fail "Blocked: the tests could not run in $APP. The agent's questions are in the qa-write-reports artifact." ;;
       *) fail "The QA writer did not produce failing tests that the kit accepts (code $code). See the log and the qa-write-reports artifact." ;;
     esac
     cd "$APP"
-    node "$KIT/qa/scenario-review.ts" export "$TICKET" "$KIT/$SPEC" "$MFE"
+    node "$KIT/qa/scenario-review.ts" export "$TICKET" "$REPO/$SPEC" "$MFE"
     node "$KIT/qa/scenario-review.ts" pr-body "$TICKET" > "$REVIEW_BODY"
     cat "$REVIEW_BODY" >> "$GITHUB_STEP_SUMMARY"
     ;;
@@ -65,7 +69,7 @@ case "${1:-}" in
     git add -- "${qa_files[@]}"
     git -c user.name="$GITHUB_ACTOR" -c user.email="$GITHUB_ACTOR_ID+$GITHUB_ACTOR@users.noreply.github.com" \
       commit --quiet -m "test($TICKET): add the QA tests to review"
-    bash qa/check-scope.sh scope "$GITHUB_SHA"
+    bash "$KIT/qa/check-scope.sh" scope "$GITHUB_SHA"
     git push --quiet origin "qa/$TICKET"
     # feat/<TICKET> receives the approved tests; the developer's work starts from it.
     branch_exists "feat/$TICKET" || git push --quiet origin "$GITHUB_SHA:refs/heads/feat/$TICKET"
@@ -75,7 +79,7 @@ case "${1:-}" in
     echo "::notice title=QA tests ready for review::$url"
     printf '\n**Review and approve:** %s\n' "$url" >> "$GITHUB_STEP_SUMMARY"
     # Red until the approval is complete: this pull request triggers no workflow of its own.
-    bash qa/ci-approval.sh "${url##*/}" \
+    bash "$KIT/qa/ci-approval.sh" "${url##*/}" \
       || echo "::warning title=QA write tests::$(escape "The QA approval status could not be set on $url: see the log above. QA verify still checks the approval.")"
     ;;
 

@@ -32,13 +32,43 @@ jobs:
       # Repository variable: "advisory" reports failures as warnings without blocking, to build a
       # track record first; unset or "blocking" fails the check (see HOW_TO_APPLY.md).
       QA_VERIFY_MODE: ${{ vars.QA_VERIFY_MODE || 'blocking' }}
+      # Repository variable: "warn" (the default) says when the pull request changes how its own tests
+      # run; "block" fails the check instead.
+      QA_VERIFY_TOOLING: ${{ vars.QA_VERIFY_TOOLING || 'warn' }}
       QA_VERIFY_RECORD: ${{ github.workspace }}/qa-verify-record.jsonl
+      # The kit runs from a copy of the base branch's kit that the pull request's code cannot change,
+      # not from the pull request's own scripts (qa/ci-trusted-kit.sh).
+      QA_KIT: /opt/qa-kit
+      QA_REPO_DIR: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           # No token on disk while the agent and the pull request's code run.
           persist-credentials: false
+      # The kit as the base branch has it: a pull request is not judged by scripts it can change.
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.base_ref }}
+          path: base-kit
+          sparse-checkout: |
+            qa
+            .claude
+          persist-credentials: false
+      - name: Take the kit from the base branch
+        run: |
+          if [ -f base-kit/qa/ci-trusted-kit.sh ]; then
+            bash base-kit/qa/ci-trusted-kit.sh base-kit
+            echo "QA_KIT_FROM=base" >> "$GITHUB_ENV"
+          elif [ -f qa/ci-trusted-kit.sh ]; then
+            echo "::warning title=QA verify::The base branch has no kit that can run from a copy yet (a first install, or an upgrade): this run uses the pull request's own copy of the kit."
+            bash qa/ci-trusted-kit.sh .
+            echo "QA_KIT_FROM=pull-request" >> "$GITHUB_ENV"
+          else
+            echo "::error title=QA verify::Neither the base branch nor this pull request has qa/ci-trusted-kit.sh: upgrade the kit (npx github:Gleaming0427/agent-qa-kit init)."
+            exit 1
+          fi
+          rm -rf base-kit
       - uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -46,7 +76,7 @@ jobs:
         id: prepare
         env:
           GH_TOKEN: ${{ github.token }}
-        run: bash qa/ci-verify.sh prepare
+        run: bash "$QA_KIT/qa/ci-verify.sh" prepare
       # The kit's scripts above ran on Node.js 22; the application gets its own version from here
       # (.nvmrc or .node-version, else 22: qa/ci-node-version.sh, chosen in the prepare step).
       - name: Use the application's Node.js version
@@ -56,7 +86,7 @@ jobs:
           node-version: ${{ steps.prepare.outputs.node }}
       - name: Install the application, its browser and the agent sandbox
         if: steps.prepare.outputs.count != '0'
-        run: bash qa/ci-verify.sh install
+        run: bash "$QA_KIT/qa/ci-verify.sh" install
       - name: QA verifier agent checks each criterion (phase 2)
         if: steps.prepare.outputs.count != '0'
         env:
@@ -64,11 +94,11 @@ jobs:
           # Repository variable: more turns for the agent on a large application (its own limit when unset).
           QA_MAX_TURNS: ${{ vars.QA_MAX_TURNS }}
           DISABLE_AUTOUPDATER: 1
-        run: bash qa/ci-verify.sh agent
+        run: bash "$QA_KIT/qa/ci-verify.sh" agent
       # A step of its own, without the API key: the pull request's code runs here.
       - name: Full suite, smoke journeys included
         if: steps.prepare.outputs.count != '0'
-        run: bash qa/ci-verify.sh suite
+        run: bash "$QA_KIT/qa/ci-verify.sh" suite
       - name: Upload the outcome of each check (the track record)
         if: always()
         uses: actions/upload-artifact@v6

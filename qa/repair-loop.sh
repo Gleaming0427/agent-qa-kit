@@ -18,6 +18,8 @@ KIT="$(cd "$(dirname "$0")/.." && pwd)" || fail 'Cannot locate the kit'
 cd "${QA_PROJECT_DIR:-$KIT}" || fail "Cannot enter the project: ${QA_PROJECT_DIR:-$KIT}"
 export QA_KIT_DIR="$KIT"
 for tool in claude jq awk node; do command -v "$tool" >/dev/null 2>&1 || fail "$tool is required"; done
+# Loaded before any agent runs, so that nothing an agent does can replace these functions.
+source "$KIT/qa/kit-integrity.sh" || fail 'Cannot load qa/kit-integrity.sh'
 MAX="${QA_MAX_VERIFY_ATTEMPTS:-3}"
 [[ "$MAX" =~ ^[1-9][0-9]*$ ]] || fail 'QA_MAX_VERIFY_ATTEMPTS must be a positive integer'
 AGENT="$KIT/.claude/agents/qa-repairer.md"
@@ -37,6 +39,17 @@ check_tooling() {
   node "$KIT/qa/tooling-integrity.ts" compare <<<"$TOOLING" \
     || fail "node_modules or the git files changed during the $1: do not trust this run, reinstall the dependencies (npm ci, or pnpm install) and review the repair"
 }
+# The kit's own files, which the commands of the agent and of the tests can reach when the application
+# is at the root of its repository. Checked with the functions above, before any script of the kit runs.
+KIT_DIRS=("$KIT/qa" "$KIT/.claude")
+[[ "$PWD" == "$KIT" ]] || KIT_DIRS+=("$PWD/qa" "$PWD/.claude")
+KIT_BEFORE="$(kit_manifest "${KIT_DIRS[@]}")" || fail 'cannot read the kit to protect it'
+check_kit() {
+  local changed
+  changed="$(kit_changes "$KIT_BEFORE" "${KIT_DIRS[@]}")" \
+    || fail "the kit's own files changed during the $1 (${changed//$'\n'/, }): do not trust this run, restore them (git checkout -- qa .claude) and review the repair"
+}
+REPAIR_SETTINGS="$(kit_settings "$KIT/.claude/repair-settings.json" "$KIT" "$PWD")" || fail 'cannot build the repair agent settings'
 
 for (( attempt = 1; ; attempt++ )); do
   echo "repair-loop: verification $attempt/$MAX for $TICKET"
@@ -44,7 +57,8 @@ for (( attempt = 1; ; attempt++ )); do
   rm -f "reports/$TICKET-full-suite.json"
   bash "$KIT/qa/run-qa.sh" "$TICKET" 2 "$SPEC" "$MFE"
   code=$?
-  # Code that a repair planted can patch the test tools while the tests run.
+  # Code that a repair planted can patch the test tools, or the kit, while the tests run.
+  check_kit verification
   check_tooling verification
   case "$code" in
     0) echo "repair-loop: $TICKET passes after $attempt verification(s)"; exit 0 ;;
@@ -74,7 +88,7 @@ $FAILURES
   echo "repair-loop: repair $attempt, budget \$$BUDGET"
   # The application's tests run by the agent get no credentials.
   CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 claude -p "$REQUEST" \
-    --settings "$KIT/.claude/repair-settings.json" \
+    --settings "$REPAIR_SETTINGS" \
     --append-system-prompt-file "$SYSTEM_PROMPT" \
     --model "$MODEL" --effort "$EFFORT" \
     --allowedTools 'Glob,Grep' \
@@ -87,6 +101,8 @@ $FAILURES
     fail "repair agent error (cost \$$COST): $(jq -r '.result // .terminal_reason // .subtype // "unknown"' "$OUTPUT")"
   fi
   echo "repair-loop: repair $attempt finished, cost \$$COST"
+  # Before the scripts below run, outside the sandbox: the repair's own commands could have changed them.
+  check_kit repair
   # The approved tests and ticket must be exactly as reviewed.
   node "$KIT/qa/scenario-review.ts" verify "$TICKET" "$SPEC" >/dev/null \
     || fail 'the repair changed the approved tests, ticket or initial reports; review the diff'

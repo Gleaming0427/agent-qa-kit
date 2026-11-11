@@ -124,6 +124,7 @@ The main threat is an agent that cheats to get a pass, or follows instructions h
 - each agent can only write what its role needs, and only run allowlisted commands;
 - those commands run in a sandbox with no network, and never see the API key;
 - approved tests are hashed and frozen;
+- the scripts that judge a pull request come from its base branch, in a copy the code under test cannot change;
 - a script reads the test reports, the agent's verdict is not trusted.
 
 The kit does not protect against someone with write access to the repository. Details, known gaps and recommended settings are in [SECURITY.md](SECURITY.md).

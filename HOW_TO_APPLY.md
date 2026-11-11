@@ -57,6 +57,7 @@ It then checks what the workflows need, as `npx github:Gleaming0427/agent-qa-kit
 - Tick "Allow GitHub Actions to create and approve pull requests" (Settings → Actions → General → Workflow permissions).
 - Add the repository variable `QA_VERIFY_MODE` = `advisory` (same page as the secret, Variables). QA verify then only warns until it has shown it can block ([section 7](#7-let-qa-verify-block-merges)).
 - On a large application, add the variable `QA_MAX_TURNS`: it replaces the agents' own limit of turns (40 for the writer, 25 for the verifier). The budget ceiling still applies.
+- Optionally, the variable `QA_VERIFY_TOOLING` = `block`: QA verify then fails when a pull request changes how its own tests run ([section 5](#5-develop-and-verify)). Without it, QA verify only says so.
 
 Do not require the checks yet: that is the last step, in section 7.
 
@@ -66,11 +67,12 @@ Use the writer for changes to critical journeys, authorization, data integrity, 
 
 Write the ticket as `specs/TICKET-44.md`, with observable acceptance criteria: what the user sees or can do. Resolve ambiguous criteria before the writer starts: on an ambiguous ticket it stops and asks instead of guessing. Commit the ticket, then open Actions → **QA write tests** → Run workflow, from the branch the ticket is on (usually the default branch), with the ticket key, the feature area and the application folder. The job:
 
-1. checks the request before it spends anything: a valid ticket key, its spec, the secret, and no `qa/TICKET-44` branch yet;
-2. installs the application, Chromium, Claude Code and its sandbox (`qa/ci-install-agents.sh`). The agent's commands run in bubblewrap, without network access, and never see the API key;
-3. runs phase 1: for each criterion, at least one failing unit test and a failing browser test. A browser test must fail on an `expect(...)` assertion: a pass, a timeout, a crash or a network error is refused. If the application cannot start for the browser tests, the run stops as `blocked`;
-4. saves the review package to `qa-reviews/TICKET-44/`, so that a later job can check the approval;
-5. commits the tests and the package on `qa/TICKET-44`, creates `feat/TICKET-44` from the commit it ran on when it does not exist, and opens the pull request `qa/TICKET-44` → `feat/TICKET-44`.
+1. copies the kit (`qa/` and `.claude/`) to `/opt/qa-kit`, owned by root and read-only, before any code of the application runs (`qa/ci-trusted-kit.sh`, with `sudo`, as GitHub's runners allow). The agent's tests can write in the checkout, and the kit's scripts run again afterwards, with the API key or a token: they run from this copy;
+2. checks the request before it spends anything: a valid ticket key, its spec, the secret, and no `qa/TICKET-44` branch yet;
+3. installs the application, Chromium, Claude Code and its sandbox (`qa/ci-install-agents.sh`). The agent's commands run in bubblewrap, without network access, and never see the API key;
+4. runs phase 1: for each criterion, at least one failing unit test and a failing browser test. A browser test must fail on an `expect(...)` assertion: a pass, a timeout, a crash or a network error is refused. If the application cannot start for the browser tests, the run stops as `blocked`;
+5. saves the review package to `qa-reviews/TICKET-44/`, so that a later job can check the approval;
+6. commits the tests and the package on `qa/TICKET-44`, creates `feat/TICKET-44` from the commit it ran on when it does not exist, and opens the pull request `qa/TICKET-44` → `feat/TICKET-44`.
 
 The writer names every test with `[TICKET-44][AC-1]`. It puts the browser tests in `e2e/TICKET-44.spec.ts`, inside `test.describe('@shop TICKET-44', …)`, and the unit tests in a file named after the ticket.
 
@@ -110,6 +112,15 @@ Work on `feat/TICKET-44`, or on any branch whose name or pull request title cont
 
 A pull request that names no such ticket passes at once, without a model call. Each verification has a $0.20 budget ceiling, and a newer push cancels the run in progress. If the QA pull request is approved after the developer's pull request was opened, re-run the check.
 
+**Whose scripts judge the pull request.** QA verify and QA branch rules run the kit as the **base branch** has it, not as the pull request has it: a pull request that edits `qa/` or `.claude/` is still judged by the scripts it is merged into, and its change takes effect once it is merged. QA verify copies them to `/opt/qa-kit` (section 3); the other two read them from a second checkout of the base branch, and the QA approval status from the default branch. On the pull request that installs the kit, or upgrades it from a version without this copy, the base branch has nothing to copy from: the job uses the pull request's own scripts and warns. The workflow files `.github/workflows/qa-*.yml` still run as the pull request has them: protect `.github/` with a `CODEOWNERS` file.
+
+**Changes to how the tests run.** The approved tests are frozen; what they run on is not. QA verify lists, in a warning and in the job summary, what the pull request changes in:
+- the scripts of a `package.json` that run the tests or the install (`test*`, `install`, `prepare`, `qa:*`);
+- the Vitest, Vite and Playwright configuration, and the files a configuration names as `setupFiles`, `globalSetup` or `globalTeardown`;
+- the kit's own files (`qa/`, `.claude/`, the QA workflows, `.agent-qa-kit.json`).
+
+A pass says nothing about those files: read that diff yourself. It does not look at dependencies, or at what a configuration imports without naming it as a setup file. With the repository variable `QA_VERIFY_TOOLING=block`, a change to the test setup fails the check (it only warns in advisory mode): make it in a pull request of its own, which names no ticket, then verify the feature.
+
 When QA verify fails, fix the application. No workflow runs the repair agent: [section 9](#9-run-the-agents-locally-optional) shows how to run it on a developer machine. When the test itself is wrong, amend it (section 6).
 
 Delete `qa/TICKET-44` once the ticket is merged: its tests then follow the normal review. The review package stays as a record of what was approved, by whom, and what was amended.
@@ -147,7 +158,7 @@ In both modes, each run uploads a `qa-verify-record` artifact: one line per tick
 node qa/verify-record.ts --labels labels.json path/to/records
 ```
 
-It lists every run that would have blocked, with an id. Label each one in `labels.json`, as `"false_block"` when the pull request was fine (a wrong test, a wrong verdict, a broken environment) or `"caught"` when the check found a real problem. It says the check is ready to block once it has seen 10 pull requests (`--min-prs`) with no false block and no failure left unlabeled.
+It lists every run that would have blocked, with an id. A change to the test setup appears there as a `prepare` step, with the files in its detail. Label each one in `labels.json`, as `"false_block"` when the pull request was fine (a wrong test, a wrong verdict, a broken environment) or `"caught"` when the check found a real problem. It says the check is ready to block once it has seen 10 pull requests (`--min-prs`) with no false block and no failure left unlabeled.
 
 Then delete the variable, or set it to `blocking`, and in the ruleset of the branch, require the **QA verify** and **QA branch rules (scope + frozen tests)** checks.
 
@@ -208,6 +219,7 @@ Exit codes: `0` ready or pass, `1` fail, `2` blocked, `3` technical error, inval
 
 - The workflows have run with the real API on two real tickets, one on the demo shop and one on omni-tools (`eval/results/2026-11-07-real-tickets.md`). The QA approval status and an amendment after a squash have run on a third demo ticket (`eval/results/2026-11-07-approval-trial.md`). Their deterministic parts are tested in `qa/tests/`, with a stand-in for the GitHub CLI.
 - A pull request opened with `GITHUB_TOKEN` does not trigger other workflows, so the QA pull request gets no checks of its own when it opens. QA write tests and QA amend tests set its QA approval status themselves.
-- A pull request can change the workflows that judge it. In a team, protect `.github/`, `qa/` and `.claude/` with a `CODEOWNERS` file and the ruleset option "Require review from Code Owners".
+- A pull request can change the workflow files that judge it. The scripts they call come from the base branch, but the workflow files do not: in a team, protect `.github/` (and `qa/` and `.claude/`, which take effect once merged) with a `CODEOWNERS` file and the ruleset option "Require review from Code Owners".
+- The copy of the kit in `/opt/qa-kit`, the checkout of the base branch and the sandbox's write rules for the kit's folders are tested on their own, not yet in a GitHub Actions job. If a run fails at "Copy the kit where the agent's code cannot change it", the runner has no `sudo` or `/opt` is not writable.
 - Code that runs in a job can reach that job's secrets. The key is limited to the agent's step and scrubbed from the agent's commands (`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`), and pull requests from forks never receive it. The dependencies of the pull request are still installed in the same job: keep the key dedicated and its spending limit low.
 - The guard hook, not the settings file, keeps the agents out of `reports/` and `node_modules/`, since the test tools must keep writing their reports and caches there. More in [SECURITY.md](SECURITY.md).

@@ -18,6 +18,8 @@ KIT="$(cd "$(dirname "$0")/.." && pwd)" || fail 'Cannot locate the kit'
 cd "${QA_PROJECT_DIR:-$KIT}" || fail "Cannot enter the project: ${QA_PROJECT_DIR:-$KIT}"
 export QA_KIT_DIR="$KIT"
 for tool in claude jq awk node; do command -v "$tool" >/dev/null 2>&1 || fail "$tool is required"; done
+# Loaded before the agent runs, so that nothing it does can replace these functions (qa/kit-integrity.sh).
+source "$KIT/qa/kit-integrity.sh" || fail 'Cannot load qa/kit-integrity.sh'
 if [[ "$PHASE" == 1 ]]; then
   AGENT="$KIT/.claude/agents/qa-writer.md"; BUDGET="${QA_BUDGET_USD:-1.00}"; RESTRICTIONS=()
 else
@@ -65,11 +67,19 @@ export QA_RUN_ID="$TICKET-phase$PHASE-$(date +%s)-$$"
 # Commands the agent starts (the application's tests included) get no credentials,
 # and on Linux cannot read other processes' environments.
 export CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1
+# The commands the agent starts can write in the project's folder, which holds the kit when the
+# application is at the root of its repository: the sandbox is told to keep the kit's folders (and the
+# project's own qa/ and .claude/) read-only, and the kit's files are compared before and after the agent
+# (qa/kit-integrity.sh).
+AGENT_SETTINGS="$(kit_settings "$KIT/.claude/qa-settings.json" "$KIT" "$PWD")" || fail 'Cannot build the agent settings'
+KIT_DIRS=("$KIT/qa" "$KIT/.claude")
+[[ "$PWD" == "$KIT" ]] || KIT_DIRS+=("$PWD/qa" "$PWD/.claude")
+KIT_BEFORE="$(kit_manifest "${KIT_DIRS[@]}")" || fail 'Cannot read the kit to protect it'
 # On Linux and macOS the default tool set leaves out Glob and Grep, and searches would go through
 # find and grep in Bash, which the guard refuses. Naming them in --allowedTools brings them back;
 # an allow rule in the settings file does not. The guard still checks their paths.
 claude -p "$REQUEST" \
-  --settings "$KIT/.claude/qa-settings.json" \
+  --settings "$AGENT_SETTINGS" \
   --append-system-prompt-file "$SYSTEM_PROMPT" \
   --model "$MODEL" --effort "$EFFORT" \
   ${RESTRICTIONS[@]+"${RESTRICTIONS[@]}"} \
@@ -77,6 +87,9 @@ claude -p "$REQUEST" \
   --permission-mode dontAsk \
   --max-budget-usd "$BUDGET" --max-turns "$TURNS" --output-format json \
   < /dev/null > "$OUTPUT" || fail "agent command failed; see $OUTPUT"
+# Before any script of the kit runs again, outside the sandbox and with the API key.
+changed="$(kit_changes "$KIT_BEFORE" "${KIT_DIRS[@]}")" \
+  || fail "the kit's own files changed while the agent ran (${changed//$'\n'/, }): do not trust this run, restore them (git checkout -- qa .claude) and review what the agent's tests do"
 [[ -s "$OUTPUT" ]] || fail 'Empty agent output'
 jq -e . "$OUTPUT" >/dev/null 2>&1 || fail 'Invalid agent JSON output'
 COST="$(jq -r '.total_cost_usd // 0' "$OUTPUT")"
