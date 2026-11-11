@@ -14,7 +14,7 @@ The kit defends against one threat above all: **an AI agent that cheats to obtai
 | Changes to how tests run | QA verify says when a pull request changes the scripts of a `package.json` that run the tests or the install, the Vitest, Vite or Playwright configuration, or a setup file that a configuration names, and when it changes the kit's own files. It only warns by default; the repository variable `QA_VERIFY_TOOLING=block` makes it fail the check. |
 | Dependencies | Exact versions, committed lockfiles, and releases at least two weeks old when they were chosen. In November 2026, `npm audit` reported no known vulnerability in either package. |
 
-Each rule has regression tests, which `npm run check` runs in CI. Three parts were tested on their own and have not run in a GitHub Actions job yet (November 2026): the copy of the kit in `/opt/qa-kit` and its ownership by root (it needs `sudo`, as on GitHub's runners), the checkout of the base branch, and the sandbox's write rules, which were tried with bubblewrap through the sandbox runtime but not through Claude Code itself.
+Each rule has regression tests, which `npm run check` runs in CI. In November 2026, the copy of the kit in `/opt/qa-kit` (made with `sudo`, and checked not to be writable by the job's user) and the checkout of the base branch ran on a GitHub-hosted runner, in QA verify on a pull request that names no ticket. The steps that come after, with a ticket (the verifier, the full suite) and QA write tests, have not run with the copy yet. The sandbox's write rules were tried with bubblewrap through the sandbox runtime, not through Claude Code itself.
 
 **Known gaps**, to fix before a team relies on the kit:
 

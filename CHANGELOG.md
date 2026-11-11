@@ -9,7 +9,7 @@
     - the workflows run the kit from `/opt/qa-kit`, a copy owned by root and read-only, made before any code of the application runs (`qa/ci-trusted-kit.sh`; it uses `sudo`, as GitHub's runners allow).
   - **A pull request judged by its own scripts.** QA verify ran `qa/` and `.claude/` as the pull request had them, so a pull request could weaken the checks that judged it. Now QA verify and QA branch rules use the kit of the pull request's base branch, and the QA approval status the default branch's. A pull request that installs or upgrades the kit has no such copy to use: it uses its own scripts and warns.
   - **New: changes to how the tests run are reported.** QA verify says, in a warning and in the job summary, when a pull request changes the test scripts of a `package.json`, the Vitest, Vite or Playwright configuration, a setup file it names, or the kit's own files. The repository variable `QA_VERIFY_TOOLING=block` makes a change to the test setup fail the check. The default only warns.
-  - Not yet run in a GitHub Actions job: the copy in `/opt/qa-kit`, the checkout of the base branch, and the sandbox rules through Claude Code. The rest has regression tests. Run `npx github:Gleaming0427/agent-qa-kit init` again to upgrade.
+  - Run on a GitHub-hosted runner so far: the copy in `/opt/qa-kit` and the checkout of the base branch, in QA verify on a pull request that names no ticket. Not yet run: the steps that follow with a ticket, QA write tests, and the sandbox rules through Claude Code. The rest has regression tests. Run `npx github:Gleaming0427/agent-qa-kit init` again to upgrade.
 - **An MIT license.** The kit had none, so nobody could reuse it. `LICENSE` now holds the MIT license, and `package.json` says so.
 
 ## v0.3.0, 9 November 2026
