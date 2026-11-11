@@ -25,6 +25,20 @@
 #       Compares the folders with a manifest taken earlier. Prints up to five paths that differ and
 #       returns 1 when anything does. Taken before the agent and after it, it shows a change that the
 #       sandbox did not stop.
+#   kit_session_args AGENT_FILE
+#       Sets SESSION_ARGS, the options that keep a Claude Code session to what the kit planned for it.
+#       A session also reads the project's own configuration: the hooks of .claude/settings.json and
+#       the servers of .mcp.json are started outside the sandbox, with the API key in their environment,
+#       and CLAUDE.md goes to the model as instructions. A pull request can change all of them. So:
+#         --setting-sources "" (or "user"): no settings, hooks or memory files from the project; the
+#                    kit's own settings file, given with --settings, is still read;
+#         --strict-mcp-config: no MCP server, as none is given;
+#         --disable-slash-commands: no skills or commands;
+#         --tools: only the tools of the agent's file (its `tools:` line): 6 instead of 24 for the writer.
+#       QA_SETTING_SOURCES=user also reads the user's own settings (~/.claude), for someone whose login
+#       or provider is set there (apiKeyHelper, env); nothing else is offered, "project" and "local"
+#       are the folders that a pull request changes. Returns 1, with a message, when the agent's file has
+#       no tools line or the variable holds another value.
 
 kit_settings() {
   local settings="$1" parent dir list dirs=()
@@ -60,6 +74,14 @@ kit_manifest() {
     }
     console.log(lines.sort().join("\n"));
   ' "$@"
+}
+
+kit_session_args() {
+  local agent="$1" sources="${QA_SETTING_SOURCES:-}" tools
+  tools="$(awk '/^---$/ { n++; next } n == 1 && $1 == "tools:" { sub(/^tools:[ \t]*/, ""); gsub(/[ \t]/, ""); print; exit }' "$agent")"
+  [[ "$tools" =~ ^[A-Za-z]+(,[A-Za-z]+)*$ ]] || { echo "kit-integrity: no tools line in the frontmatter of $agent" >&2; return 1; }
+  [[ -z "$sources" || "$sources" == user ]] || { echo "kit-integrity: QA_SETTING_SOURCES must be empty or \"user\", got \"$sources\"" >&2; return 1; }
+  SESSION_ARGS=(--tools "$tools" --setting-sources "$sources" --strict-mcp-config --disable-slash-commands)
 }
 
 kit_changes() {

@@ -29,6 +29,8 @@ field() { awk -v key="$1:" '/^---$/ { n++; next } n == 1 && $1 == key { print $2
 MODEL="${QA_REPAIR_MODEL:-$(field model)}"; EFFORT="${QA_REPAIR_EFFORT:-$(field effort)}"; TURNS="$(field maxTurns)"
 BUDGET="${QA_REPAIR_BUDGET_USD:-1.00}"
 [[ -n "$MODEL" && -n "$EFFORT" && "$TURNS" =~ ^[0-9]+$ ]] || fail 'Invalid repair agent frontmatter'
+# The tools of the agent's file and no configuration from the project (qa/kit-integrity.sh).
+kit_session_args "$AGENT" || fail 'cannot set the options of the repair agent session'
 SYSTEM_PROMPT="$(mktemp)"
 trap 'rm -f "$SYSTEM_PROMPT"' EXIT
 awk '/^---$/ && n < 2 { n++; next } n >= 2' "$AGENT" > "$SYSTEM_PROMPT"
@@ -90,6 +92,7 @@ $FAILURES
   # The application's tests run by the agent get no credentials.
   CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 claude -p "$REQUEST" \
     --settings "$REPAIR_SETTINGS" \
+    "${SESSION_ARGS[@]}" \
     --append-system-prompt-file "$SYSTEM_PROMPT" \
     --model "$MODEL" --effort "$EFFORT" \
     --allowedTools 'Glob,Grep' \

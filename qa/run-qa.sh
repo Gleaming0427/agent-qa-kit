@@ -30,6 +30,8 @@ fi
 field() { awk -v key="$1:" '/^---$/ { n++; next } n == 1 && $1 == key { print $2; exit }' "$AGENT"; }
 MODEL="${QA_MODEL:-$(field model)}"; EFFORT="${QA_EFFORT:-$(field effort)}"; TURNS="$(field maxTurns)"
 [[ -n "$MODEL" && -n "$EFFORT" && "$TURNS" =~ ^[0-9]+$ ]] || fail 'Invalid agent frontmatter'
+# The tools of the agent's file and no configuration from the project (qa/kit-integrity.sh).
+kit_session_args "$AGENT" || fail 'Cannot set the options of the agent session'
 # A larger application can need more turns than the agent's own limit: QA_MAX_TURNS replaces it.
 # The budget ceiling still applies.
 if [[ -n "${QA_MAX_TURNS:-}" ]]; then
@@ -78,8 +80,10 @@ KIT_BEFORE="$(kit_manifest "${KIT_DIRS[@]}")" || fail 'Cannot read the kit to pr
 # On Linux and macOS the default tool set leaves out Glob and Grep, and searches would go through
 # find and grep in Bash, which the guard refuses. Naming them in --allowedTools brings them back;
 # an allow rule in the settings file does not. The guard still checks their paths.
+# The session reads the agent's own settings above and nothing from the project (SESSION_ARGS).
 claude -p "$REQUEST" \
   --settings "$AGENT_SETTINGS" \
+  "${SESSION_ARGS[@]}" \
   --append-system-prompt-file "$SYSTEM_PROMPT" \
   --model "$MODEL" --effort "$EFFORT" \
   ${RESTRICTIONS[@]+"${RESTRICTIONS[@]}"} \
