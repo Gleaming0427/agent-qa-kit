@@ -106,7 +106,7 @@ Work on `feat/TICKET-44`, or on any branch whose name or pull request title cont
 
 **QA verify** runs on pull requests into that branch. For each ticket the branch or title names, it:
 
-1. finds the ticket's QA pull request. It needs an approval by someone who can write to the repository (an owner, member or collaborator whose permission, read from GitHub, is write or more), on the latest commit of the tests, and no such person whose latest review requests changes (`qa/github-approval.ts`, `qa/ci-permissions.sh`). Someone with read access only does not count, and a request for changes from them does not block;
+1. finds the ticket's QA pull request. It needs an approval by someone who can write to the repository (an owner, member or collaborator whose permission, read from GitHub, is write or more), on the latest commit of the tests, and no such person whose latest review requests changes (`qa/github-approval.ts`, `qa/ci-permissions.sh`). Someone with read access only does not count, and a request for changes from them does not block. Each reviewer's latest decision counts, but an approval without text, given later for the same commit, does not take back the lines they wrote earlier: asking for changes or dismissing the review does;
 2. checks that the tests and the review package are identical to the approved commit (`qa/check-scope.sh frozen`), then records the approval from the review text, which must give a reason per criterion;
 3. runs the verifier (phase 2) with the API key, then the full suite (`qa/full-suite.sh`) in a step without it. The ticket passes only if every test passes, at least one `@smoke` journey passes, and the ticket's criteria pass again in that run.
 

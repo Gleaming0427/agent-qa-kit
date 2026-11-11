@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Finds the human approval of a ticket's QA pull request (head qa/<TICKET>).
 // It counts only if someone who can write to the repository approved the latest commit of the tests,
-// and none of those people's latest review asks for changes.
+// and none of those people's latest review asks for changes. Each reviewer's latest decision counts, but
+// a later approval without text does not take back the reasons they gave on the same commit.
 //
 // Who can write: GitHub's author association on the review (OWNER, MEMBER or COLLABORATOR) says that a
 // person belongs to the repository, not what they may do there: a member of the organization, or a
@@ -52,6 +53,8 @@ const TRUSTED = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
 const CAN_WRITE = new Set(['admin', 'maintain', 'write']);
 export type Permissions = Record<string, string>;
 const decided = (review: Review) => ['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(review.state);
+// An approval gives its reasons as lines "AC-N: reason".
+const givesReasons = (review: Review) => /AC-[1-9]\d*/.test(review.body ?? '');
 
 /** Whether a review counts, for or against: it comes from someone who belongs to the repository and, when known, can write to it. */
 function counts(login: string, review: Review, permissions?: Permissions): boolean {
@@ -84,9 +87,14 @@ export function lastMergedQaPull(pulls: PullRequest[], ticket: string, repo: str
 export function findApproval(pull: PullRequest, reviews: Review[], permissions?: Permissions): FoundApproval {
   // Each reviewer's latest decision; comments do not change it.
   const latest = new Map<string, Review>();
+  // What each reviewer approved since their last request for changes or dismissal, oldest first.
+  const approved = new Map<string, Review[]>();
   for (const review of [...reviews].sort((a, b) => a.id - b.id)) {
     const login = review.user?.login;
-    if (login && decided(review)) latest.set(login, review);
+    if (!login || !decided(review)) continue;
+    latest.set(login, review);
+    if (review.state === 'APPROVED') approved.set(login, [...(approved.get(login) ?? []), review]);
+    else approved.delete(login);
   }
   const decisions = [...latest.entries()];
   // Anyone with a GitHub account can leave a review on a public repository: a request for changes blocks
@@ -95,7 +103,16 @@ export function findApproval(pull: PullRequest, reviews: Review[], permissions?:
   if (blocking.length) throw new Error(`${blocking.join(', ')} requested changes on the QA pull request #${pull.number}.`);
 
   const approvals = decisions.filter(([, review]) => review.state === 'APPROVED');
-  const valid = approvals.filter(([login, review]) => counts(login, review, permissions) && review.commit_id === pull.head.sha);
+  // A later approval without text does not take back the reasons that the same person gave for the same
+  // commit: only a request for changes or a dismissal does. An approval of an older commit gives none.
+  const withTheirReasons = (login: string, review: Review): Review => {
+    if (givesReasons(review)) return review;
+    const earlier = (approved.get(login) ?? []).filter((other) => other.commit_id === review.commit_id && givesReasons(other));
+    return earlier.sort((a, b) => b.id - a.id)[0] ?? review;
+  };
+  const valid = approvals
+    .filter(([login, review]) => counts(login, review, permissions) && review.commit_id === pull.head.sha)
+    .map(([login, review]): [string, Review] => [login, withTheirReasons(login, review)]);
   if (!valid.length) {
     const reasons = approvals.map(([login, review]) => !TRUSTED.has(review.author_association ?? '')
       ? `@${login} cannot approve: not a collaborator of the repository`
@@ -105,7 +122,7 @@ export function findApproval(pull: PullRequest, reviews: Review[], permissions?:
     throw new Error(`The QA pull request #${pull.number} has no valid approval${reasons.length ? `: ${reasons.join('; ')}` : ''}.`);
   }
   // Prefer the latest approval that gives reasons, written as "AC-N: reason".
-  const withReasons = valid.filter(([, review]) => /AC-[1-9]\d*/.test(review.body ?? ''));
+  const withReasons = valid.filter(([, review]) => givesReasons(review));
   const [reviewer, review] = (withReasons.length ? withReasons : valid).sort(([, a], [, b]) => b.id - a.id)[0];
   return { number: pull.number, head_sha: pull.head.sha, reviewer: `@${reviewer}`, body: review.body ?? '' };
 }
