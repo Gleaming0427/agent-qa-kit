@@ -310,6 +310,28 @@ node eval/validate.ts --candidate "D clean, split runners" --policy-current
 - **Output.** The decision goes to the run's summary, with annotations on the run page, and to the `release-decision` artifact (Markdown and JSON). The JSON holds the comparison, the next steps and where the rules came from.
 - **After a release**, make the released version the baseline, in a reviewed commit.
 
+## An evaluation before a change of the agents is merged
+
+An agent is evaluated again at every change of its prompt, its model, its tools or the version of the SDK that runs it. The **QA eval required** workflow checks this on every pull request of this repository, with no model call and no secret (`eval/required.ts`, `eval/lib/required.ts`):
+
+- **What counts as a change of the agents** is what they see or can do, read with git at the commit the pull request branched from and at its head:
+  - the files of the writer and the verifier (`.claude/agents/qa-writer.md`, `qa-verifier.md`: prompt, model, effort, tools);
+  - their settings (`.claude/qa-settings.json`) and the hooks (`.claude/hooks/`);
+  - the launcher and what it builds the session and the request with (`qa/run-qa.sh`, `qa/kit-integrity.sh`, `qa/criteria-manifest.ts`);
+  - the version of Claude Code the workflows install (`qa/ci-install-agents.sh`, the version line only).
+
+  It is narrower than the agent's version of the history, which counts every script of `qa/`: a CI script changes that version, not what the agents do. The repair agent is left out, since the evaluation does not run it.
+- **No change:** the check passes.
+- **A change:** the check looks in `eval/history/campaigns` for a campaign (not a control or a dry run) whose commit has the same agents as the pull request's head. Without one, it fails and says what to do: run QA eval on the branch (`tickets: smoke`, under $5, or `all`), then add the run's report to the history ("Adding a campaign" in [history/README.md](history/README.md)) and push it to the branch. A campaign added after the run, in a commit that changes nothing else of the agents, still counts.
+- **With a campaign:** its release decision against the baseline applies, as in QA eval (`eval/validate.ts --ci`, with the rules at the campaign's commit): rejected fails the check, review passes with a warning.
+- **The label `qa-eval-waived`** lets a change that needs no evaluation through, such as a comment in a prompt, with a warning that names what changed.
+- **Trust.** The check runs the copy of `eval/` of the pull request's base branch, so that a pull request cannot loosen the check that judges it; the workflow file itself still runs as the pull request has it (see [SECURITY.md](../SECURITY.md)). It blocks a merge only once it is a required check of `main`.
+- **Limit.** Campaigns are matched by their commit, so a campaign whose branch was merged by squash and deleted can no longer be read: the check counts it as not comparable and says how many there were. This is expected: the campaign that matters is the one run on the pull request's own branch.
+
+```bash
+node eval/required.ts origin/main HEAD     # before pushing: does this branch need an evaluation, and has it one?
+```
+
 ## Trials per ticket
 
 More trials make each measurement more precise, and cost more. `node eval/trials.ts` measures, on the history and with no model call, what more or fewer trials change. It also allocates the trials of an adaptive campaign.
