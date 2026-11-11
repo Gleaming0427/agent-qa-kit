@@ -1,0 +1,515 @@
+{
+  "config": {
+    "configFile": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/playwright.config.ts",
+    "rootDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 300000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "ci": {
+        "commitHref": "https://github.com/Gleaming0427/agent-qa-kit/commit/d06b2bed0ffc11e36452e3d40a53d9efa76baa0f",
+        "commitHash": "d06b2bed0ffc11e36452e3d40a53d9efa76baa0f",
+        "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/43009007579"
+      },
+      "gitCommit": {
+        "shortHash": "d06b2be",
+        "hash": "d06b2bed0ffc11e36452e3d40a53d9efa76baa0f",
+        "subject": "Do not take the folders Claude Code creates for tampering with the kit (#48)",
+        "body": "Do not take the folders Claude Code creates for tampering with the kit (#48)\n\n* Close the remaining gaps of the security review: approvers, tests of other tickets, test setup\n\nThe review of the kit's security found, besides the two gaps fixed in the\nprevious change, three more that need no model call.\n\n1. Approval. GitHub's author association says that someone belongs to the\n   repository, not what they may do there: a member or a collaborator can\n   have read access only, whereas GitHub's own required reviews ignore\n   them. A request for changes from any account blocked QA verify, though\n   their approval would not have counted.\n   - qa/ci-permissions.sh reads each reviewer's permission\n     (collaborators/{login}/permission); qa/github-approval.ts counts an\n     approval only with write access or more, and a request for changes\n     only from someone whose approval would count.\n   - The permissions only narrow: a login that cannot be read falls back to\n     the association and the job warns, so the kit works as before where\n     the token may not read them. Whether the workflows' token may is not\n     confirmed: the documentation could not be read from this session.\n\n2. Tests of a ticket that a pull request does not name, and the QA agent\n   rewriting existing tests. qa/check-test-blocks.ts reads test files test\n   by test (it, test, hooks), with a scanner that skips strings, templates,\n   comments and regular expressions: 294 tests in the repository's 56 test\n   files, none left open.\n   - A pull request may not change, remove or move a test whose title\n     carries [TICKET-N][AC-N] of a ticket it does not name. It runs on\n     every pull request in QA branch rules, also for tickets whose qa/\n     branch was deleted.\n   - A QA branch may add tests and rewrite its own ticket's, not another\n     ticket's test, a test with no ticket, or a hook that was there. It\n     runs in check-scope.sh scope, before the push in QA write tests and\n     QA amend tests, and on the pull request.\n\n3. Test setup. The repair agent could edit src/setupTests.ts,\n   vitest.setup.ts, mocks and helpers.\n   - The guard refuses them by name (isSupportFile in check-tooling.ts and\n     the same two patterns in qa-guard.sh; a test keeps them in step).\n   - tooling-integrity.ts adds package.json, the test configuration, the\n     setup files it names and what those import, and the files that are\n     test support by name to the snapshot compared after every repair\n     step, so a change made by code that the tests run is caught too.\n   - QA verify also names a pull request's changes to such files.\n\nRegression tests for each rule, on real git histories, and a mutation\ncheck that the test for imported helpers fails without the import\nclosure. npm run check: 270 passed, 0 failed, 3 skipped (the same three\nas on main, which need a full clone, bwrap and npm ci in the demo). Not\nrun on a GitHub-hosted runner. Limits are in SECURITY.md.\n\nClaude-Session: https://claude.ai/code/session_01N4hLdLD4m4sZNjEADxtoct\n\n* Do not take the folders Claude Code creates for tampering with the kit\n\nThe first real run of QA write tests after the integrity checks (GitHub\nrunner, TICKET-44 on the demo shop, Claude Code 2.1.303): the writer\nfinished (verdict ready, 10 turns, 56 s, $0.14, red tests for both\ncriteria), then qa/run-qa.sh stopped with \"the kit's own files changed\nwhile the agent ran (.claude/, .claude/.cc-writes/, .claude/agents/,\n.claude/commands/)\".\n\nClaude Code had created those empty folders in the project while it\nstarted its session. The manifest of qa/kit-integrity.sh listed folders,\nso an empty one that appeared counted as a change, and the run could\nnever go on in an application with no .claude/ of its own (and very\nlikely not in one at the root either). Only folders were listed in the\nlog, no file: a file would have been named.\n\nThe manifest now lists files, links and what is neither, not folders. A\nfile created inside a new folder is still reported. The tests could not\nshow it: the stand-in for claude created nothing. The new ones create\nwhat the runner showed, in the application-at-the-root layout, in the\nkit-outside-the-project layout with no .claude/ in the project, and in\nthe repair loop; with the previous script they fail (4 of 26).\n\nqa/ci-write-tests.sh publish had no test, and it is the step that runs\nnext, with the scope check added in the previous change. It now runs on\na real git history with a bare origin and a stand-in for gh: added tests\nare committed and pushed with feat/<ticket> and the pull request, a test\nadded to a shared file is accepted, a rewrite of another ticket's test\nor of a test with no ticket stops the run before anything is pushed.\n\nnpm run check: 277 passed, 0 failed, 3 skipped (the same three as on\nmain). The touched test files also pass as an unprivileged user. Not\nrun again on a runner.\n\nClaude-Session: https://claude.ai/code/session_01N4hLdLD4m4sZNjEADxtoct\n\n---------\n\nCo-authored-by: Gleaming <284604818+Gleaming0427@users.noreply.github.com>",
+        "author": {
+          "name": "Gleaming",
+          "email": "4ccp55h4qz@privaterelay.appleid.com",
+          "time": 1794391345000
+        },
+        "committer": {
+          "name": "GitHub",
+          "email": "noreply@github.com",
+          "time": 1794391345000
+        },
+        "branch": "main"
+      },
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "reports/playwright.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/Gleaming0427/agent-qa-kit/commit/d06b2bed0ffc11e36452e3d40a53d9efa76baa0f",
+            "commitHash": "d06b2bed0ffc11e36452e3d40a53d9efa76baa0f",
+            "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/43009007579"
+          },
+          "gitCommit": {
+            "shortHash": "d06b2be",
+            "hash": "d06b2bed0ffc11e36452e3d40a53d9efa76baa0f",
+            "subject": "Do not take the folders Claude Code creates for tampering with the kit (#48)",
+            "body": "Do not take the folders Claude Code creates for tampering with the kit (#48)\n\n* Close the remaining gaps of the security review: approvers, tests of other tickets, test setup\n\nThe review of the kit's security found, besides the two gaps fixed in the\nprevious change, three more that need no model call.\n\n1. Approval. GitHub's author association says that someone belongs to the\n   repository, not what they may do there: a member or a collaborator can\n   have read access only, whereas GitHub's own required reviews ignore\n   them. A request for changes from any account blocked QA verify, though\n   their approval would not have counted.\n   - qa/ci-permissions.sh reads each reviewer's permission\n     (collaborators/{login}/permission); qa/github-approval.ts counts an\n     approval only with write access or more, and a request for changes\n     only from someone whose approval would count.\n   - The permissions only narrow: a login that cannot be read falls back to\n     the association and the job warns, so the kit works as before where\n     the token may not read them. Whether the workflows' token may is not\n     confirmed: the documentation could not be read from this session.\n\n2. Tests of a ticket that a pull request does not name, and the QA agent\n   rewriting existing tests. qa/check-test-blocks.ts reads test files test\n   by test (it, test, hooks), with a scanner that skips strings, templates,\n   comments and regular expressions: 294 tests in the repository's 56 test\n   files, none left open.\n   - A pull request may not change, remove or move a test whose title\n     carries [TICKET-N][AC-N] of a ticket it does not name. It runs on\n     every pull request in QA branch rules, also for tickets whose qa/\n     branch was deleted.\n   - A QA branch may add tests and rewrite its own ticket's, not another\n     ticket's test, a test with no ticket, or a hook that was there. It\n     runs in check-scope.sh scope, before the push in QA write tests and\n     QA amend tests, and on the pull request.\n\n3. Test setup. The repair agent could edit src/setupTests.ts,\n   vitest.setup.ts, mocks and helpers.\n   - The guard refuses them by name (isSupportFile in check-tooling.ts and\n     the same two patterns in qa-guard.sh; a test keeps them in step).\n   - tooling-integrity.ts adds package.json, the test configuration, the\n     setup files it names and what those import, and the files that are\n     test support by name to the snapshot compared after every repair\n     step, so a change made by code that the tests run is caught too.\n   - QA verify also names a pull request's changes to such files.\n\nRegression tests for each rule, on real git histories, and a mutation\ncheck that the test for imported helpers fails without the import\nclosure. npm run check: 270 passed, 0 failed, 3 skipped (the same three\nas on main, which need a full clone, bwrap and npm ci in the demo). Not\nrun on a GitHub-hosted runner. Limits are in SECURITY.md.\n\nClaude-Session: https://claude.ai/code/session_01N4hLdLD4m4sZNjEADxtoct\n\n* Do not take the folders Claude Code creates for tampering with the kit\n\nThe first real run of QA write tests after the integrity checks (GitHub\nrunner, TICKET-44 on the demo shop, Claude Code 2.1.303): the writer\nfinished (verdict ready, 10 turns, 56 s, $0.14, red tests for both\ncriteria), then qa/run-qa.sh stopped with \"the kit's own files changed\nwhile the agent ran (.claude/, .claude/.cc-writes/, .claude/agents/,\n.claude/commands/)\".\n\nClaude Code had created those empty folders in the project while it\nstarted its session. The manifest of qa/kit-integrity.sh listed folders,\nso an empty one that appeared counted as a change, and the run could\nnever go on in an application with no .claude/ of its own (and very\nlikely not in one at the root either). Only folders were listed in the\nlog, no file: a file would have been named.\n\nThe manifest now lists files, links and what is neither, not folders. A\nfile created inside a new folder is still reported. The tests could not\nshow it: the stand-in for claude created nothing. The new ones create\nwhat the runner showed, in the application-at-the-root layout, in the\nkit-outside-the-project layout with no .claude/ in the project, and in\nthe repair loop; with the previous script they fail (4 of 26).\n\nqa/ci-write-tests.sh publish had no test, and it is the step that runs\nnext, with the scope check added in the previous change. It now runs on\na real git history with a bare origin and a stand-in for gh: added tests\nare committed and pushed with feat/<ticket> and the pull request, a test\nadded to a shared file is accepted, a rewrite of another ticket's test\nor of a test with no ticket stops the run before anything is pushed.\n\nnpm run check: 277 passed, 0 failed, 3 skipped (the same three as on\nmain). The touched test files also pass as an unprivileged user. Not\nrun again on a runner.\n\nClaude-Session: https://claude.ai/code/session_01N4hLdLD4m4sZNjEADxtoct\n\n---------\n\nCo-authored-by: Gleaming <284604818+Gleaming0427@users.noreply.github.com>",
+            "author": {
+              "name": "Gleaming",
+              "email": "4ccp55h4qz@privaterelay.appleid.com",
+              "time": 1794391345000
+            },
+            "committer": {
+              "name": "GitHub",
+              "email": "noreply@github.com",
+              "time": 1794391345000
+            },
+            "branch": "main"
+          },
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/Gleaming0427/agent-qa-kit/commit/d06b2bed0ffc11e36452e3d40a53d9efa76baa0f",
+            "commitHash": "d06b2bed0ffc11e36452e3d40a53d9efa76baa0f",
+            "buildHref": "https://github.com/Gleaming0427/agent-qa-kit/actions/runs/43009007579"
+          },
+          "gitCommit": {
+            "shortHash": "d06b2be",
+            "hash": "d06b2bed0ffc11e36452e3d40a53d9efa76baa0f",
+            "subject": "Do not take the folders Claude Code creates for tampering with the kit (#48)",
+            "body": "Do not take the folders Claude Code creates for tampering with the kit (#48)\n\n* Close the remaining gaps of the security review: approvers, tests of other tickets, test setup\n\nThe review of the kit's security found, besides the two gaps fixed in the\nprevious change, three more that need no model call.\n\n1. Approval. GitHub's author association says that someone belongs to the\n   repository, not what they may do there: a member or a collaborator can\n   have read access only, whereas GitHub's own required reviews ignore\n   them. A request for changes from any account blocked QA verify, though\n   their approval would not have counted.\n   - qa/ci-permissions.sh reads each reviewer's permission\n     (collaborators/{login}/permission); qa/github-approval.ts counts an\n     approval only with write access or more, and a request for changes\n     only from someone whose approval would count.\n   - The permissions only narrow: a login that cannot be read falls back to\n     the association and the job warns, so the kit works as before where\n     the token may not read them. Whether the workflows' token may is not\n     confirmed: the documentation could not be read from this session.\n\n2. Tests of a ticket that a pull request does not name, and the QA agent\n   rewriting existing tests. qa/check-test-blocks.ts reads test files test\n   by test (it, test, hooks), with a scanner that skips strings, templates,\n   comments and regular expressions: 294 tests in the repository's 56 test\n   files, none left open.\n   - A pull request may not change, remove or move a test whose title\n     carries [TICKET-N][AC-N] of a ticket it does not name. It runs on\n     every pull request in QA branch rules, also for tickets whose qa/\n     branch was deleted.\n   - A QA branch may add tests and rewrite its own ticket's, not another\n     ticket's test, a test with no ticket, or a hook that was there. It\n     runs in check-scope.sh scope, before the push in QA write tests and\n     QA amend tests, and on the pull request.\n\n3. Test setup. The repair agent could edit src/setupTests.ts,\n   vitest.setup.ts, mocks and helpers.\n   - The guard refuses them by name (isSupportFile in check-tooling.ts and\n     the same two patterns in qa-guard.sh; a test keeps them in step).\n   - tooling-integrity.ts adds package.json, the test configuration, the\n     setup files it names and what those import, and the files that are\n     test support by name to the snapshot compared after every repair\n     step, so a change made by code that the tests run is caught too.\n   - QA verify also names a pull request's changes to such files.\n\nRegression tests for each rule, on real git histories, and a mutation\ncheck that the test for imported helpers fails without the import\nclosure. npm run check: 270 passed, 0 failed, 3 skipped (the same three\nas on main, which need a full clone, bwrap and npm ci in the demo). Not\nrun on a GitHub-hosted runner. Limits are in SECURITY.md.\n\nClaude-Session: https://claude.ai/code/session_01N4hLdLD4m4sZNjEADxtoct\n\n* Do not take the folders Claude Code creates for tampering with the kit\n\nThe first real run of QA write tests after the integrity checks (GitHub\nrunner, TICKET-44 on the demo shop, Claude Code 2.1.303): the writer\nfinished (verdict ready, 10 turns, 56 s, $0.14, red tests for both\ncriteria), then qa/run-qa.sh stopped with \"the kit's own files changed\nwhile the agent ran (.claude/, .claude/.cc-writes/, .claude/agents/,\n.claude/commands/)\".\n\nClaude Code had created those empty folders in the project while it\nstarted its session. The manifest of qa/kit-integrity.sh listed folders,\nso an empty one that appeared counted as a change, and the run could\nnever go on in an application with no .claude/ of its own (and very\nlikely not in one at the root either). Only folders were listed in the\nlog, no file: a file would have been named.\n\nThe manifest now lists files, links and what is neither, not folders. A\nfile created inside a new folder is still reported. The tests could not\nshow it: the stand-in for claude created nothing. The new ones create\nwhat the runner showed, in the application-at-the-root layout, in the\nkit-outside-the-project layout with no .claude/ in the project, and in\nthe repair loop; with the previous script they fail (4 of 26).\n\nqa/ci-write-tests.sh publish had no test, and it is the step that runs\nnext, with the scope check added in the previous change. It now runs on\na real git history with a bare origin and a stand-in for gh: added tests\nare committed and pushed with feat/<ticket> and the pull request, a test\nadded to a shared file is accepted, a rewrite of another ticket's test\nor of a test with no ticket stops the run before anything is pushed.\n\nnpm run check: 277 passed, 0 failed, 3 skipped (the same three as on\nmain). The touched test files also pass as an unprivileged user. Not\nrun again on a runner.\n\nClaude-Session: https://claude.ai/code/session_01N4hLdLD4m4sZNjEADxtoct\n\n---------\n\nCo-authored-by: Gleaming <284604818+Gleaming0427@users.noreply.github.com>",
+            "author": {
+              "name": "Gleaming",
+              "email": "4ccp55h4qz@privaterelay.appleid.com",
+              "time": 1794391345000
+            },
+            "committer": {
+              "name": "GitHub",
+              "email": "noreply@github.com",
+              "time": 1794391345000
+            },
+            "branch": "main"
+          },
+          "actualWorkers": 1
+        },
+        "id": "mobile",
+        "name": "mobile",
+        "testDir": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.55.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run serve:e2e",
+      "url": "http://127.0.0.1:4173",
+      "reuseExistingServer": false,
+      "timeout": 60000,
+      "env": {
+        "VITE_DEMO_BUG": "0"
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "TICKET-42.spec.ts",
+      "file": "TICKET-42.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "@shop TICKET-42, integrated shell",
+          "file": "TICKET-42.spec.ts",
+          "line": 8,
+          "column": 6,
+          "specs": [
+            {
+              "title": "[TICKET-42][AC-1] shell lists the products with their prices",
+              "ok": true,
+              "tags": [
+                "shop"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 146,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-11T11:06:17.525Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bb2a4bcec7a19d6abb50-6f96668c3c3ad1cdb649",
+              "file": "TICKET-42.spec.ts",
+              "line": 10,
+              "column": 3
+            },
+            {
+              "title": "[TICKET-42][AC-2] shell subtotal is the sum of price times quantity",
+              "ok": true,
+              "tags": [
+                "shop"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 198,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-11T11:06:17.837Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bb2a4bcec7a19d6abb50-f70ca7a4582da0a2f57a",
+              "file": "TICKET-42.spec.ts",
+              "line": 18,
+              "column": 3
+            },
+            {
+              "title": "[TICKET-42][AC-3] shell shipping is free from €50 and included in the total",
+              "ok": true,
+              "tags": [
+                "shop"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 168,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-11T11:06:18.046Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bb2a4bcec7a19d6abb50-a0d2ab1636c1b7204ef4",
+              "file": "TICKET-42.spec.ts",
+              "line": 26,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "TICKET-44.spec.ts",
+      "file": "TICKET-44.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "@shop TICKET-44, promo code",
+          "file": "TICKET-44.spec.ts",
+          "line": 12,
+          "column": 6,
+          "specs": [
+            {
+              "title": "[TICKET-44][AC-1] shell WELCOME10 takes 10% off, shipping stays on the undiscounted subtotal",
+              "ok": false,
+              "tags": [
+                "shop"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5167,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByLabel('Promo code')\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Promo code')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByLabel('Promo code')\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Promo code')\u001b[22m\n\n    at applyCode (/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts:7:47)\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts:18:11",
+                        "location": {
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts",
+                          "column": 47,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m \u001b[36mconst\u001b[39m summaryRow \u001b[33m=\u001b[39m (page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m label\u001b[33m:\u001b[39m string) \u001b[33m=>\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'table'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Order summary'\u001b[39m })\u001b[33m.\u001b[39mgetByRole(\u001b[32m'row'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mRegExp\u001b[39m(\u001b[32m`^${label}`\u001b[39m) })\u001b[33m;\u001b[39m\n \u001b[90m  6 |\u001b[39m \u001b[36mconst\u001b[39m applyCode \u001b[33m=\u001b[39m \u001b[36masync\u001b[39m (page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m code\u001b[33m:\u001b[39m string) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Promo code'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Promo code'\u001b[39m)\u001b[33m.\u001b[39mfill(code)\u001b[33m;\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'button'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Apply'\u001b[39m })\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 10 |\u001b[39m }\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts",
+                            "column": 47,
+                            "line": 7
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByLabel('Promo code')\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Promo code')\u001b[22m\n\n\n   5 | const summaryRow = (page: Page, label: string) => page.getByRole('table', { name: 'Order summary' }).getByRole('row', { name: new RegExp(`^${label}`) });\n   6 | const applyCode = async (page: Page, code: string) => {\n>  7 |   await expect(page.getByLabel('Promo code')).toBeVisible();\n     |                                               ^\n   8 |   await page.getByLabel('Promo code').fill(code);\n   9 |   await page.getByRole('button', { name: 'Apply' }).click();\n  10 | };\n    at applyCode (/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts:7:47)\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts:18:11"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-11T11:06:18.227Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/TICKET-44--shop-TICKET-44--5421d-n-the-undiscounted-subtotal-desktop/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/TICKET-44--shop-TICKET-44--5421d-n-the-undiscounted-subtotal-desktop/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts",
+                        "column": 47,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "a1f4befbae193b73a1a3-e581c466b9ee281847e3",
+              "file": "TICKET-44.spec.ts",
+              "line": 14,
+              "column": 3
+            },
+            {
+              "title": "[TICKET-44][AC-1] shell discount on a cart that pays shipping",
+              "ok": false,
+              "tags": [
+                "shop"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5277,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByLabel('Promo code')\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Promo code')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByLabel('Promo code')\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Promo code')\u001b[22m\n\n    at applyCode (/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts:7:47)\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts:29:11",
+                        "location": {
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts",
+                          "column": 47,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m \u001b[36mconst\u001b[39m summaryRow \u001b[33m=\u001b[39m (page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m label\u001b[33m:\u001b[39m string) \u001b[33m=>\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'table'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Order summary'\u001b[39m })\u001b[33m.\u001b[39mgetByRole(\u001b[32m'row'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mRegExp\u001b[39m(\u001b[32m`^${label}`\u001b[39m) })\u001b[33m;\u001b[39m\n \u001b[90m  6 |\u001b[39m \u001b[36mconst\u001b[39m applyCode \u001b[33m=\u001b[39m \u001b[36masync\u001b[39m (page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m code\u001b[33m:\u001b[39m string) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Promo code'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Promo code'\u001b[39m)\u001b[33m.\u001b[39mfill(code)\u001b[33m;\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'button'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Apply'\u001b[39m })\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 10 |\u001b[39m }\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts",
+                            "column": 47,
+                            "line": 7
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByLabel('Promo code')\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Promo code')\u001b[22m\n\n\n   5 | const summaryRow = (page: Page, label: string) => page.getByRole('table', { name: 'Order summary' }).getByRole('row', { name: new RegExp(`^${label}`) });\n   6 | const applyCode = async (page: Page, code: string) => {\n>  7 |   await expect(page.getByLabel('Promo code')).toBeVisible();\n     |                                               ^\n   8 |   await page.getByLabel('Promo code').fill(code);\n   9 |   await page.getByRole('button', { name: 'Apply' }).click();\n  10 | };\n    at applyCode (/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts:7:47)\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts:29:11"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-11T11:06:23.812Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/TICKET-44--shop-TICKET-44--08633-n-a-cart-that-pays-shipping-desktop/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/TICKET-44--shop-TICKET-44--08633-n-a-cart-that-pays-shipping-desktop/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts",
+                        "column": 47,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "a1f4befbae193b73a1a3-f151417ec9d634f8a9a8",
+              "file": "TICKET-44.spec.ts",
+              "line": 24,
+              "column": 3
+            },
+            {
+              "title": "[TICKET-44][AC-2] shell an unknown code shows \"Invalid code\" and leaves the total unchanged",
+              "ok": false,
+              "tags": [
+                "shop"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5295,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByLabel('Promo code')\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Promo code')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByLabel('Promo code')\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Promo code')\u001b[22m\n\n    at applyCode (/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts:7:47)\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts:37:11",
+                        "location": {
+                          "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts",
+                          "column": 47,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m \u001b[36mconst\u001b[39m summaryRow \u001b[33m=\u001b[39m (page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m label\u001b[33m:\u001b[39m string) \u001b[33m=>\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'table'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Order summary'\u001b[39m })\u001b[33m.\u001b[39mgetByRole(\u001b[32m'row'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mRegExp\u001b[39m(\u001b[32m`^${label}`\u001b[39m) })\u001b[33m;\u001b[39m\n \u001b[90m  6 |\u001b[39m \u001b[36mconst\u001b[39m applyCode \u001b[33m=\u001b[39m \u001b[36masync\u001b[39m (page\u001b[33m:\u001b[39m \u001b[33mPage\u001b[39m\u001b[33m,\u001b[39m code\u001b[33m:\u001b[39m string) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Promo code'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByLabel(\u001b[32m'Promo code'\u001b[39m)\u001b[33m.\u001b[39mfill(code)\u001b[33m;\u001b[39m\n \u001b[90m  9 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m'button'\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m'Apply'\u001b[39m })\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 10 |\u001b[39m }\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts",
+                            "column": 47,
+                            "line": 7
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  getByLabel('Promo code')\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Promo code')\u001b[22m\n\n\n   5 | const summaryRow = (page: Page, label: string) => page.getByRole('table', { name: 'Order summary' }).getByRole('row', { name: new RegExp(`^${label}`) });\n   6 | const applyCode = async (page: Page, code: string) => {\n>  7 |   await expect(page.getByLabel('Promo code')).toBeVisible();\n     |                                               ^\n   8 |   await page.getByLabel('Promo code').fill(code);\n   9 |   await page.getByRole('button', { name: 'Apply' }).click();\n  10 | };\n    at applyCode (/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts:7:47)\n    at /home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts:37:11"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-11T11:06:29.545Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/TICKET-44--shop-TICKET-44--07a05--leaves-the-total-unchanged-desktop/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/test-results/TICKET-44--shop-TICKET-44--07a05--leaves-the-total-unchanged-desktop/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/agent-qa-kit/agent-qa-kit/examples/shop/e2e/TICKET-44.spec.ts",
+                        "column": 47,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "a1f4befbae193b73a1a3-5b88ee37b8be1bdb8f41",
+              "file": "TICKET-44.spec.ts",
+              "line": 34,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-11T11:06:15.278Z",
+    "duration": 19702.86,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}
