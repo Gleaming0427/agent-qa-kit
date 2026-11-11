@@ -105,7 +105,7 @@ case "${1:-}" in
     commit_as_actor commit --quiet -m "test($TICKET): log the amendment of the approved QA tests"
     git fetch --quiet --no-tags origin "+refs/heads/feat/$TICKET:refs/remotes/origin/feat/$TICKET"
     ( record_copy ) || warn "Could not check how the previous tests of $TICKET reached feat/$TICKET: see the log above. If the pull request conflicts, merge it by hand (HOW_TO_APPLY.md, \"Amend an approved test\")."
-    bash "$KIT/qa/check-scope.sh" scope "origin/feat/$TICKET"
+    bash "$KIT/qa/check-scope.sh" scope "origin/feat/$TICKET" "$TICKET"
     git push --quiet origin "HEAD:refs/heads/qa/$TICKET"
     open="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "qa/$TICKET" --base "feat/$TICKET" --state open --json url --jq '.[0].url // empty')"
     if [[ -n "$open" ]]; then

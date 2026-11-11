@@ -72,7 +72,10 @@ prepare_ticket() {
   app="$(dirname "$(dirname "$(dirname "$context")")")"
 
   gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/pulls/$number/reviews?per_page=100" > "$reviews"
-  approval="$(node "$KIT/qa/github-approval.ts" approval "$ticket" "$GITHUB_REPOSITORY" "$pulls" "$reviews" 2>"$ERR")" || fail "$ticket: $(<"$ERR")"
+  # An approval counts only from someone who can write to the repository, not from a reader who is a member.
+  permissions="$RUNNER_TEMP/$ticket-permissions.json"
+  bash "$KIT/qa/ci-permissions.sh" "$reviews" "$permissions" || echo '{}' > "$permissions"
+  approval="$(node "$KIT/qa/github-approval.ts" approval "$ticket" "$GITHUB_REPOSITORY" "$pulls" "$reviews" "$permissions" 2>"$ERR")" || fail "$ticket: $(<"$ERR")"
   sha="$(jq -r .head_sha <<<"$approval")"; reviewer="$(jq -r .reviewer <<<"$approval")"
   jq -r .body <<<"$approval" > "$RUNNER_TEMP/$ticket-review.md"
 

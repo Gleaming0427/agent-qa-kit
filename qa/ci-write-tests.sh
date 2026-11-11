@@ -69,7 +69,7 @@ case "${1:-}" in
     git add -- "${qa_files[@]}"
     git -c user.name="$GITHUB_ACTOR" -c user.email="$GITHUB_ACTOR_ID+$GITHUB_ACTOR@users.noreply.github.com" \
       commit --quiet -m "test($TICKET): add the QA tests to review"
-    bash "$KIT/qa/check-scope.sh" scope "$GITHUB_SHA"
+    bash "$KIT/qa/check-scope.sh" scope "$GITHUB_SHA" "$TICKET"
     git push --quiet origin "qa/$TICKET"
     # feat/<TICKET> receives the approved tests; the developer's work starts from it.
     branch_exists "feat/$TICKET" || git push --quiet origin "$GITHUB_SHA:refs/heads/feat/$TICKET"

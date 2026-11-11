@@ -102,6 +102,15 @@ case "$TOOL" in
         package.json|package-lock.json|npm-shrinkwrap.json|yarn.lock|pnpm-lock.yaml|playwright.config.*|vite.config.*|vitest.config.*|vitest.workspace.*)
           deny "Repair agent may not change the test setup or dependencies ($rel)" ;;
       esac
+      # What the tests are set up with, by conventional name: setup and teardown files, mocks, fixtures, helpers.
+      # The same two patterns as isSupportFile in qa/check-tooling.ts, which also keeps the files a configuration
+      # names as setup files unchanged during a repair (qa/tooling-integrity.ts).
+      lower="$(printf '%s' "$rel" | tr '[:upper:]' '[:lower:]')"
+      support_dir='(^|/)(__mocks__|__fixtures__|__tests__|tests?|testing|test[-_]?utils|test[-_]?helpers)/'
+      support_name='^(setup[-_]?tests?|test[-_]?setup|global[-_]?(setup|teardown)|test[-_]?(utils?|helpers?)|.+\.(setup|teardown))\.[cm]?[jt]sx?$'
+      if [[ "$lower" =~ $support_dir || "${lower##*/}" =~ $support_name ]]; then
+        deny "Repair agent may not change what the tests are set up with: setup files, mocks, fixtures and test helpers ($rel). If one of them is wrong, say so in your answer instead."
+      fi
     else
       case "$rel" in
         e2e/*.spec.ts|*.test.ts|*.test.tsx) ;;

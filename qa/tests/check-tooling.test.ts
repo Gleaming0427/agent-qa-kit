@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
-import { isConfig, setupFilesOf, toolingChanges, type Reader } from '../check-tooling.ts';
+import { isConfig, isSupportFile, setupFilesOf, toolingChanges, type Reader } from '../check-tooling.ts';
 
 const script = resolve(import.meta.dirname, '../check-tooling.ts');
 
@@ -116,4 +116,44 @@ test('the command compares the pull request with the commit it branched from', (
     assert.match(run(r.dir, 'no-such-branch').err, /Cannot compare no-such-branch with HEAD/);
     assert.equal(run(r.dir).code, 2);
   } finally { rmSync(r.dir, { recursive: true, force: true }); }
+});
+
+const SUPPORT = [
+  'src/setupTests.ts', 'src/setup-tests.tsx', 'src/setup_tests.js', 'src/SetupTests.TS', 'src/testSetup.ts', 'src/test-setup.mts', 'vitest.setup.ts', 'jest.setup.js',
+  'e2e-support/auth.setup.ts', 'support/global.teardown.ts', 'apps/shop/globalSetup.ts', 'global-teardown.cjs', 'src/test-utils.tsx', 'src/testUtils.ts', 'src/test_helpers.ts', 'src/testHelper.ts',
+  'src/__mocks__/api.ts', 'apps/shop/__fixtures__/cart.json', 'src/__tests__/helpers.ts', 'src/tests/helpers.ts', 'test/render.tsx', 'apps/shop/test/render.tsx', 'src/testing/server.ts', 'src/test-utils/index.ts',
+];
+const NOT_SUPPORT = [
+  'src/setup.ts', 'src/App.tsx', 'src/utils.ts', 'src/TestimonialList.tsx', 'src/latest/cart.ts', 'src/contest/entry.ts', 'src/testing-library.md', 'src/setupTests.d.ts', 'src/protests/x.ts', 'src/helpers.ts', 'README.md',
+];
+
+test('test support is recognised by its name: setup files, mocks, fixtures and helpers, not the application', () => {
+  for (const file of SUPPORT) assert.ok(isSupportFile(file), `${file} is test support`);
+  for (const file of NOT_SUPPORT) assert.ok(!isSupportFile(file), `${file} is not`);
+});
+
+test('the guard that stops the repair agent holds the same names as isSupportFile', () => {
+  const guard = resolve(import.meta.dirname, '../../.claude/hooks/qa-guard.sh');
+  const denied = (file: string) => {
+    const result = spawnSync('bash', [guard], {
+      input: JSON.stringify({ tool_name: 'Edit', tool_input: { file_path: file, new_string: 'x' } }), encoding: 'utf8',
+      env: { ...process.env, CLAUDE_PROJECT_DIR: '/project', QA_GUARD_MODE: 'repair' },
+    });
+    return result.status === 2 && /set up with/.test(result.stderr);
+  };
+  for (const file of [...SUPPORT, ...NOT_SUPPORT]) assert.equal(denied(file), isSupportFile(file), `${file}: the guard and isSupportFile disagree`);
+});
+
+test('a pull request that changes a mock, a fixture or a helper is told so; a test file in a tests folder is not', () => {
+  const changes = toolingChanges(['src/__mocks__/api.ts', 'src/tests/helpers.ts', 'src/tests/search.test.ts', 'e2e/TICKET-1.spec.ts', 'src/App.tsx', 'src/test-utils.tsx'], sides({}, {}));
+  assert.deepEqual(changes.map((c) => [c.kind, c.file, c.why]), [
+    ['setup', 'src/__mocks__/api.ts', 'a test setup, mock or helper file'],
+    ['setup', 'src/test-utils.tsx', 'a test setup, mock or helper file'],
+    ['setup', 'src/tests/helpers.ts', 'a test setup, mock or helper file'],
+  ]);
+  // A setup file that a configuration names keeps its more precise reason, and a kit file stays a kit file.
+  const config = "export default { test: { setupFiles: ['./src/setupTests.ts'] } };";
+  assert.deepEqual(toolingChanges(['src/setupTests.ts', 'qa/tests/ci.test.ts', 'qa/tests/helpers.ts'], sides({ 'vitest.config.ts': config }, { 'vitest.config.ts': config }), ['vitest.config.ts']).map((c) => [c.kind, c.why]), [
+    ['kit', 'a file of the kit'], ['kit', 'a file of the kit'], ['setup', 'named in vitest.config.ts as setupFiles'],
+  ]);
 });
