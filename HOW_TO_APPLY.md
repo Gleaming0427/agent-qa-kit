@@ -168,9 +168,10 @@ Choose one or two user journeys whose failure would be costly. Keep their Playwr
 
 The example, `examples/shop`, goes further. `init` does not install these parts; they run in the kit's own CI:
 - a `mobile` Playwright project (Pixel 7) that runs only the `@smoke` tests;
-- a full-page screenshot compared with a committed baseline, only in CI (`ignoreSnapshots: !process.env.CI`), because fonts render differently on each machine. When no baseline exists, CI creates one and publishes it as the `screenshot-baselines` artifact, to commit to `e2e/smoke.spec.ts-snapshots/`. When a comparison fails, the `qa-demo-reports` artifact holds the expected, actual and diff images. The runner is pinned to `ubuntu-24.04` for this reason;
 - an advisory AI visual review, `node qa/visual-review.ts reports/screens reports/visual-review.json`. It sends the screenshots to a vision model (Claude Opus 5.5 by default, `QA_VISUAL_MODEL` to change it) with four checks: text that overflows, overlapping elements, empty sections, and controls off screen. Each finding becomes a warning; the step never fails the build, and is skipped without an `ANTHROPIC_API_KEY`. Screenshots leave your infrastructure: keep it off for pages with sensitive data;
 - the test cycle: the same tests fail with a deliberate bug on, pass with it off, and fail again when it is back on.
+
+The example does not compare screenshots with committed images. A pixel comparison needs the same pixels on every machine, and fonts differ between Mac, Windows and Linux, so it needs baselines made by CI on a pinned runner and remade whenever the page changes. The smoke test takes its screenshots for the visual review only; its other checks, such as a control in view and no sideways scroll, do not depend on the system. An application that wants a pixel comparison can add `toHaveScreenshot` to its own smoke test, in CI only (`ignoreSnapshots: !process.env.CI`), on a pinned runner.
 
 ## 9. Run the agents locally (optional)
 

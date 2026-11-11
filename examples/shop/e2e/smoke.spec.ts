@@ -4,9 +4,7 @@ test('@smoke a shopper can fill a cart and check out', async ({ page }, testInfo
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Shop', exact: true })).toBeVisible();
   await expect(page.getByRole('list', { name: 'Products' }).getByRole('listitem')).toHaveCount(4);
-  // Compared in CI with the committed baseline, one image per project.
-  await expect(page).toHaveScreenshot('shop.png', { fullPage: true });
-  // Kept for the advisory AI visual review (qa/visual-review.ts).
+  // Kept for the advisory AI visual review (qa/visual-review.ts). It is not compared with an image.
   await page.screenshot({ path: `reports/screens/shop-${testInfo.project.name}.png`, fullPage: true, scale: 'css' });
 
   // Usable on every screen size: the first product can be added without scrolling, and nothing scrolls sideways.

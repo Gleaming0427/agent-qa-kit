@@ -7,8 +7,6 @@ export default defineConfig({
   globalTimeout: 5 * 60_000,
   retries: 0,
   reporter: [['list'], ['json', { outputFile: 'reports/playwright.json' }]],
-  // Screenshot baselines are made on Linux CI; fonts render differently elsewhere.
-  ignoreSnapshots: !process.env.CI,
   use: {
     baseURL: 'http://127.0.0.1:4173',
     trace: 'retain-on-failure',
