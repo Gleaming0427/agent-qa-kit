@@ -153,6 +153,7 @@ Computed by `eval/lib/score.ts` (one trial) and `eval/lib/aggregate.ts` (the cam
 - **Clustered standard error.** The trials of one ticket are correlated, so the report also gives the standard error clustered by ticket: `sqrt(sum over tickets of (sum of residuals)^2) / N`.
 - **Reliability.** pass@k is the chance that at least one of k trials succeeds; pass^k is the chance that all k succeed. Both use the unbiased estimators `1 - C(n-c, k)/C(n, k)` and `C(c, k)/C(n, k)` per ticket, averaged over tickets, with k equal to the number of trials per ticket.
 - **Cost, duration and turns** are reported as total, p50 and p95. The cost is the one the Claude CLI reports. Durations and turns are given with the number of runs they cover.
+- **Cost per success** is the cost of all the trials divided by the number of trials that succeeded, for the campaign and for each ticket: what one success cost, the failed trials included. A version that succeeds less often at the same cost per trial costs more per success.
 - **Load.** Effective parallelism is the trials' working time divided by the campaign's span, from the first trial's start to the last one's end. A trial's working time leaves out the installs of each runner.
   - With separate runners, it is the sum of the time each runner worked on the trial; the wait between runners is left out. A scoring job waits until every agent job is done, so counting a trial from its start to its end would count other trials' jobs as its own work.
   - The report also gives each runner's working time: p50, p95 and total.
@@ -225,7 +226,7 @@ node eval/compare.ts --a C --a "C, regression check" --b "D, clean" --b "D, clea
   - it leaves out a ticket whose corpus changed, a ticket that only one side has, and trials with an agent error or a scoring error (a scoring runner that sent nothing back).
 - **Measurements.** Each version's rates over the comparable tickets, with 95% Wilson intervals:
   - trial success, bug detection, trials without a false positive, policy;
-  - cost, duration and tokens, the cost compared ticket by ticket.
+  - cost, duration and tokens, the cost compared ticket by ticket, and the cost per successful trial over the comparable trials (shown, not a rule).
 - **Changes**, ticket by ticket (trial success) and bug by bug (detection). A unit is stable on a side when all its trials agree. Stable on both sides, it is "pass in both", "fail in both", "improved" (fail → pass) or "regressed" (pass → fail). Otherwise it is "unstable", with the direction of the rates.
 - **Statistics.** The unit is the ticket: the trials and the bugs of a ticket are not independent, so they are never counted as separate observations.
   - An exact two-sided sign test runs on the tickets whose rate changed, once for trial success and once for bug detection (each ticket's detection rate over its bugs and trials). Ties are left out.
