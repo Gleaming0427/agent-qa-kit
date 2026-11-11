@@ -104,6 +104,30 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   background: var(--surface);
   color: var(--ink);
 }
+.promo { margin-bottom: 16px; }
+.promo label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 14px; }
+.promo-row { display: flex; gap: 8px; }
+.promo-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--surface);
+}
+.promo-row input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.promo-row button {
+  padding: 8px 14px;
+  border: 1px solid var(--accent);
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 600;
+}
+.promo-row button:hover { background: var(--accent-soft); }
+.promo-error { margin: 8px 0 0; color: #b42318; font-size: 14px; }
 .summary { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-variant-numeric: tabular-nums; }
 .summary th { text-align: left; font-weight: 400; color: var(--muted); padding: 6px 0; }
 .summary td { text-align: right; padding: 6px 0; }

@@ -34,6 +34,17 @@ export function shipping(subtotalCents: number): number {
   return SHIPPING_CENTS;
 }
 
+// Promo codes, and the percentage each one takes off the subtotal. A Map, not an object: "constructor" or
+// "toString" must not count as a code.
+export const PROMO_CODES: ReadonlyMap<string, number> = new Map([['WELCOME10', 10]]);
+
+// The discount a code gives on a subtotal, in whole cents; 0 for a code that does not exist.
+// Shipping is not part of it: it is still worked out on the subtotal before the discount.
+export function discount(code: string, subtotalCents: number): number {
+  const percent = PROMO_CODES.get(code);
+  return percent === undefined ? 0 : Math.round((subtotalCents * percent) / 100);
+}
+
 export function formatPrice(cents: number): string {
   return `€${(cents / 100).toFixed(2)}`;
 }
