@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
 
-# Pinned, not ubuntu-latest: the screenshot baselines depend on the runner's fonts.
+# Pinned, not ubuntu-latest: a new runner image should not change a run that did not change.
 
 jobs:
   deterministic-controls:
@@ -51,23 +51,8 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - run: npm run build
-      - name: Critical user journey smoke test (desktop + mobile, screenshots compared)
-        id: smoke
-        run: |
-          if ls e2e/smoke.spec.ts-snapshots/*.png >/dev/null 2>&1; then
-            npm run test:smoke
-          else
-            # No baselines committed yet: create them on this CI machine and publish them.
-            npm run test:smoke -- --update-snapshots=all
-            echo "created=true" >> "$GITHUB_OUTPUT"
-            echo "::warning::Screenshots were created, not compared. Commit the screenshot-baselines artifact to examples/shop/e2e/smoke.spec.ts-snapshots/."
-          fi
-      - name: Upload new screenshot baselines
-        if: steps.smoke.outputs.created == 'true'
-        uses: actions/upload-artifact@v6
-        with:
-          name: screenshot-baselines
-          path: examples/shop/e2e/smoke.spec.ts-snapshots/
+      - name: Critical user journey smoke test (desktop + mobile)
+        run: npm run test:smoke
       - run: npm run demo:unit
       - run: npm run demo:e2e
       - name: Final full suite on the current code

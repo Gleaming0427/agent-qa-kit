@@ -227,6 +227,22 @@ test('the verify workflow counts an approval only from someone who can write, an
   } finally { cleanup(h.dir); }
 });
 
+test('the verify workflow keeps the reasons of an approval that a later click on Approve left without text', () => {
+  const h = history();
+  try {
+    const approval = (id: number, body: string | null) => ({ id, user: { login: 'alice' }, state: 'APPROVED', commit_id: h.approved, author_association: 'OWNER', body });
+    // Approved with a line per criterion, then approved again with nothing (as when merging): the first still stands.
+    let r = verify(h, { reviews: [approval(1, REASONS), approval(2, null)] });
+    assert.equal(r.code, 0, r.output);
+    const approved = JSON.parse(readFileSync(join(r.ci, `app/reports/${TICKET}-approved.json`), 'utf8'));
+    assert.equal(approved.reviewer, '@alice');
+    // Retracting is done by asking for changes: an approval without text after that has no reasons to keep.
+    r = verify(h, { reviews: [approval(1, REASONS), { ...approval(2, 'no'), state: 'CHANGES_REQUESTED' }, approval(3, null)] });
+    assert.equal(r.code, 1, r.output);
+    assert.match(r.output, /approval of #7 by @alice cannot be used.*AC-1: explain why/);
+  } finally { cleanup(h.dir); }
+});
+
 test('the verify workflow has nothing to check without a ticket that has QA tests', () => {
   const h = history();
   try {

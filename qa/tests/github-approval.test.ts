@@ -130,3 +130,41 @@ test('the QA approval status says why a reader\'s approval does not count', () =
   assert.equal(approvalStatus(pull(), [reader], criteria).state, 'success', 'without the permissions, the association decides, as before');
   assert.equal(approvalStatus(pull(), [reader, review('wes', 'APPROVED')], criteria, { rhea: 'read', wes: 'write' }).state, 'success');
 });
+
+test('a later approval without text does not take back the reasons the same person gave for the same commit', () => {
+  // What happened on a real pull request: approved with a line per criterion, approved again with nothing
+  // (a click on Approve to merge), approved once more with the lines.
+  const reasoned = review('alice', 'APPROVED');
+  const bare = review('alice', 'APPROVED', { body: null });
+  const found = findApproval(pull(), [reasoned, bare]);
+  assert.deepEqual(found, { number: 7, head_sha: latest, reviewer: '@alice', body: reasons }, 'the reasons of the first approval stand');
+  assert.equal(findApproval(pull(), [reasoned, bare, review('alice', 'APPROVED', { body: `${reasons}\\nAC-2: again` })]).body, `${reasons}\\nAC-2: again`, 'the latest approval that gives reasons');
+  assert.equal(findApproval(pull(), [reasoned, review('alice', 'COMMENTED', { body: 'a question' }), bare]).body, reasons, 'a comment in between changes nothing');
+  assert.equal(findApproval(pull(), [reasoned, review('alice', 'APPROVED', { body: '   ' })]).body, reasons, 'a blank body counts as no text');
+  // The status says so too: it is green, not "approved without a reason".
+  assert.equal(approvalStatus(pull(), [reasoned, bare], ['AC-1']).state, 'success');
+});
+
+test('a request for changes, a dismissal, or an older commit still take the reasons away', () => {
+  const reasoned = review('alice', 'APPROVED');
+  const bare = (login = 'alice') => review(login, 'APPROVED', { body: null });
+  // Retracting is done by asking for changes or dismissing, and an approval after that starts again.
+  assert.equal(findApproval(pull(), [reasoned, review('alice', 'CHANGES_REQUESTED'), bare()]).body, '');
+  assert.equal(findApproval(pull(), [reasoned, review('alice', 'DISMISSED'), bare()]).body, '');
+  assert.equal(approvalStatus(pull(), [reasoned, review('alice', 'DISMISSED'), bare()], ['AC-1']).state, 'failure');
+  // Reasons given for an older version of the tests are not reasons for this one.
+  assert.equal(findApproval(pull(), [review('alice', 'APPROVED', { commit_id: older }), bare()]).body, '');
+  assert.match(approvalStatus(pull(), [review('alice', 'APPROVED', { commit_id: older }), bare()], ['AC-1']).description, /@alice approved without a reason for AC-1/);
+  // Someone else's reasons are not alice's: a bare approval by bob next to a reasoned one by alice is alice's.
+  assert.equal(findApproval(pull(), [reasoned, bare('bob')]).reviewer, '@alice');
+  assert.equal(findApproval(pull(), [review('alice', 'APPROVED', { body: null }), bare('bob')]).body, '', 'no reasons from anyone');
+});
+
+test('reasons kept from an earlier approval need the same rights as any approval', () => {
+  const reasoned = review('rhea', 'APPROVED', { author_association: 'MEMBER' });
+  const bare = review('rhea', 'APPROVED', { author_association: 'MEMBER', body: null });
+  assert.throws(() => findApproval(pull(), [reasoned, bare], { rhea: 'read' }), /@rhea cannot approve: only has read access/);
+  assert.equal(findApproval(pull(), [reasoned, bare], { rhea: 'write' }).body, reasons);
+  const outsider = (body: string | null) => review('mallory', 'APPROVED', { author_association: 'NONE', body });
+  assert.throws(() => findApproval(pull(), [outsider(reasons), outsider(null)]), /@mallory cannot approve: not a collaborator/);
+});
