@@ -2,9 +2,12 @@
 # CI check: everyone stays in their lane.
 #
 # Usage:
-#   qa/check-scope.sh scope <base>
+#   qa/check-scope.sh scope <base> [ticket]
 #       On the QA agent's branch: fails if any file other than a test or the
-#       review package (qa-reviews/<ticket>/) was modified compared with <base>.
+#       review package (qa-reviews/<ticket>/) was modified compared with <base>,
+#       or if it changed or removed a test that already existed and is not its own
+#       (qa/check-test-blocks.ts own): the agent adds tests and rewrites the ones it
+#       wrote for <ticket>, never another ticket's, an untagged test or a hook.
 #
 #   qa/check-scope.sh frozen <base> <qa-branch>
 #       On the final branch: fails if a test or review file written by the QA
@@ -17,6 +20,8 @@
 #       must match the QA branch ("frozen"); otherwise the PR may not touch
 #       the ticket's browser tests, e2e/<ticket>.spec.ts, or its review
 #       package, qa-reviews/<ticket>/, at all.
+#       Whatever the branches: a PR may not change or remove a test, in any file, that
+#       carries the tag of a ticket it does not name (qa/check-test-blocks.ts others).
 #
 # This check does not depend on the agents: even if a guard were bypassed
 # during the work, the PR could not be merged.
@@ -24,7 +29,7 @@
 set -uo pipefail
 
 usage() {
-  echo "usage: $0 scope <base> | $0 frozen <base> <qa-branch> | $0 pr <base> <head-branch> [pr-title]" >&2
+  echo "usage: $0 scope <base> [ticket] | $0 frozen <base> <qa-branch> | $0 pr <base> <head-branch> [pr-title]" >&2
   exit 2
 }
 
@@ -63,11 +68,23 @@ check_frozen() {
   echo "Frozen tests: identical to the version written by the QA agent on $qa."
 }
 
+# The tests that already exist, one by one (qa/check-test-blocks.ts), from the kit's own folder.
+BLOCKS="$(cd "$(dirname "$0")" && pwd)/check-test-blocks.ts"
+check_blocks() {
+  [[ -f "$BLOCKS" ]] || { echo "Cannot find $BLOCKS: the kit is incomplete." >&2; return 1; }
+  local out code=0
+  out="$(node "$BLOCKS" "$@" 2>&1)" || code=$?
+  # 1 is a refusal; anything else, such as 2, is a check that could not run, and does not pass either.
+  (( code == 0 )) || { printf '%s\n' "$out"; return 1; }
+  echo "$out"
+}
+
 MODE="${1:-}"
 case "$MODE" in
   scope)
-    [[ $# -eq 2 ]] || usage
-    BASE="$2"; check_ref "$BASE"
+    [[ $# -eq 2 || $# -eq 3 ]] || usage
+    BASE="$2"; TICKET="${3:-}"; check_ref "$BASE"
+    [[ -z "$TICKET" || "$TICKET" =~ ^[A-Z][A-Z0-9]*-[0-9]+$ ]] || usage
     out_of_scope=()
     while IFS= read -r file; do
       [[ -n "$file" ]] || continue
@@ -80,6 +97,7 @@ case "$MODE" in
       exit 1
     fi
     echo "QA scope respected: only tests and the review package were modified."
+    check_blocks own "$BASE" HEAD ${TICKET:+"$TICKET"} || exit 1
     ;;
 
   frozen)
@@ -107,6 +125,9 @@ case "$MODE" in
         failed=1
       fi
     done < <(git for-each-ref --format='%(refname:short)' refs/remotes/origin/qa/)
+    # Not only for the tickets that have a qa/ branch: a branch deleted after its merge protects nothing.
+    # shellcheck disable=SC2086  # $named is a list of tickets, with no spaces inside one
+    check_blocks others "$BASE" HEAD $named || failed=1
     (( failed == 0 )) || exit 1
     echo "Frozen tests respected: $checked ticket(s) with a qa/ branch checked."
     ;;

@@ -4,7 +4,8 @@
 cd "$(dirname "$0")/.." || exit 1
 SCOPE="$PWD/qa/check-scope.sh"
 REPO="$(mktemp -d)"
-trap 'rm -rf "$REPO"' EXIT
+REPO2="$(mktemp -d)"
+trap 'rm -rf "$REPO" "$REPO2"' EXIT
 cd "$REPO" || exit 1
 git init -q -b main
 git config user.email qa@example.invalid
@@ -99,5 +100,85 @@ expect 0 'QA branch changes only tests and its review'       qa/TICKET-42 scope 
 expect 1 'QA branch changes the application'                  qa/TICKET-60 scope origin/main
 expect 0 'frozen: tests identical to the QA branch'           feat/TICKET-42 frozen origin/main origin/qa/TICKET-42
 expect 1 'frozen: a QA test was edited'                       feat/TICKET-42-test-edited frozen origin/main origin/qa/TICKET-42
+# A second history, where main already holds the unit tests of a ticket: nothing refers to a qa/ branch.
+cd "$REPO2" || exit 1
+git init -q -b main
+git config user.email qa@example.invalid
+git config user.name QA
+mkdir -p src
+cat > src/App.test.tsx <<'TESTS'
+test('[TICKET-42][AC-1] the button clears the search', () => {
+  expect(clear()).toBe('');
+});
+beforeEach(() => {
+  reset();
+});
+test('an older feature', () => {
+  expect(older()).toBe(true);
+});
+TESTS
+echo 'export const clear = () => "";' > src/App.tsx
+commit 'base: a ticket and its unit test are on main'
+git update-ref refs/remotes/origin/main main
+
+branch fix/unit-weakened main
+sed -i.bak "s/expect(clear()).toBe('');/expect(clear()).toBeDefined();/" src/App.test.tsx && rm -f src/App.test.tsx.bak
+commit 'weaken the unit test of a ticket, unnamed'
+branch fix/unit-removed main
+sed -i.bak '1,3d' src/App.test.tsx && rm -f src/App.test.tsx.bak
+commit 'remove the unit test of a ticket'
+branch fix/unit-moved main
+git mv src/App.test.tsx src/Search.test.tsx
+commit 'move the test file of a ticket'
+branch feat/TICKET-50 main
+echo "test('[TICKET-50][AC-1] sorts', () => {});" >> src/App.test.tsx
+sed -i.bak "s/toBe(true)/toBe(false)/" src/App.test.tsx && rm -f src/App.test.tsx.bak
+commit 'another ticket adds a test, and changes an older one that has no ticket'
+branch feat/TICKET-51 main
+echo "test('[TICKET-51][AC-1] filters', () => {});" >> src/App.test.tsx
+echo 'export const filter = 1;' >> src/App.tsx
+commit 'another ticket adds a test and changes the application'
+branch feat/TICKET-50-edits-42 main
+sed -i.bak "s/toBe('')/toBe('x')/" src/App.test.tsx && rm -f src/App.test.tsx.bak
+commit 'a pull request that names another ticket edits the test of TICKET-42'
+branch qa/TICKET-70 main
+echo "test('[TICKET-70][AC-1] new', () => {});" >> src/App.test.tsx
+commit 'the QA agent adds a test'
+branch qa/TICKET-71 main
+sed -i.bak "s/toBe(true)/toBe(false)/" src/App.test.tsx && rm -f src/App.test.tsx.bak
+echo "test('[TICKET-71][AC-1] new', () => {});" >> src/App.test.tsx
+commit 'the QA agent rewrites a test that has no ticket'
+branch qa/TICKET-72 main
+sed -i.bak "s/toBe('')/toBe('x')/" src/App.test.tsx && rm -f src/App.test.tsx.bak
+commit 'the QA agent rewrites the test of another ticket'
+branch qa/TICKET-73 main
+sed -i.bak "s|expect(older()).toBe(true);|expect(older()).toBe(true); // with a comment|" src/App.test.tsx && rm -f src/App.test.tsx.bak
+commit 'the QA agent edits an older test, without a ticket to name'
+branch qa/TICKET-74 main
+sed -i.bak "s/reset();/reset(1);/" src/App.test.tsx && rm -f src/App.test.tsx.bak
+echo "test('[TICKET-74][AC-1] new', () => {});" >> src/App.test.tsx
+commit 'the QA agent changes a hook that was there, and adds a test'
+branch qa/TICKET-75 main
+sed -i.bak "s/^test('an older feature'/beforeEach(() => {});\ntest('an older feature'/" src/App.test.tsx && rm -f src/App.test.tsx.bak
+echo "test('[TICKET-75][AC-1] new', () => {});" >> src/App.test.tsx
+commit 'the QA agent adds a hook of its own and a test'
+
+echo 'Every pull request: the tests of a ticket it does not name'
+expect 1 'unnamed PR weakens the unit test of a ticket'              fix/unit-weakened pr origin/main fix/unit-weakened 'Tidy up'
+expect 1 'unnamed PR removes the unit test of a ticket'              fix/unit-removed pr origin/main fix/unit-removed 'Tidy up'
+expect 1 'unnamed PR moves the test file of a ticket'                fix/unit-moved pr origin/main fix/unit-moved 'Rename tests'
+expect 0 'PR named by its title: the frozen check decides'           fix/unit-weakened pr origin/main fix/unit-weakened 'TICKET-42: tidy up'
+expect 1 'PR that names another ticket edits the test of TICKET-42'  feat/TICKET-50-edits-42 pr origin/main feat/TICKET-50-edits-42 'TICKET-50: sort'
+expect 0 'another ticket adds tests and edits an untagged one'       feat/TICKET-50 pr origin/main feat/TICKET-50 'TICKET-50: sort'
+expect 0 'another ticket only adds a test'                           feat/TICKET-51 pr origin/main feat/TICKET-51 'TICKET-51: filter'
+echo 'A QA branch changes only its own tests'
+expect 0 'QA branch adds a test'                                     qa/TICKET-70 scope origin/main TICKET-70
+expect 0 'QA branch adds a test, no ticket given'                    qa/TICKET-70 scope origin/main
+expect 1 'QA branch rewrites a test that has no ticket'              qa/TICKET-71 scope origin/main TICKET-71
+expect 1 'QA branch rewrites the test of another ticket'             qa/TICKET-72 scope origin/main TICKET-72
+expect 1 'QA branch edits an older test, no ticket given'            qa/TICKET-73 scope origin/main
+expect 1 'QA branch changes a hook that was there'                   qa/TICKET-74 scope origin/main TICKET-74
+expect 0 'QA branch adds a hook of its own (not looked at)'          qa/TICKET-75 scope origin/main TICKET-75
+expect 2 'a ticket that is not a ticket'                             qa/TICKET-70 scope origin/main notes
 echo
 if [[ "$failures" == 0 ]]; then echo "All $n branch rule cases behave as expected."; else echo "$failures of $n cases failed"; exit 1; fi

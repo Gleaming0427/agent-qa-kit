@@ -5,7 +5,8 @@
 # The application may live outside the kit: set QA_PROJECT_DIR to its folder.
 # Codes: 0 pass; 1 still failing after the last attempt; 2 blocked;
 #        3 infrastructure error, attempt limit, or a repair that touched the tests,
-#        the installed packages (node_modules/) or the git files.
+#        the installed packages (node_modules/), the git files or the test setup (package.json, the
+#        test configuration, setup files, mocks and helpers).
 set -uo pipefail
 fail() { echo "repair-loop: $1" >&2; exit 3; }
 [[ $# -eq 3 ]] || fail 'usage: qa/repair-loop.sh <TICKET> <spec file> <mfe>'
@@ -32,12 +33,12 @@ SYSTEM_PROMPT="$(mktemp)"
 trap 'rm -f "$SYSTEM_PROMPT"' EXIT
 awk '/^---$/ && n < 2 { n++; next } n >= 2' "$AGENT" > "$SYSTEM_PROMPT"
 [[ -s "$SYSTEM_PROMPT" ]] || fail 'Empty repair agent prompt'
-# The installed packages and git files before any agent runs. Kept in memory, not on
+# The installed packages, git files and test setup files before any agent runs. Kept in memory, not on
 # disk, so that code run by the tests cannot rewrite the reference.
-TOOLING="$(node "$KIT/qa/tooling-integrity.ts" snapshot)" || fail 'cannot record node_modules and the git files'
+TOOLING="$(node "$KIT/qa/tooling-integrity.ts" snapshot)" || fail 'cannot record node_modules, the git files and the test setup'
 check_tooling() {
   node "$KIT/qa/tooling-integrity.ts" compare <<<"$TOOLING" \
-    || fail "node_modules or the git files changed during the $1: do not trust this run, reinstall the dependencies (npm ci, or pnpm install) and review the repair"
+    || fail "node_modules, the git files or the test setup (package.json, the test configuration, setup files, mocks and helpers) changed during the $1: do not trust this run, reinstall the dependencies (npm ci, or pnpm install), restore the test setup (git checkout) and review the repair"
 }
 # The kit's own files, which the commands of the agent and of the tests can reach when the application
 # is at the root of its repository. Checked with the functions above, before any script of the kit runs.

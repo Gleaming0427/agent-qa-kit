@@ -39,6 +39,9 @@ echo "$*" >> "${dir}/calls.log"
 case "$*" in
   'api repos/acme/shop/pulls/7') cat "${dir}/pull.json" ;;
   *'/pulls/7/reviews'*) cat "${dir}/reviews.json" ;;
+  # Who may write to the repository: permissions.json when a test gives one, else the call fails.
+  *'/collaborators/'*'/permission'*) login="\${2#repos/acme/shop/collaborators/}"; login="\${login%/permission}"
+    [[ -f "${dir}/permissions.json" ]] && jq -er --arg l "$login" '.[$l] // empty' "${dir}/permissions.json" ;;
   'api --silent -X POST repos/acme/shop/statuses/'*) ;;
   *) echo "unexpected gh call: $*" >&2; exit 1 ;;
 esac
@@ -83,6 +86,26 @@ test('a QA pull request gets a red "QA approval" status on its latest commit unt
     assert.equal(r.code, 0, r.output);
     assert.equal(r.posted, call(s.tests, 'success', 'Approved by @alice, with a reason per criterion. Ready to merge.'));
     assert.match(r.summary, /: complete\. Approved by @alice/);
+  } finally { rmSync(s.dir, { recursive: true, force: true }); }
+});
+
+test('the "QA approval" status ignores the approval of someone who can only read', () => {
+  const s = setup();
+  try {
+    const approved = [{ id: 2, user: { login: 'rhea' }, state: 'APPROVED', commit_id: s.tests, author_association: 'MEMBER', body: REASONS }];
+    let r = status(s, { reviews: approved });
+    assert.equal(r.code, 0, r.output);
+    assert.equal(r.posted, call(s.tests, 'success', 'Approved by @rhea, with a reason per criterion. Ready to merge.'), 'permission unknown: the association decides, as before');
+    assert.match(r.output, /Could not read the repository permission of rhea/);
+
+    writeFileSync(join(s.dir, 'permissions.json'), JSON.stringify({ rhea: 'read' }));
+    r = status(s, { reviews: approved });
+    assert.equal(r.code, 0, r.output);
+    assert.equal(r.posted, call(s.tests, 'failure', 'This pull request has no valid approval: @rhea cannot approve: only has read access to the repository, and writing needs write access.'));
+
+    writeFileSync(join(s.dir, 'permissions.json'), JSON.stringify({ rhea: 'write' }));
+    r = status(s, { reviews: approved });
+    assert.match(r.posted ?? '', /state=success/);
   } finally { rmSync(s.dir, { recursive: true, force: true }); }
 });
 

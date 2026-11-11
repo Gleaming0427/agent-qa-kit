@@ -19,6 +19,10 @@ jobs:
           path: base-kit
           sparse-checkout: qa
           persist-credentials: false
+      # The checks that read the test files are Node.js scripts.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
       - name: Pick the rules
         run: |
           if [ -f base-kit/qa/check-scope.sh ]; then
@@ -31,12 +35,15 @@ jobs:
         env:
           BASE: ${{ github.base_ref }}
         run: git fetch --no-tags origin "+refs/heads/$BASE:refs/remotes/origin/$BASE" '+refs/heads/qa/*:refs/remotes/origin/qa/*'
-      - name: A QA branch may only change tests
+      - name: A QA branch may only add tests, and change only its own
         if: startsWith(github.head_ref, 'qa/')
         env:
           BASE: ${{ github.base_ref }}
-        run: bash "$QA_SCOPE" scope "origin/$BASE"
-      - name: Tests of a ticket with a qa/ branch stay frozen
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          ticket="$(grep -xE '[A-Z][A-Z0-9]*-[0-9]+' <<<"${HEAD_REF#qa/}" || true)"
+          bash "$QA_SCOPE" scope "origin/$BASE" ${ticket:+"$ticket"}
+      - name: Tests of a ticket stay frozen, and no pull request changes another ticket's tests
         env:
           BASE: ${{ github.base_ref }}
           PR_TITLE: ${{ github.event.pull_request.title }}
