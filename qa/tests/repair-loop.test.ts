@@ -54,6 +54,7 @@ echo "repair" >> calls
 [[ "\${FAKE_TAMPER_HELPER:-0}" == 1 ]] && echo 'globalThis.expect = () => ({});' >> src/helpers/server.ts
 [[ "\${FAKE_TAMPER_MOCK:-0}" == 1 ]] && echo 'export const api = { cheat: true };' > src/__mocks__/api.ts
 [[ "\${FAKE_ADD_MOCK:-0}" == 1 ]] && echo 'export const extra = 1;' > src/__mocks__/extra.ts
+[[ "\${FAKE_FOLDERS:-0}" == 1 ]] && mkdir -p .claude/.cc-writes .claude/commands qa/cache
 [[ "\${FAKE_TAMPER_PACKAGE:-0}" == 1 ]] && echo '{ "scripts": { "test": "true" } }' > package.json
 [[ "\${FAKE_FIX_APP:-0}" == 1 ]] && echo 'export const App = () => "fixed";' > src/App.tsx
 jq -n '{result: "{\\"needs_human\\": false}", total_cost_usd: 0.4, is_error: false}'
@@ -145,6 +146,11 @@ test('a mock added by a repair stops the loop; a fix to the application does not
     assert.deepEqual(r.calls.map((c) => c.split(' ')[0]), ['verify', 'repair', 'verify']);
   });
 });
+test('the empty folders that Claude Code creates in the project are not taken for a change by the kit or by the test setup', () => inProject([1, 0], (root) => {
+  const r = run(root, { FAKE_FOLDERS: '1' });
+  assert.equal(r.code, 0, r.output);
+  assert.deepEqual(r.calls.map((c) => c.split(' ')[0]), ['verify', 'repair', 'verify']);
+}));
 test('with one allowed verification, nothing is repaired', () => inProject([1], (root) => {
   const r = run(root, { QA_MAX_VERIFY_ATTEMPTS: '1' });
   assert.equal(r.code, 1);
