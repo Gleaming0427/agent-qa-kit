@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Security: what an agent's session reads
+
+A Claude Code session starts what the project tells it to, outside the sandbox: the hooks of `.claude/settings.json` and the servers of `.mcp.json` run as commands, and `CLAUDE.md` goes to the model as instructions. A pull request can change all of them, and a session in a project with a planted hook and MCP server ran both (with `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`, they no longer saw the API key, but still ran). `qa/run-qa.sh` and `qa/repair-loop.sh` now start the agents with:
+
+- `--setting-sources ""`: no settings, hooks or memory files from the project or the user; the kit's settings file (`--settings`) is still read, hooks included (checked);
+- `--strict-mcp-config` and `--disable-slash-commands`: no MCP server, no skill, no command;
+- `--tools` from the `tools:` line of the agent's file (`qa/kit-integrity.sh`, `kit_session_args`): 6 tools for the writer and the repair agent and 4 for the verifier, instead of 24, with no sub-agents and no web tools.
+
+`QA_SETTING_SOURCES=user` also reads `~/.claude`, for a machine where the login or provider is set in the user's settings; any other value stops the run before the agent starts. Measured with Claude Code 2.1.303 against a stand-in for the API that recorded what was sent (nothing was billed): the default session sent the project's and the user's memory files and ran both hooks; with the options, none of it. Not yet run in a full agent run on a runner.
+
 ## v0.3.1, 11 November 2026
 
 Since v0.3.0 the kit's own scripts are out of reach of the code they judge, and the kit has run for the first time on a GitHub-hosted runner with a ticket (QA write tests, then QA verify, on a demo ticket), which found two defects that the kit's stand-ins could not show. A review of the kit's security found five gaps; all five are closed, each with regression tests. The agents' prompts and settings files are unchanged; the sandbox now also keeps the kit's folders read-only when an agent starts, and the repair agent's guard denies more. The campaigns of v0.3.0 were not run again: they still describe the writer and the verifier, whose prompts did not change. Run `npx github:Gleaming0427/agent-qa-kit init` again to upgrade.
