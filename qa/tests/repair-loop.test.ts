@@ -44,6 +44,7 @@ exit "$code"
   writeFileSync(join(root, 'bin/claude'), `#!/usr/bin/env bash
 printf '%s' "$2" > "repair-request-$(ls repair-request-* 2>/dev/null | wc -l | tr -d ' ')"
 printf '%s\\n' "$@" > repair-args-used
+printf '%s' "\${CLAUDE_CODE_DISABLE_AUTO_MEMORY-unset}" > repair-auto-memory
 while [[ $# -gt 0 ]]; do [[ "$1" == --settings ]] && printf '%s' "$2" > repair-settings-used.json; shift; done
 echo "repair" >> calls
 [[ "\${FAKE_TAMPER:-0}" == 1 ]] && touch tests-changed
@@ -178,6 +179,7 @@ test('the repair agent starts with its own tools and nothing from the project', 
   assert.equal(after('--setting-sources'), '', 'no settings, hooks or memory files from the project');
   assert.ok(args.includes('--strict-mcp-config') && args.includes('--disable-slash-commands'));
   assert.ok(args.includes('--settings'), 'the settings file of the kit is still given');
+  assert.equal(readFileSync(join(root, 'repair-auto-memory'), 'utf8'), '1', 'no auto memory either');
 }));
 test('a value of QA_SETTING_SOURCES that would read the project\'s settings stops the loop before any agent starts', () => inProject([1, 0], (root) => {
   const r = run(root, { QA_SETTING_SOURCES: 'local' });

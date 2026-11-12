@@ -11,11 +11,12 @@
 
 A Claude Code session starts what the project tells it to, outside the sandbox: the hooks of `.claude/settings.json` and the servers of `.mcp.json` run as commands, and `CLAUDE.md` goes to the model as instructions. A pull request can change all of them, and a session in a project with a planted hook and MCP server ran both (with `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`, they no longer saw the API key, but still ran). `qa/run-qa.sh` and `qa/repair-loop.sh` now start the agents with:
 
-- `--setting-sources ""`: no settings, hooks or memory files from the project or the user; the kit's settings file (`--settings`) is still read, hooks included (checked);
+- `--setting-sources ""`: no settings, hooks or `CLAUDE.md` from the project or the user; the kit's settings file (`--settings`) is still read, hooks included (checked);
+- `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`: no auto memory. `--setting-sources ""` leaves it on, and a `MEMORY.md` planted in the project's folder of `~/.claude/projects` reached the writer's context: on a developer's machine, what the developer's own sessions on the project remembered. The setting also takes about 2,800 characters out of the agents' fixed context;
 - `--strict-mcp-config` and `--disable-slash-commands`: no MCP server, no skill, no command;
 - `--tools` from the `tools:` line of the agent's file (`qa/kit-integrity.sh`, `kit_session_args`): 6 tools for the writer and the repair agent and 4 for the verifier, instead of 24, with no sub-agents and no web tools.
 
-`QA_SETTING_SOURCES=user` also reads `~/.claude`, for a machine where the login or provider is set in the user's settings; any other value stops the run before the agent starts. Measured with Claude Code 2.1.303 against a stand-in for the API that recorded what was sent (nothing was billed): the default session sent the project's and the user's memory files and ran both hooks; with the options, none of it. Not yet run in a full agent run on a runner.
+`QA_SETTING_SOURCES=user` also reads `~/.claude`, for a machine where the login or provider is set in the user's settings; any other value stops the run before the agent starts. Measured with Claude Code 2.1.303 against a stand-in for the API that recorded what was sent (nothing was billed): the default session sent the project's and the user's `CLAUDE.md` and ran both hooks; with the options, none of it. Run since in QA eval, with the real model, against a reference of the agents before the change: `eval/results/2026-11-12-session-surface.md`.
 
 ## v0.3.1, 11 November 2026
 
