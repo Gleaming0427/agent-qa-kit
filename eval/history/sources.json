@@ -999,6 +999,74 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 43173061289,
+      "run_number": 50,
+      "branch": "main",
+      "started_at": "2026-11-12T07:08:25Z",
+      "commit": "7ab7106ffe5b6d70bba329c666671a831f5f711a",
+      "label": "main, reference, smoke tickets, run 50",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 43173061289,
+        "commit": "7ab7106ffe5b6d70bba329c666671a831f5f711a"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-43173061289.json",
+        "sha256": "474f3b6954b0c4011b3f48699d8e80e0375ac5d1e7099bc654fd875f39a16710",
+        "artifact": {
+          "id": 13924046818,
+          "name": "eval-report",
+          "digest": "sha256:44c84d147f88ccb55e70388623cbd4278d3e2408bbae30cd1eea04f98c8b4bed"
+        }
+      },
+      "doc": "eval/results/2026-11-12-session-surface.md",
+      "notes": [
+        "The agents of main at v0.3.1 and #55, on the tickets of the smoke selection of run 49 (EVAL-1, EVAL-4, EVAL-8, EVAL-9, EVAL-10, EVAL-15), measured as the reference for the session options of run 49: the same demo shop and scoring code. 17 of 18 trials successful; one false positive (EVAL-10)."
+      ],
+      "inputs": {
+        "tickets": "EVAL-1 EVAL-4 EVAL-8 EVAL-9 EVAL-10 EVAL-15",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
+    },
+    {
+      "run_id": 43179403294,
+      "run_number": 51,
+      "branch": "main",
+      "started_at": "2026-11-12T08:00:04Z",
+      "commit": "598cb7dcb4b97a5bc5a3ca4fca541f0254ee4c44",
+      "label": "follow-up of session surface, EVAL-8 EVAL-15, run 51",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 43179403294,
+        "commit": "598cb7dcb4b97a5bc5a3ca4fca541f0254ee4c44"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-43179403294.json",
+        "sha256": "8ed26c59253e95934e239ad2880f66a0bdeb77ba6878bd560a4fbd804e1bc732",
+        "artifact": {
+          "id": 13925782651,
+          "name": "eval-report",
+          "digest": "sha256:59d7ac9ecfb2183e6f218def00d99ea9768051fe4c297a48ee199964a632d485"
+        }
+      },
+      "doc": "eval/results/2026-11-12-session-surface.md",
+      "notes": [
+        "The follow-up the release decision of run 49 against run 50 asked for: EVAL-8 and EVAL-15, 3 trials each, with the agents of run 49 (main after #56). 6 of 6 trials successful, no false positive, 12 of 12 injected bugs detected."
+      ],
+      "inputs": {
+        "tickets": "EVAL-8 EVAL-15",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }
