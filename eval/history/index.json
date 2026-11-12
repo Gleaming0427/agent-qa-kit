@@ -627,5 +627,24 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 1.5021
+  },
+  {
+    "id": "gh-43179403294",
+    "label": "follow-up of session surface, EVAL-8 EVAL-15, run 51",
+    "role": "campaign",
+    "started_at": "2026-11-12T08:00:04Z",
+    "commit": "598cb7d",
+    "agent": "060b432cb4b8",
+    "writer_prompt": "9ee1763",
+    "scoring": "original at 598cb7d",
+    "tickets": 2,
+    "trials": 6,
+    "agent_errors": 0,
+    "successes": 6,
+    "bugs_detected": "12/12",
+    "trials_with_false_positives": 0,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 0.5973
   }
 ]
