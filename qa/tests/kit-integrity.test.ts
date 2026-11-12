@@ -121,6 +121,52 @@ test('the sandbox is told to keep the kit\'s folders read-only, as absolute path
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
+// The options kit_session_args gives a session, one per line (an empty option is an empty line).
+function sessionArgs(agent: string, env: Record<string, string> = {}) {
+  const result = spawnSync('bash', ['-c', 'source "$1"; kit_session_args "$2" && printf "%s\\n" "${SESSION_ARGS[@]}"', 'bash', helper, agent], { encoding: 'utf8', env: { ...process.env, QA_SETTING_SOURCES: '', ...env } });
+  return { code: result.status, args: result.stdout === '' ? [] : result.stdout.split('\n').slice(0, -1), err: result.stderr.trim() };
+}
+const valueAfter = (args: string[], flag: string) => args[args.indexOf(flag) + 1];
+
+test('a session has the tools of its agent\'s file, no MCP server, no command and nothing from the project', () => {
+  // What each agent may use is its `tools:` line: a change of it is a change of what the agent can do.
+  for (const [agent, tools] of [['qa-writer', 'Read,Grep,Glob,Write,Edit,Bash'], ['qa-verifier', 'Read,Grep,Glob,Bash'], ['qa-repairer', 'Read,Grep,Glob,Write,Edit,Bash']]) {
+    const r = sessionArgs(join(kit, `.claude/agents/${agent}.md`));
+    assert.equal(r.code, 0, `${agent}: ${r.err}`);
+    assert.equal(valueAfter(r.args, '--tools'), tools, agent);
+    assert.equal(valueAfter(r.args, '--setting-sources'), '', `${agent}: no settings, hooks or memory files from the project or the user`);
+    assert.ok(r.args.includes('--strict-mcp-config'), `${agent}: no MCP server`);
+    assert.ok(r.args.includes('--disable-slash-commands'), `${agent}: no skills or commands`);
+  }
+});
+
+test('the user\'s own settings can be read, and nothing else can be added', () => {
+  const agent = join(kit, '.claude/agents/qa-writer.md');
+  assert.equal(valueAfter(sessionArgs(agent, { QA_SETTING_SOURCES: 'user' }).args, '--setting-sources'), 'user');
+  for (const value of ['project', 'local', 'user,project', 'project,user', 'User', ' user']) {
+    const r = sessionArgs(agent, { QA_SETTING_SOURCES: value });
+    assert.equal(r.code, 1, value);
+    assert.match(r.err, /QA_SETTING_SOURCES must be empty or "user"/, value);
+  }
+});
+
+test('an agent\'s file without a usable tools line gives no session', () => {
+  const root = folder({
+    'no-tools.md': '---\nname: x\nmodel: sonnet\n---\ntools: Bash\n', // a line of the prompt is not the frontmatter
+    'bad-tools.md': '---\nname: x\ntools: Read; rm -rf /\n---\n',
+    'empty-tools.md': '---\nname: x\ntools:\n---\n',
+    'ok.md': '---\nname: x\ntools: Read,  Grep\n---\n',
+  });
+  try {
+    for (const name of ['no-tools', 'bad-tools', 'empty-tools']) {
+      const r = sessionArgs(join(root, `${name}.md`));
+      assert.equal(r.code, 1, name);
+      assert.match(r.err, /no tools line in the frontmatter/, name);
+    }
+    assert.equal(valueAfter(sessionArgs(join(root, 'ok.md')).args, '--tools'), 'Read,Grep', 'spaces are dropped');
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
 // qa/run-qa.sh in a project where claude, the criteria and the verdict check are stand-ins, so what
 // the launcher does around the agent can be tested without a model.
 function project(layout: 'application-at-the-root' | 'kit-outside-the-project') {
@@ -146,6 +192,7 @@ console.log(JSON.stringify({ verdict: 'ready' }));
     write(appDir, '.claude/settings.json', '{}\n');
   }
   write(root, 'bin/claude', `#!/usr/bin/env bash
+printf '%s\\n' "$@" > claude-args-used
 while [[ $# -gt 0 ]]; do [[ "$1" == --settings ]] && printf '%s' "$2" > claude-settings-used.json; shift; done
 case "\${FAKE_TAMPER:-}" in
   qa) echo '// written by a test the agent ran' >> qa/check-tests.ts ;;
@@ -188,6 +235,28 @@ test('the agent starts with the kit\'s folders read-only in its sandbox', () => 
   assert.equal(settings.sandbox.enabled, true);
   assert.equal(settings.sandbox.failIfUnavailable, true);
   assert.ok(settings.hooks.PreToolUse, 'the hooks of the settings stay');
+}));
+
+test('the agent starts with its own tools and nothing from the project, and the kit\'s settings file is still the one it reads', () => inProject('kit-outside-the-project', (p) => {
+  const r = runQa(p);
+  assert.equal(r.code, 0, r.output);
+  const args = readFileSync(join(p.appDir, 'claude-args-used'), 'utf8').split('\n').slice(0, -1);
+  assert.equal(valueAfter(args, '--tools'), 'Read,Grep,Glob,Write,Edit,Bash');
+  assert.equal(valueAfter(args, '--setting-sources'), '');
+  assert.ok(args.includes('--strict-mcp-config') && args.includes('--disable-slash-commands'));
+  assert.ok(args.includes('--settings'), 'the settings file of the kit is still given');
+  assert.equal(valueAfter(args, '--permission-mode'), 'dontAsk');
+}));
+
+test('a value of QA_SETTING_SOURCES that would read the project\'s settings stops the run before the agent starts', () => inProject('application-at-the-root', (p) => {
+  const r = runQa(p, { QA_SETTING_SOURCES: 'project' });
+  assert.equal(r.code, 3, r.output);
+  assert.match(r.output, /QA_SETTING_SOURCES must be empty or "user"/);
+  assert.equal(existsSync(join(p.appDir, 'claude-args-used')), false, 'claude was not started');
+  // The user's own settings are the one thing that can be added.
+  assert.equal(runQa(p, { QA_SETTING_SOURCES: 'user' }).code, 0);
+  const args = readFileSync(join(p.appDir, 'claude-args-used'), 'utf8').split('\n').slice(0, -1);
+  assert.equal(valueAfter(args, '--setting-sources'), 'user');
 }));
 
 test('the test code of an agent that rewrites the kit is caught before any script of the kit runs again', () => {

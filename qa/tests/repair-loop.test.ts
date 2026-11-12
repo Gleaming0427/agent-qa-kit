@@ -43,6 +43,7 @@ exit "$code"
   writeFileSync(join(root, 'qa/check-tests.ts'), '');
   writeFileSync(join(root, 'bin/claude'), `#!/usr/bin/env bash
 printf '%s' "$2" > "repair-request-$(ls repair-request-* 2>/dev/null | wc -l | tr -d ' ')"
+printf '%s\\n' "$@" > repair-args-used
 while [[ $# -gt 0 ]]; do [[ "$1" == --settings ]] && printf '%s' "$2" > repair-settings-used.json; shift; done
 echo "repair" >> calls
 [[ "\${FAKE_TAMPER:-0}" == 1 ]] && touch tests-changed
@@ -167,6 +168,22 @@ test('code planted by a repair that changes the kit while the tests run stops th
   assert.equal(r.code, 3);
   assert.deepEqual(r.calls.map((c) => c.split(' ')[0]), ['verify', 'repair', 'verify']);
   assert.match(r.output, /the kit's own files changed during the verification \(qa\/summary\.ts\)/);
+}));
+test('the repair agent starts with its own tools and nothing from the project', () => inProject([1, 0], (root) => {
+  const r = run(root);
+  assert.equal(r.code, 0);
+  const args = readFileSync(join(root, 'repair-args-used'), 'utf8').split('\n').slice(0, -1);
+  const after = (flag: string) => args[args.indexOf(flag) + 1];
+  assert.equal(after('--tools'), 'Read,Grep,Glob,Write,Edit,Bash', 'the tools of qa-repairer.md');
+  assert.equal(after('--setting-sources'), '', 'no settings, hooks or memory files from the project');
+  assert.ok(args.includes('--strict-mcp-config') && args.includes('--disable-slash-commands'));
+  assert.ok(args.includes('--settings'), 'the settings file of the kit is still given');
+}));
+test('a value of QA_SETTING_SOURCES that would read the project\'s settings stops the loop before any agent starts', () => inProject([1, 0], (root) => {
+  const r = run(root, { QA_SETTING_SOURCES: 'local' });
+  assert.equal(r.code, 3);
+  assert.match(r.output, /QA_SETTING_SOURCES must be empty or "user"/);
+  assert.deepEqual(r.calls, [], 'no verification and no repair');
 }));
 test('the repair agent starts with the kit\'s folders read-only in the sandbox', () => inProject([1, 0], (root) => {
   const r = run(root);
