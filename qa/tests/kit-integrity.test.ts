@@ -138,6 +138,10 @@ test('a session has the tools of its agent\'s file, no MCP server, no command an
     assert.ok(r.args.includes('--strict-mcp-config'), `${agent}: no MCP server`);
     assert.ok(r.args.includes('--disable-slash-commands'), `${agent}: no skills or commands`);
   }
+  // And no auto memory: kit_session_args exports the switch for the session it prepares.
+  const memory = spawnSync('bash', ['-c', 'source "$1"; kit_session_args "$2" && printf "%s" "$CLAUDE_CODE_DISABLE_AUTO_MEMORY"', 'bash', helper, join(kit, '.claude/agents/qa-writer.md')],
+    { encoding: 'utf8', env: { ...process.env, QA_SETTING_SOURCES: '', CLAUDE_CODE_DISABLE_AUTO_MEMORY: '0' } });
+  assert.equal(memory.stdout, '1');
 });
 
 test('the user\'s own settings can be read, and nothing else can be added', () => {
@@ -193,6 +197,7 @@ console.log(JSON.stringify({ verdict: 'ready' }));
   }
   write(root, 'bin/claude', `#!/usr/bin/env bash
 printf '%s\\n' "$@" > claude-args-used
+printf '%s' "\${CLAUDE_CODE_DISABLE_AUTO_MEMORY-unset}" > claude-auto-memory
 while [[ $# -gt 0 ]]; do [[ "$1" == --settings ]] && printf '%s' "$2" > claude-settings-used.json; shift; done
 case "\${FAKE_TAMPER:-}" in
   qa) echo '// written by a test the agent ran' >> qa/check-tests.ts ;;
@@ -246,6 +251,14 @@ test('the agent starts with its own tools and nothing from the project, and the 
   assert.ok(args.includes('--strict-mcp-config') && args.includes('--disable-slash-commands'));
   assert.ok(args.includes('--settings'), 'the settings file of the kit is still given');
   assert.equal(valueAfter(args, '--permission-mode'), 'dontAsk');
+}));
+
+test('the agent starts without Claude Code\'s auto memory, whatever the environment says', () => inProject('application-at-the-root', (p) => {
+  // Left on, its MEMORY.md (~/.claude/projects/<folder>/memory) would reach the model as context.
+  for (const value of ['', '0']) {
+    assert.equal(runQa(p, { CLAUDE_CODE_DISABLE_AUTO_MEMORY: value }).code, 0);
+    assert.equal(readFileSync(join(p.appDir, 'claude-auto-memory'), 'utf8'), '1', `set to "${value}" before the launcher`);
+  }
 }));
 
 test('a value of QA_SETTING_SOURCES that would read the project\'s settings stops the run before the agent starts', () => inProject('application-at-the-root', (p) => {

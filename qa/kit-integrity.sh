@@ -39,6 +39,12 @@
 #       or provider is set there (apiKeyHelper, env); nothing else is offered, "project" and "local"
 #       are the folders that a pull request changes. Returns 1, with a message, when the agent's file has
 #       no tools line or the variable holds another value.
+#       Also exports CLAUDE_CODE_DISABLE_AUTO_MEMORY=1. --setting-sources "" leaves Claude Code's auto
+#       memory on: its instructions stay in the system prompt, and the MEMORY.md of the project's folder
+#       in ~/.claude/projects (written by the user's own sessions, or by an earlier one) goes to the
+#       model as context. An agent of the kit runs once and gets what it needs from the request and the
+#       files: memory would be a channel between sessions that nothing checks. Measured with Claude Code
+#       2.1.303: a planted MEMORY.md reached the writer's context without it, not with it.
 
 kit_settings() {
   local settings="$1" parent dir list dirs=()
@@ -82,6 +88,7 @@ kit_session_args() {
   [[ "$tools" =~ ^[A-Za-z]+(,[A-Za-z]+)*$ ]] || { echo "kit-integrity: no tools line in the frontmatter of $agent" >&2; return 1; }
   [[ -z "$sources" || "$sources" == user ]] || { echo "kit-integrity: QA_SETTING_SOURCES must be empty or \"user\", got \"$sources\"" >&2; return 1; }
   SESSION_ARGS=(--tools "$tools" --setting-sources "$sources" --strict-mcp-config --disable-slash-commands)
+  export CLAUDE_CODE_DISABLE_AUTO_MEMORY=1
 }
 
 kit_changes() {
