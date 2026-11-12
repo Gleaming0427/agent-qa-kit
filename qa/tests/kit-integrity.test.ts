@@ -130,7 +130,7 @@ const valueAfter = (args: string[], flag: string) => args[args.indexOf(flag) + 1
 
 test('a session has the tools of its agent\'s file, no MCP server, no command and nothing from the project', () => {
   // What each agent may use is its `tools:` line: a change of it is a change of what the agent can do.
-  for (const [agent, tools] of [['qa-writer', 'Read,Grep,Glob,Write,Edit,Bash'], ['qa-verifier', 'Read,Grep,Glob,Bash'], ['qa-repairer', 'Read,Grep,Glob,Write,Edit,Bash']]) {
+  for (const [agent, tools] of [['qa-writer', 'Read,Grep,Glob,Write,Edit,Bash'], ['qa-verifier', 'Read,Grep,Bash'], ['qa-repairer', 'Read,Grep,Glob,Write,Edit,Bash']]) {
     const r = sessionArgs(join(kit, `.claude/agents/${agent}.md`));
     assert.equal(r.code, 0, `${agent}: ${r.err}`);
     assert.equal(valueAfter(r.args, '--tools'), tools, agent);

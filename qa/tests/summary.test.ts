@@ -17,11 +17,13 @@ const playwright = JSON.stringify({ stats: { expected: 0, unexpected: 1, flaky: 
   tests: [{ status: 'unexpected', results: [{ status: 'failed', error: { message: "Locator: getByRole('heading', { name: 'Cart (3)' })" } }] }],
 }] }] });
 
-function app(e2e: 'report' | 'crash') {
+const vitestPassing = JSON.stringify({ numPassedTests: 2, numFailedTests: 0, testResults: [] });
+
+function app(e2e: 'report' | 'crash', unit: 'fail' | 'pass' | 'crash' = 'fail') {
   const dir = mkdtempSync(join(tmpdir(), 'qa-summary-'));
   mkdirSync(join(dir, 'bin'));
   mkdirSync(join(dir, 'reports'));
-  writeFileSync(join(dir, 'vitest.json'), vitest);
+  writeFileSync(join(dir, 'vitest.json'), unit === 'pass' ? vitestPassing : vitest);
   writeFileSync(join(dir, 'playwright.json'), playwright);
   // Reports from an earlier run, which --run must not show as this one's.
   writeFileSync(join(dir, 'reports/vitest.json'), '{"numPassedTests":9,"numFailedTests":0,"testResults":[]}');
@@ -30,7 +32,7 @@ function app(e2e: 'report' | 'crash') {
 echo "$*" >> "${dir}/calls.log"
 echo "lots of test output"
 case "$*" in
-  'run test:affected') cp "${dir}/vitest.json" reports/vitest.json; exit 1 ;;
+  'run test:affected') ${unit === 'crash' ? 'echo "vitest crashed" >&2; exit 1' : `cp "${dir}/vitest.json" reports/vitest.json; exit ${unit === 'pass' ? 0 : 1}`} ;;
   'run test:e2e -- --grep @shop')
     ${e2e === 'report' ? `cp "${dir}/playwright.json" reports/playwright.json; exit 1` : `echo 'Error: browserType.launch: Executable does not exist' >&2; exit 1`} ;;
   *) echo "unexpected npm call: $*" >&2; exit 9 ;;
@@ -71,10 +73,40 @@ test('--run says which command wrote no report, with the end of its output', () 
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('--stop-on-unit-failure runs the browser tests only after unit tests with no failure', () => {
+  for (const unit of ['fail', 'crash'] as const) {
+    const dir = app('report', unit);
+    try {
+      const r = summary(dir, '--run', '@shop', '--stop-on-unit-failure');
+      assert.equal(r.calls, 'run test:affected\n', `${unit}: the browser tests do not run`);
+      assert.match(r.out, new RegExp(`Browser tests not run: the unit tests ${unit === 'fail' ? 'failed' : 'wrote no report'}\\. Report the shell level as not_run\\.`));
+      assert.doesNotMatch(r.out, /Shell level/, `${unit}: no browser summary`);
+      assert.equal(existsSync(join(dir, 'reports/playwright.json')), false, `${unit}: the earlier browser report is removed, so not_run can be checked`);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  }
+  const dir = app('report', 'pass');
+  try {
+    const r = summary(dir, '--run', '@shop', '--stop-on-unit-failure');
+    assert.equal(r.code, 0, r.out);
+    assert.equal(r.calls, 'run test:affected\nrun test:e2e -- --grep @shop\n');
+    assert.match(r.out, /MFE level \(Vitest\): 2 passed, 0 failed/);
+    assert.match(r.out, /Shell level \(Playwright\): 0 passed, 1 failed/);
+    assert.doesNotMatch(r.out, /not run/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('without --stop-on-unit-failure, the browser tests run after failing unit tests, as the writer needs', () => {
+  const dir = app('report', 'fail');
+  try {
+    assert.equal(summary(dir, '--run', '@shop').calls, 'run test:affected\nrun test:e2e -- --grep @shop\n');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('an option other than --run @<mfe> is refused before any test runs', () => {
   const dir = app('report');
   try {
-    for (const args of [['--run'], ['--run', 'shop'], ['--run', '@Shop'], ['--run', '@shop', 'extra'], ['--update']]) {
+    for (const args of [['--run'], ['--run', 'shop'], ['--run', '@Shop'], ['--run', '@shop', 'extra'], ['--update'],
+      ['--run', '@shop', '--stop-on-unit-failure', 'extra'], ['--stop-on-unit-failure', '--run', '@shop'], ['--run', '--stop-on-unit-failure', '@shop']]) {
       const r = summary(dir, ...args);
       assert.equal(r.code, 2, args.join(' '));
       assert.match(r.out, /Usage: npm run test:summary, or npm run test:summary -- --run @<mfe>/);

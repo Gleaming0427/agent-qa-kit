@@ -64,7 +64,7 @@ Evaluation campaigns added to `eval/history` on 12 November ($3.42 in all):
 
 ## Next steps, in order
 
-1. **Verifier through the test summary.** Its prompt runs `npm run test:affected` first, so the raw Vitest output enters its context: up to Claude Code's 30,000-character cap on a large application. It should run `npm run test:summary -- --run @<mfe>`, as the writer does. This is a prompt change, so it needs a smoke evaluation (about $1.30).
+1. **Verifier through the test summary (in progress, branch `claude/verifier-one-command`).** One command, `npm run test:summary -- --run @<mfe> --stop-on-unit-failure`, instead of three with raw output; Glob removed from its tools (never used in 60 sessions); the git rules removed from `.claude/qa-settings.json` (never used in 96 sessions). Waits for its smoke evaluation, on the six tickets of runs 49 to 51 so that it can be compared with them.
 2. **A new release baseline.** A full QA eval on `main` (every ticket, 3 trials, about $6), then `eval/release-baseline.json` in a reviewed pull request. Then the next release (v0.3.2), with the "Unreleased" entries.
 3. **`--exclude-dynamic-system-prompt-sections`.** It moves the working directory, the environment and the git status from the system prompt into the first message, so that the system prompt is the same in every project folder (measured). The cache gain is small; it needs an evaluation.
 4. **Context in the eval report.** Add the first-call and peak context per session, measured from the transcripts. No credit needed. Measured by hand on 12 November: writer peak about 20,000 tokens, verifier about 14,000.

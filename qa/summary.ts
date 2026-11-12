@@ -10,12 +10,19 @@
 //   reports/playwright.json  Playwright JSON report (shell level)
 //
 // Usage: node qa/summary.ts   (or npm run test:summary)
-//        node qa/summary.ts --run @<mfe>   (or npm run test:summary -- --run @<mfe>)
+//        node qa/summary.ts --run @<mfe> [--stop-on-unit-failure]
+//        (or npm run test:summary -- --run @<mfe> [--stop-on-unit-failure])
 //
 // With --run, it first runs `npm run test:affected`, then `npm run test:e2e -- --grep @<mfe>`,
 // keeps their full output out of the way, and prints the summary of both: one command for a
 // whole test cycle. The agents kept chaining those three commands and cutting the output with
 // `| tail`, which the guard refuses, a turn lost each time.
+//
+// --stop-on-unit-failure, for the verifier: the browser tests run only when the unit tests wrote a
+// report with no failed test. Otherwise their report is removed, so that no earlier one passes for
+// this run, and the summary says they were not run: the verifier then reports the shell level as
+// not_run, which the verdict check accepts only after a unit failure and without a browser report.
+// The writer does not use it: its unit tests fail by design, and its browser tests must run too.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, rmSync } from 'node:fs';
@@ -122,8 +129,11 @@ function printFailures(failures: Failure[]) {
   }
 }
 
-/** Runs the unit tests, then the browser tests of a feature area; says when one wrote no report, and why. */
-function runTests(mfe: string) {
+/**
+ * Runs the unit tests, then the browser tests of a feature area; says when one wrote no report, and why.
+ * stopOnUnitFailure: the browser tests run only if the unit tests reported no failed test.
+ */
+function runTests(mfe: string, stopOnUnitFailure: boolean) {
   const steps: [string[], string][] = [
     [['run', 'test:affected'], 'reports/vitest.json'],
     [['run', 'test:e2e', '--', '--grep', mfe], 'reports/playwright.json'],
@@ -131,6 +141,13 @@ function runTests(mfe: string) {
   for (const [args, report] of steps) {
     // A report left by an earlier run would pass for this one's.
     rmSync(report, { force: true });
+    if (stopOnUnitFailure && args[1] === 'test:e2e') {
+      const unit = readJson<VitestReport>('reports/vitest.json');
+      if (!unit || (unit.numFailedTests ?? 0) > 0) {
+        console.log(`Browser tests not run: the unit tests ${unit ? 'failed' : 'wrote no report'}. Report the shell level as not_run.`);
+        break;
+      }
+    }
     const run = spawnSync('npm', args, { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
     if (existsSync(report)) continue;
     const ended = run.error ? run.error.message : run.signal ? `signal ${run.signal}` : `exit code ${run.status}`;
@@ -142,11 +159,12 @@ function runTests(mfe: string) {
 
 const options = process.argv.slice(2);
 if (options.length) {
-  if (options.length !== 2 || options[0] !== '--run' || !/^@[a-z0-9-]+$/.test(options[1])) {
-    console.log('Usage: npm run test:summary, or npm run test:summary -- --run @<mfe> to run the tests first.');
+  const stop = options.length === 3 && options[2] === '--stop-on-unit-failure';
+  if ((options.length !== 2 && !stop) || options[0] !== '--run' || !/^@[a-z0-9-]+$/.test(options[1])) {
+    console.log('Usage: npm run test:summary, or npm run test:summary -- --run @<mfe> [--stop-on-unit-failure] to run the tests first.');
     process.exit(2);
   }
-  runTests(options[1]);
+  runTests(options[1], stop);
 }
 
 const vitest = readJson<VitestReport>('reports/vitest.json');
