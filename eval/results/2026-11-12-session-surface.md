@@ -44,3 +44,32 @@ None of them comes from a missing tool or from the project's configuration being
 ## Release decision
 
 **Review**, with no comparable ticket: the release baseline (D clean) ran on another version of the demo shop (its browser test stopped comparing screenshots, #50) and was scored by older code (the report gained the cost per success, #55). Both make the history block the comparison, as it should. A comparison would need a reference measured on the current shop and code: the agents of `main` on the same six tickets.
+
+## Against a reference on the same shop and code
+
+QA eval run [43173061289](https://github.com/Gleaming0427/agent-qa-kit/actions/runs/43173061289) (run 50) measured the agents of `main` before this change (commit `7ab7106`), on the same six tickets, 3 trials each, with phase 2. Both runs have the same shop and scoring code, so the history lets them be compared on all six tickets (`node eval/validate.ts --candidate gh-43168175641 --baseline gh-43173061289`).
+
+| | Run 50, `main` before | Run 49, session options |
+|---|---|---|
+| Trial success | 17/18 | 16/18 |
+| Injected bugs detected | 25/27 | 26/27 |
+| Trials without a false positive | 14/15 | 12/15 |
+| Policy respected | 18/18 | 18/18 |
+| Guard refusals | 1 (a Grep on the whole project) | 0 |
+| Cost per trial | $0.0835 | $0.0734 (−12%) |
+| Cost per successful trial | $0.0884 | $0.0826 |
+| Tokens per trial | 292,450 | 164,980 (−44%) |
+| Phase 1 duration, p50 | 41.1 s | 43 s |
+
+| Ticket | Run 50 | Run 49 | Change |
+|---|---|---|---|
+| EVAL-1 | 2/3 | 3/3 | unstable, better (the shipping bug found 3 times of 3, against 2) |
+| EVAL-4 | 3/3 | 3/3 | pass in both |
+| EVAL-8 | 3/3 | 2/3 | unstable, worse (1 false positive) |
+| EVAL-9 (critical) | 3/3 | 3/3 | pass in both |
+| EVAL-10 (critical) | 3/3 | 3/3 | pass in both (1 false positive on each side) |
+| EVAL-15 | 3/3 | 2/3 | unstable, worse (1 false positive) |
+
+**Decision: review.** Every rule passed but one: EVAL-8 and EVAL-15 are unstable and worse (3/3 → 2/3), which the trials neither confirm nor rule out. No regression is confirmed, no critical ticket changed, and the sign test finds no difference (1 ticket better, 2 worse, p = 1.0). The policy's next step is a rerun of EVAL-8 and EVAL-15, 3 trials, then the decision again with both runs as the candidate.
+
+The tokens per trial fell by 44%, mostly in cache reads (2.47 million against 4.63 million over the campaign): the session's system prompt no longer lists 24 tools, the skills and the commands.
