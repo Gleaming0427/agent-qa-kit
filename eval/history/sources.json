@@ -965,6 +965,40 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 43168175641,
+      "run_number": 49,
+      "branch": "claude/session-surface",
+      "started_at": "2026-11-12T06:26:39Z",
+      "commit": "9a1c117e15b02bec5408b50c40d1946a3984f16c",
+      "label": "session surface, smoke, run 49",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 43168175641,
+        "commit": "9a1c117e15b02bec5408b50c40d1946a3984f16c"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-43168175641.json",
+        "sha256": "9a0fc8ffc559af4e22dbfced45bf34898696771da0d7e217c6b4612179934f28",
+        "artifact": {
+          "id": 13921168659,
+          "name": "eval-report",
+          "digest": "sha256:192d84548b45ba0755e2f3a793b38bde69f88ce1e4ca77ff9c6e7cf271e577c5"
+        }
+      },
+      "doc": "eval/results/2026-11-12-session-surface.md",
+      "notes": [
+        "The agents started with --setting-sources \"\", --strict-mcp-config, --disable-slash-commands and the tools of their file (6 for the writer, 4 for the verifier), on the smoke selection: 16 of 18 trials successful, no missing tool, no guard refusal, policy respected in every trial. The 3 false positives (EVAL-8, EVAL-15, EVAL-10, one trial each) are tests written too strictly, not effects of the options. Not comparable with the release baseline: the demo shop changed in #50 and the scoring code in #55."
+      ],
+      "inputs": {
+        "tickets": "smoke",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }
