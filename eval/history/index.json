@@ -646,5 +646,24 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 0.5973
+  },
+  {
+    "id": "gh-43414787289",
+    "label": "verifier one command, smoke, run 56",
+    "role": "campaign",
+    "started_at": "2026-11-13T11:09:33Z",
+    "commit": "ecd4abf",
+    "agent": "4fdaa2e0410b",
+    "writer_prompt": "2e02c1c",
+    "scoring": "original at ecd4abf",
+    "tickets": 6,
+    "trials": 18,
+    "agent_errors": 0,
+    "successes": 18,
+    "bugs_detected": "27/27",
+    "trials_with_false_positives": 0,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 1.3424
   }
 ]
