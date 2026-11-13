@@ -7,7 +7,8 @@
 # pull requests trigger no workflow); the "QA approval" workflow updates it after each
 # review, and after each push by a person.
 # Usage: qa/ci-approval.sh PULL_NUMBER
-# Needs GH_TOKEN (statuses: write, pull-requests: read), GITHUB_REPOSITORY, RUNNER_TEMP,
+# Needs GH_TOKEN (statuses: write, pull-requests: read; it also reads who may write to the repository,
+# qa/ci-permissions.sh, and falls back to the reviewer's association when it cannot), GITHUB_REPOSITORY, RUNNER_TEMP,
 # and the pull request's latest commit in the git repository of the current folder.
 set -euo pipefail
 KIT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -18,6 +19,7 @@ number="${1:-}"
 pull="$RUNNER_TEMP/qa-approval-$number-pull.json"
 reviews="$RUNNER_TEMP/qa-approval-$number-reviews.json"
 request="$RUNNER_TEMP/qa-approval-$number-request.json"
+permissions="$RUNNER_TEMP/qa-approval-$number-permissions.json"
 summary() { [[ -z "${GITHUB_STEP_SUMMARY:-}" ]] || printf '%s\n' "$1" >> "$GITHUB_STEP_SUMMARY"; }
 
 gh api "repos/$GITHUB_REPOSITORY/pulls/$number" > "$pull"
@@ -41,7 +43,9 @@ package="$(git ls-tree -r --name-only "$sha" | grep -E "(^|/)qa-reviews/$ticket/
 if [[ -n "$package" ]]; then
   git show "$sha:$package" > "$request"
   gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/pulls/$number/reviews?per_page=100" > "$reviews"
-  status="$(node "$KIT/qa/github-approval.ts" status "$pull" "$reviews" "$request")"
+  # An approval counts only from someone who can write to the repository (qa/ci-permissions.sh).
+  bash "$KIT/qa/ci-permissions.sh" "$reviews" "$permissions" || echo '{}' > "$permissions"
+  status="$(node "$KIT/qa/github-approval.ts" status "$pull" "$reviews" "$request" "$permissions")"
 else
   status="$(jq -nc --arg ticket "$ticket" \
     '{state: "failure", description: "No review package qa-reviews/\($ticket)/ in this pull request: QA verify cannot check its approval."}')"

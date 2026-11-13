@@ -10,7 +10,7 @@ import { exportReview, prepareReview } from '../scenario-review.ts';
 // The "QA amend tests" workflow on a real git history, with stand-ins for the GitHub CLI and for
 // npm (whose test runs write the reports), then the "prepare" step of QA verify on the result.
 const kit = resolve(import.meta.dirname, '../..');
-const KIT_FILES = ['qa/ci-verify.sh', 'qa/ci-node-version.sh', 'qa/check-scope.sh', 'qa/github-approval.ts', 'qa/scenario-review.ts', 'qa/loose-assertions.ts',
+const KIT_FILES = ['qa/ci-verify.sh', 'qa/ci-node-version.sh', 'qa/ci-permissions.sh', 'qa/check-scope.sh', 'qa/check-test-blocks.ts', 'qa/github-approval.ts', 'qa/scenario-review.ts', 'qa/loose-assertions.ts',
   'qa/criteria-manifest.ts', '.claude/hooks/strict-evidence.ts', '.claude/hooks/coverage.ts'];
 const TICKET = 'TICKET-43';
 const UNIT = `[${TICKET}][AC-1] MFE shows the clear button`;

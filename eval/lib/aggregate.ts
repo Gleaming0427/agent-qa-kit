@@ -22,6 +22,8 @@ export interface TicketRow {
   bugs_detected: string;
   false_positive_trials: number;
   mean_cost_usd: number;
+  /** The cost of the ticket's trials over its successes: what one success cost, failures included. Null without a success. */
+  cost_per_success_usd: number | null;
 }
 export interface Report {
   schema_version: 1;
@@ -43,7 +45,8 @@ export interface Report {
   runner_time_s: Record<RunnerName, { n: number; total: number; p50: number | null; p95: number | null }>;
   metrics: Record<string, Metric>;
   reliability: { k: number; pass_at_1: number | null; pass_at_k: number | null; pass_hat_k: number | null };
-  cost_usd: { total: number; mean_per_trial: number | null; p50: number | null; p95: number | null };
+  /** per_success: the total over the number of successful trials (failed ones are in the total); null without a success. */
+  cost_usd: { total: number; mean_per_trial: number | null; p50: number | null; p95: number | null; per_success: number | null; successes: number };
   /** Tokens of phases 1 and 2, over the trials whose CLI results report them (n). */
   tokens: { n: number; input: number; output: number; cache_read: number; cache_creation: number; mean_total_per_trial: number | null };
   /** n: runs with a known duration (or turn count); a CLI result that covers only its last turn has neither. */
@@ -125,6 +128,7 @@ export function aggregate(scores: TrialScore[]): Report {
       bugs_detected: `${bugs.filter((b) => b.detected).length}/${bugs.length}`,
       false_positive_trials: trials.filter((t) => t.false_positives.length > 0).length,
       mean_cost_usd: round(mean(trials.map((t) => t.cost_usd))) ?? 0,
+      cost_per_success_usd: successes ? round(trials.reduce((a, t) => a + t.cost_usd, 0) / successes) : null,
     };
   });
 
@@ -138,6 +142,7 @@ export function aggregate(scores: TrialScore[]): Report {
     return { n: values.length, total: round(values.reduce((a, b) => a + b, 0), 1) ?? 0, p50: round(percentile(values, 50), 1), p95: round(percentile(values, 95), 1) };
   };
   const costs = scores.map((s) => s.cost_usd);
+  const successCount = scores.filter((s) => s.success).length;
   const durations = scores.flatMap((s) => (s.phase1_duration_ms === null ? [] : [s.phase1_duration_ms / 1000]));
   const turns = scores.flatMap((s) => (s.phase1_turns === null ? [] : [s.phase1_turns]));
   const blocks = scores.flatMap((s) => (s.guard_blocks === null ? [] : [s.guard_blocks]));
@@ -192,6 +197,8 @@ export function aggregate(scores: TrialScore[]): Report {
       mean_per_trial: round(mean(costs)),
       p50: round(percentile(costs, 50)),
       p95: round(percentile(costs, 95)),
+      per_success: successCount ? round(costs.reduce((a, b) => a + b, 0) / successCount) : null,
+      successes: successCount,
     },
     tokens: {
       n: withTokens.length, input: tokenSum('input'), output: tokenSum('output'), cache_read: tokenSum('cache_read'), cache_creation: tokenSum('cache_creation'),
@@ -308,7 +315,10 @@ export function toMarkdown(report: Report): string {
     '',
     guardLine(report.guard_blocks),
     '',
-    `**Cost:** $${report.cost_usd.total.toFixed(4)} in total, $${report.cost_usd.mean_per_trial?.toFixed(4) ?? 'n/a'} per trial (p50 $${report.cost_usd.p50?.toFixed(4) ?? 'n/a'}, p95 $${report.cost_usd.p95?.toFixed(4) ?? 'n/a'}), as reported by the Claude CLI.`,
+    `**Cost:** $${report.cost_usd.total.toFixed(4)} in total, $${report.cost_usd.mean_per_trial?.toFixed(4) ?? 'n/a'} per trial (p50 $${report.cost_usd.p50?.toFixed(4) ?? 'n/a'}, p95 $${report.cost_usd.p95?.toFixed(4) ?? 'n/a'}), as reported by the Claude CLI. `
+      + (report.cost_usd.per_success === null
+        ? 'No trial succeeded: no cost per success.'
+        : `Per successful trial: $${report.cost_usd.per_success.toFixed(4)} (${report.cost_usd.successes} of ${report.campaign.trials} trials succeeded; the cost of the others is included).`),
     '',
     report.tokens.n
       ? `**Tokens** (${report.tokens.n} trials, phases 1 and 2): ${report.tokens.input} input, ${report.tokens.output} output, ${report.tokens.cache_read} cache read, ${report.tokens.cache_creation} cache write; ${report.tokens.mean_total_per_trial} in all per trial, as reported by the Claude CLI.`
@@ -319,9 +329,9 @@ export function toMarkdown(report: Report): string {
     `**Load:** campaign span ${c.span_ms === null ? 'n/a' : `${(c.span_ms / 60000).toFixed(1)} min`}, effective parallelism ${c.effective_parallelism ?? 'n/a'} (the trials' working time over the span; installs left out).`
       + runnerLine(report.runner_time_s),
     '',
-    '| Ticket | Kind | Trials | Successes | pass^k | Valid RED | Fail-to-pass | Bugs detected | Trials with false positives | Mean cost |',
-    '|---|---|---|---|---|---|---|---|---|---|',
-    ...report.tickets.map((t) => `| ${t.ticket} | ${t.kind} | ${t.trials} | ${t.successes} | ${pct(t.pass_hat_k)} | ${t.red_valid} | ${t.f2p} | ${t.bugs_detected} | ${t.false_positive_trials} | $${t.mean_cost_usd.toFixed(4)} |`),
+    '| Ticket | Kind | Trials | Successes | pass^k | Valid RED | Fail-to-pass | Bugs detected | Trials with false positives | Mean cost | Cost per success |',
+    '|---|---|---|---|---|---|---|---|---|---|---|',
+    ...report.tickets.map((t) => `| ${t.ticket} | ${t.kind} | ${t.trials} | ${t.successes} | ${pct(t.pass_hat_k)} | ${t.red_valid} | ${t.f2p} | ${t.bugs_detected} | ${t.false_positive_trials} | $${t.mean_cost_usd.toFixed(4)} | ${t.cost_per_success_usd === null ? 'no success' : `$${t.cost_per_success_usd.toFixed(4)}`} |`),
     '',
   ];
   return lines.join('\n');

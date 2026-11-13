@@ -10,7 +10,7 @@ import { exportReview, prepareReview } from '../scenario-review.ts';
 // The "prepare" step of the QA verify workflow on a real git history, with a
 // stand-in for the GitHub CLI: which approval counts, and on which tests.
 const kit = resolve(import.meta.dirname, '../..');
-const KIT_FILES = ['qa/ci-verify.sh', 'qa/ci-node-version.sh', 'qa/ci-trusted-kit.sh', 'qa/check-scope.sh', 'qa/check-tooling.ts', 'qa/github-approval.ts', 'qa/scenario-review.ts',
+const KIT_FILES = ['qa/ci-verify.sh', 'qa/ci-node-version.sh', 'qa/ci-permissions.sh', 'qa/ci-trusted-kit.sh', 'qa/check-scope.sh', 'qa/check-test-blocks.ts', 'qa/check-tooling.ts', 'qa/github-approval.ts', 'qa/scenario-review.ts',
   'qa/loose-assertions.ts', 'qa/criteria-manifest.ts', '.claude/hooks/strict-evidence.ts', '.claude/hooks/coverage.ts'];
 const TICKET = 'TICKET-43';
 const REASONS = 'Looks right.\n\nAC-1: the button does not exist yet, so the search cannot be cleared.';
@@ -121,6 +121,10 @@ case "$*" in
   'auth setup-git') ;;
   *'/pulls?'*) cat "${dir}/pulls.json" ;;
   *'/pulls/7/reviews'*) cat "${dir}/reviews.json" ;;
+  # Who may write to the repository: permissions.json, when a test gives one; otherwise the call fails, as it does
+  # for a token that is not allowed to read it.
+  *'/collaborators/'*'/permission'*) login="\${2#repos/acme/shop/collaborators/}"; login="\${login%/permission}"
+    [[ -f "${dir}/permissions.json" ]] && jq -er --arg l "$login" '.[$l] // empty' "${dir}/permissions.json" ;;
   *) echo "unexpected gh call: $*" >&2; exit 1 ;;
 esac
 `);
@@ -188,6 +192,54 @@ test('the verify workflow accepts only the tests a collaborator approved', () =>
     r = verify(h, { branch: `feat/${TICKET}-without-tests` });
     assert.equal(r.code, 1);
     assert.match(r.output, /QA tests in pull request #7, but this branch does not contain them/);
+  } finally { cleanup(h.dir); }
+});
+
+test('the verify workflow counts an approval only from someone who can write, and falls back to the association when it cannot tell', () => {
+  const h = history();
+  try {
+    const approval = (login: string, association: string) => ({ id: 1, user: { login }, state: 'APPROVED', commit_id: h.approved, author_association: association, body: REASONS });
+    // The token cannot read permissions: the association decides, and the log says so.
+    let r = verify(h);
+    assert.equal(r.code, 0, r.output);
+    assert.match(r.output, /::warning title=QA approval::Could not read the repository permission of alice/);
+
+    // alice is the owner of the organization but only reads this repository.
+    writeFileSync(join(h.dir, 'permissions.json'), JSON.stringify({ alice: 'read' }));
+    r = verify(h);
+    assert.equal(r.code, 1, r.output);
+    assert.match(r.output, /@alice cannot approve: only has read access to the repository/);
+    assert.equal(r.record.at(-1)?.result, 'fail');
+
+    // A reader's request for changes does not cancel a writer's approval.
+    writeFileSync(join(h.dir, 'permissions.json'), JSON.stringify({ alice: 'write', rhea: 'read' }));
+    r = verify(h, { reviews: [approval('alice', 'OWNER'), { id: 2, user: { login: 'rhea' }, state: 'CHANGES_REQUESTED', commit_id: h.approved, author_association: 'MEMBER', body: 'no' }] });
+    assert.equal(r.code, 0, r.output);
+    const approved = JSON.parse(readFileSync(join(r.ci, `app/reports/${TICKET}-approved.json`), 'utf8'));
+    assert.equal(approved.reviewer, '@alice');
+    assert.doesNotMatch(r.output, /::warning title=QA approval/, 'every permission was read');
+
+    // A writer's request for changes does.
+    writeFileSync(join(h.dir, 'permissions.json'), JSON.stringify({ alice: 'write', wes: 'write' }));
+    r = verify(h, { reviews: [approval('alice', 'OWNER'), { id: 2, user: { login: 'wes' }, state: 'CHANGES_REQUESTED', commit_id: h.approved, author_association: 'COLLABORATOR', body: 'no' }] });
+    assert.equal(r.code, 1);
+    assert.match(r.output, /@wes requested changes/);
+  } finally { cleanup(h.dir); }
+});
+
+test('the verify workflow keeps the reasons of an approval that a later click on Approve left without text', () => {
+  const h = history();
+  try {
+    const approval = (id: number, body: string | null) => ({ id, user: { login: 'alice' }, state: 'APPROVED', commit_id: h.approved, author_association: 'OWNER', body });
+    // Approved with a line per criterion, then approved again with nothing (as when merging): the first still stands.
+    let r = verify(h, { reviews: [approval(1, REASONS), approval(2, null)] });
+    assert.equal(r.code, 0, r.output);
+    const approved = JSON.parse(readFileSync(join(r.ci, `app/reports/${TICKET}-approved.json`), 'utf8'));
+    assert.equal(approved.reviewer, '@alice');
+    // Retracting is done by asking for changes: an approval without text after that has no reasons to keep.
+    r = verify(h, { reviews: [approval(1, REASONS), { ...approval(2, 'no'), state: 'CHANGES_REQUESTED' }, approval(3, null)] });
+    assert.equal(r.code, 1, r.output);
+    assert.match(r.output, /approval of #7 by @alice cannot be used.*AC-1: explain why/);
   } finally { cleanup(h.dir); }
 });
 

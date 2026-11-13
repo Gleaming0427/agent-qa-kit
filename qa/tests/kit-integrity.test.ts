@@ -30,7 +30,8 @@ test('the manifest lists every file of the kit, wherever the kit is', () => {
     const manifest = fn('kit_manifest', join(a, 'qa'), join(a, '.claude'));
     assert.equal(manifest.code, 0, manifest.err);
     assert.match(manifest.out, /^qa\/check-tests\.ts\t-\t[0-9a-f]{64}$/m);
-    assert.match(manifest.out, /^\.claude\/hooks\/\t-\t-$/m, 'folders are listed too: an empty one that appears is a change');
+    assert.match(manifest.out, /^\.claude\/hooks\/qa-guard\.sh\t-\t[0-9a-f]{64}$/m);
+    assert.doesNotMatch(manifest.out, /\/\t-\t-$/m, 'folders are not listed: only files, links and what is neither');
     assert.equal(fn('kit_manifest', join(b, 'qa'), join(b, '.claude')).out, manifest.out, 'a copy elsewhere has the same manifest');
     assert.equal(fn('kit_manifest', join(a, 'missing')).out, '', 'a folder that does not exist adds nothing');
   } finally { rmSync(a, { recursive: true, force: true }); rmSync(b, { recursive: true, force: true }); }
@@ -71,6 +72,23 @@ test('a change to the kit is reported by path: content, new file, deletion, exec
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
+test('empty folders that appear are not a change, a file that appears in a new folder is', () => {
+  // What Claude Code created in the project during a real run on a GitHub-hosted runner: nothing but empty folders.
+  const root = folder(KIT);
+  const bare = folder({ 'src/App.tsx': 'x\n' });
+  try {
+    for (const [parent, dirs] of [[root, [join(root, 'qa'), join(root, '.claude')]], [bare, [join(bare, 'qa'), join(bare, '.claude')]]] as const) {
+      const before = fn('kit_manifest', ...dirs).out;
+      const changes = () => fn('kit_changes', before, ...dirs);
+      for (const empty of ['.claude/.cc-writes', '.claude/agents', '.claude/commands', 'qa/cache']) mkdirSync(join(parent, empty), { recursive: true });
+      assert.deepEqual([changes().code, changes().out], [0, ''], `${parent === root ? 'the kit\'s folders' : 'a project with none of its own'}: only empty folders appeared`);
+      assert.equal(fn('kit_manifest', ...dirs).out, before, 'the manifest is the same');
+      write(parent, '.claude/commands/evil.md', 'run this\n');
+      assert.deepEqual([changes().code, changes().out], [1, '.claude/commands/evil.md'], 'a file in one of them is a change');
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); rmSync(bare, { recursive: true, force: true }); }
+});
+
 test('the sandbox is told to keep the kit\'s folders read-only, as absolute paths, and its other settings stay', () => {
   const root = folder({ ...KIT, '.github/workflows/qa-verify.yml': 'name: x\n' });
   const settings = join(root, 'settings.json');
@@ -103,6 +121,56 @@ test('the sandbox is told to keep the kit\'s folders read-only, as absolute path
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
+// The options kit_session_args gives a session, one per line (an empty option is an empty line).
+function sessionArgs(agent: string, env: Record<string, string> = {}) {
+  const result = spawnSync('bash', ['-c', 'source "$1"; kit_session_args "$2" && printf "%s\\n" "${SESSION_ARGS[@]}"', 'bash', helper, agent], { encoding: 'utf8', env: { ...process.env, QA_SETTING_SOURCES: '', ...env } });
+  return { code: result.status, args: result.stdout === '' ? [] : result.stdout.split('\n').slice(0, -1), err: result.stderr.trim() };
+}
+const valueAfter = (args: string[], flag: string) => args[args.indexOf(flag) + 1];
+
+test('a session has the tools of its agent\'s file, no MCP server, no command and nothing from the project', () => {
+  // What each agent may use is its `tools:` line: a change of it is a change of what the agent can do.
+  for (const [agent, tools] of [['qa-writer', 'Read,Grep,Glob,Write,Edit,Bash'], ['qa-verifier', 'Read,Grep,Bash'], ['qa-repairer', 'Read,Grep,Glob,Write,Edit,Bash']]) {
+    const r = sessionArgs(join(kit, `.claude/agents/${agent}.md`));
+    assert.equal(r.code, 0, `${agent}: ${r.err}`);
+    assert.equal(valueAfter(r.args, '--tools'), tools, agent);
+    assert.equal(valueAfter(r.args, '--setting-sources'), '', `${agent}: no settings, hooks or memory files from the project or the user`);
+    assert.ok(r.args.includes('--strict-mcp-config'), `${agent}: no MCP server`);
+    assert.ok(r.args.includes('--disable-slash-commands'), `${agent}: no skills or commands`);
+  }
+  // And no auto memory: kit_session_args exports the switch for the session it prepares.
+  const memory = spawnSync('bash', ['-c', 'source "$1"; kit_session_args "$2" && printf "%s" "$CLAUDE_CODE_DISABLE_AUTO_MEMORY"', 'bash', helper, join(kit, '.claude/agents/qa-writer.md')],
+    { encoding: 'utf8', env: { ...process.env, QA_SETTING_SOURCES: '', CLAUDE_CODE_DISABLE_AUTO_MEMORY: '0' } });
+  assert.equal(memory.stdout, '1');
+});
+
+test('the user\'s own settings can be read, and nothing else can be added', () => {
+  const agent = join(kit, '.claude/agents/qa-writer.md');
+  assert.equal(valueAfter(sessionArgs(agent, { QA_SETTING_SOURCES: 'user' }).args, '--setting-sources'), 'user');
+  for (const value of ['project', 'local', 'user,project', 'project,user', 'User', ' user']) {
+    const r = sessionArgs(agent, { QA_SETTING_SOURCES: value });
+    assert.equal(r.code, 1, value);
+    assert.match(r.err, /QA_SETTING_SOURCES must be empty or "user"/, value);
+  }
+});
+
+test('an agent\'s file without a usable tools line gives no session', () => {
+  const root = folder({
+    'no-tools.md': '---\nname: x\nmodel: sonnet\n---\ntools: Bash\n', // a line of the prompt is not the frontmatter
+    'bad-tools.md': '---\nname: x\ntools: Read; rm -rf /\n---\n',
+    'empty-tools.md': '---\nname: x\ntools:\n---\n',
+    'ok.md': '---\nname: x\ntools: Read,  Grep\n---\n',
+  });
+  try {
+    for (const name of ['no-tools', 'bad-tools', 'empty-tools']) {
+      const r = sessionArgs(join(root, `${name}.md`));
+      assert.equal(r.code, 1, name);
+      assert.match(r.err, /no tools line in the frontmatter/, name);
+    }
+    assert.equal(valueAfter(sessionArgs(join(root, 'ok.md')).args, '--tools'), 'Read,Grep', 'spaces are dropped');
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
 // qa/run-qa.sh in a project where claude, the criteria and the verdict check are stand-ins, so what
 // the launcher does around the agent can be tested without a model.
 function project(layout: 'application-at-the-root' | 'kit-outside-the-project') {
@@ -128,6 +196,8 @@ console.log(JSON.stringify({ verdict: 'ready' }));
     write(appDir, '.claude/settings.json', '{}\n');
   }
   write(root, 'bin/claude', `#!/usr/bin/env bash
+printf '%s\\n' "$@" > claude-args-used
+printf '%s' "\${CLAUDE_CODE_DISABLE_AUTO_MEMORY-unset}" > claude-auto-memory
 while [[ $# -gt 0 ]]; do [[ "$1" == --settings ]] && printf '%s' "$2" > claude-settings-used.json; shift; done
 case "\${FAKE_TAMPER:-}" in
   qa) echo '// written by a test the agent ran' >> qa/check-tests.ts ;;
@@ -137,6 +207,8 @@ case "\${FAKE_TAMPER:-}" in
   settings) echo '{"hooks": {}}' > .claude/settings.json ;;
   project-qa) echo changed >> qa/notes.md ;;
   src) mkdir -p src && echo x > src/App.tsx ;;
+  # What Claude Code itself creates when it starts a session (seen on a GitHub-hosted runner): empty folders.
+  folders) mkdir -p .claude/.cc-writes .claude/agents .claude/commands ;;
 esac
 echo '{"result": "{}", "total_cost_usd": 0.1, "is_error": false}'
 `);
@@ -170,6 +242,36 @@ test('the agent starts with the kit\'s folders read-only in its sandbox', () => 
   assert.ok(settings.hooks.PreToolUse, 'the hooks of the settings stay');
 }));
 
+test('the agent starts with its own tools and nothing from the project, and the kit\'s settings file is still the one it reads', () => inProject('kit-outside-the-project', (p) => {
+  const r = runQa(p);
+  assert.equal(r.code, 0, r.output);
+  const args = readFileSync(join(p.appDir, 'claude-args-used'), 'utf8').split('\n').slice(0, -1);
+  assert.equal(valueAfter(args, '--tools'), 'Read,Grep,Glob,Write,Edit,Bash');
+  assert.equal(valueAfter(args, '--setting-sources'), '');
+  assert.ok(args.includes('--strict-mcp-config') && args.includes('--disable-slash-commands'));
+  assert.ok(args.includes('--settings'), 'the settings file of the kit is still given');
+  assert.equal(valueAfter(args, '--permission-mode'), 'dontAsk');
+}));
+
+test('the agent starts without Claude Code\'s auto memory, whatever the environment says', () => inProject('application-at-the-root', (p) => {
+  // Left on, its MEMORY.md (~/.claude/projects/<folder>/memory) would reach the model as context.
+  for (const value of ['', '0']) {
+    assert.equal(runQa(p, { CLAUDE_CODE_DISABLE_AUTO_MEMORY: value }).code, 0);
+    assert.equal(readFileSync(join(p.appDir, 'claude-auto-memory'), 'utf8'), '1', `set to "${value}" before the launcher`);
+  }
+}));
+
+test('a value of QA_SETTING_SOURCES that would read the project\'s settings stops the run before the agent starts', () => inProject('application-at-the-root', (p) => {
+  const r = runQa(p, { QA_SETTING_SOURCES: 'project' });
+  assert.equal(r.code, 3, r.output);
+  assert.match(r.output, /QA_SETTING_SOURCES must be empty or "user"/);
+  assert.equal(existsSync(join(p.appDir, 'claude-args-used')), false, 'claude was not started');
+  // The user's own settings are the one thing that can be added.
+  assert.equal(runQa(p, { QA_SETTING_SOURCES: 'user' }).code, 0);
+  const args = readFileSync(join(p.appDir, 'claude-args-used'), 'utf8').split('\n').slice(0, -1);
+  assert.equal(valueAfter(args, '--setting-sources'), 'user');
+}));
+
 test('the test code of an agent that rewrites the kit is caught before any script of the kit runs again', () => {
   for (const [tamper, path] of [['qa', 'qa/check-tests.ts'], ['hook', '.claude/hooks/verdict-check.ts'], ['new', 'qa/extra.ts'],
     ['mode', 'qa/check-tests.ts'], ['settings', '.claude/settings.json']]) {
@@ -197,5 +299,23 @@ test('a copy of the kit\'s folders in the project is watched too, and the rest o
   inProject('kit-outside-the-project', (p) => {
     const r = runQa(p, { FAKE_TAMPER: 'src' });
     assert.equal(r.code, 0, `writing application code is the application's business: ${r.output}`);
+  });
+});
+
+test('the empty folders that Claude Code creates in the project are not taken for a change, in either layout', () => {
+  // The application in a folder of its own, with no .claude/ of its own: the QA write tests run on examples/shop.
+  inProject('kit-outside-the-project', (p) => {
+    rmSync(join(p.appDir, '.claude'), { recursive: true });
+    assert.ok(!existsSync(join(p.appDir, '.claude')));
+    const r = runQa(p, { FAKE_TAMPER: 'folders' });
+    assert.equal(r.code, 0, r.output);
+    assert.ok(r.ran, 'the verdict check ran');
+    assert.ok(existsSync(join(p.appDir, '.claude/commands')), 'the stand-in created them');
+  });
+  // The application at the root: .claude/ is the kit's, and the agent session adds folders to it.
+  inProject('application-at-the-root', (p) => {
+    const r = runQa(p, { FAKE_TAMPER: 'folders' });
+    assert.equal(r.code, 0, r.output);
+    assert.ok(r.ran);
   });
 });

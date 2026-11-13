@@ -1,0 +1,47 @@
+name: QA eval required
+# On a pull request that changes what the QA agents see or can do (the prompt, model, effort and
+# tools of the writer and the verifier, their settings, the hooks, the launcher, or the version of
+# Claude Code), asks for an evaluation of that version before it is merged: a campaign of
+# eval/history that ran these agents, whose release decision (eval/validate.ts) lets it through.
+# No model call and no secret: the evaluation itself is a QA eval run, dispatched by a person.
+# The label qa-eval-waived lets a change that needs no evaluation through, with a warning.
+# The check blocks a merge only once it is a required check of main.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  required:
+    name: QA eval required (no AI)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          # The agents of each campaign are read at its commit.
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Is an evaluation needed, and is there one? (no AI)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REF: ${{ github.head_ref }}
+          WAIVED: ${{ contains(github.event.pull_request.labels.*.name, 'qa-eval-waived') }}
+        run: |
+          # The base branch's copy of eval/ decides, so that a pull request does not judge itself;
+          # it reads the pull request's history and commits from the checkout, which shares its git objects.
+          trusted="$RUNNER_TEMP/trusted"
+          git worktree add --detach --quiet "$trusted" "$BASE_SHA"
+          if [[ ! -f "$trusted/eval/required.ts" ]]; then
+            echo "::warning title=QA eval required::The base branch has no eval/required.ts yet: the pull request's own copy decides."
+            trusted="$GITHUB_WORKSPACE"
+          fi
+          waived=()
+          if [[ "$WAIVED" == true ]]; then waived=(--waived); fi
+          node "$trusted/eval/required.ts" "$BASE_SHA" "$HEAD_SHA" --repo "$GITHUB_WORKSPACE" --branch "$HEAD_REF" "${waived[@]}"

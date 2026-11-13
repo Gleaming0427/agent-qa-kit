@@ -172,6 +172,24 @@ export function jestDomImportProblem(source: string, hasSetup: boolean): string 
   if (!used.length) return null;
   return `uses jest-dom matchers (${used.slice(0, 3).join(', ')}) without importing @testing-library/jest-dom: once the feature exists they fail with "Invalid Chai property". Add import '@testing-library/jest-dom/vitest'`;
 }
+/**
+ * Why a test will fail on a correct implementation, whatever it is: a regular expression given to a text
+ * matcher (toHaveTextContent, toContainText) that ends with a word boundary. The text of a container joins
+ * the text of its elements without a space ("4 productsNotebook€4.50"), so `/4 products(?!\w)/` or
+ * `/4 products\b/` fails there, whatever the markup. Before the feature exists the test fails earlier, for a
+ * valid reason, so its failure message cannot show the problem (it showed in 3 trials out of 12 on one ticket).
+ */
+export function textBoundProblem(source: string): string | null {
+  const calls = source.matchAll(/\.(toHaveTextContent|toContainText)\(\s*(\/(?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^/\\\n[])+\/[a-z]*)\s*[,)]/g);
+  for (const [, matcher, regex] of calls) {
+    const body = regex.slice(1, regex.lastIndexOf('/'));
+    const end = /(\(\?!\\[wS]\)|\(\?=\\[Ws]\)|\\b)$/.exec(body);
+    if (end) {
+      return `passes ${regex} to ${matcher}, which ends with a word boundary (${end[1]}): the text of a container joins the text of its elements without a space ("4 productsNotebook"), so it fails on a correct implementation. Bound a number with (?<!\\d) before it and (?!\\d) after it, and put nothing after a word`;
+    }
+  }
+  return null;
+}
 function allSame(values: Result[]): Result { return values.length === 1 ? values[0] : 'blocked'; }
 function collectMatches<T extends { file: string; title: string }>(tests: T[], ticket: string, id: string, level: Level): T[] {
   return tests.filter((t) => isNamedFor(t.title, ticket, id) && (
@@ -248,9 +266,13 @@ export function validateEvidence({ verdict, manifest, phase, vitest, playwright,
     for (const file of files) {
       const path = resolve(root, file);
       if (!existsSync(path)) continue;
-      const why = jestDomImportProblem(readFileSync(path, 'utf8'), hasSetupFiles(dirname(path), root));
+      const source = readFileSync(path, 'utf8');
+      const why = jestDomImportProblem(source, hasSetupFiles(dirname(path), root)) ?? textBoundProblem(source);
       if (why) problems.push(`"${relative(root, path) || file}" ${why}.`);
     }
+    const specPath = resolve(root, 'e2e', `${verdict.ticket}.spec.ts`);
+    const specWhy = existsSync(specPath) ? textBoundProblem(readFileSync(specPath, 'utf8')) : null;
+    if (specWhy) problems.push(`"${relative(root, specPath)}" ${specWhy}.`);
   }
   for (const id of expected) {
     for (const level of LEVELS) {
@@ -287,7 +309,9 @@ export function validateEvidence({ verdict, manifest, phase, vitest, playwright,
       } else {
         if (c.status === 'not_run') {
           if (level !== 'shell' || (vitest?.numFailedTests ?? 0) === 0 || playwright) {
-            problems.push(`${id} ${level}: not_run is allowed only when MFE failed and E2E did not run.`);
+            problems.push(level === 'mfe'
+              ? `${id} mfe: not_run is not allowed at the MFE level: report pass or fail, from the result of its test.`
+              : `${id} ${level}: not_run is allowed only when MFE failed and E2E did not run.`);
           }
         } else if (c.status !== result) {
           problems.push(`${id} ${level}: agent claimed ${c.status}, actual test evidence is ${result}.`);

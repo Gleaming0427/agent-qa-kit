@@ -16,11 +16,35 @@
 #       added to the sandbox's denyWrite list, as absolute paths: the commands an agent starts cannot
 #       write there. Pass the kit's folder and the project's.
 #   kit_manifest DIR...
-#       Prints one line per file below the folders given: path, executable bit and sha256 of the content.
+#       Prints one line per file below the folders given: path, executable bit and sha256 of the content
+#       (a link, its target). Folders are not listed: an empty one changes nothing, and Claude Code
+#       creates some by itself when it starts a session in a project (.claude/.cc-writes, .claude/agents
+#       and .claude/commands, seen on a GitHub-hosted runner with Claude Code 2.1.303), which a first
+#       version of this check took for tampering. A file created inside a new folder is still listed.
 #   kit_changes BEFORE DIR...
 #       Compares the folders with a manifest taken earlier. Prints up to five paths that differ and
 #       returns 1 when anything does. Taken before the agent and after it, it shows a change that the
 #       sandbox did not stop.
+#   kit_session_args AGENT_FILE
+#       Sets SESSION_ARGS, the options that keep a Claude Code session to what the kit planned for it.
+#       A session also reads the project's own configuration: the hooks of .claude/settings.json and
+#       the servers of .mcp.json are started outside the sandbox, with the API key in their environment,
+#       and CLAUDE.md goes to the model as instructions. A pull request can change all of them. So:
+#         --setting-sources "" (or "user"): no settings, hooks or memory files from the project; the
+#                    kit's own settings file, given with --settings, is still read;
+#         --strict-mcp-config: no MCP server, as none is given;
+#         --disable-slash-commands: no skills or commands;
+#         --tools: only the tools of the agent's file (its `tools:` line): 6 instead of 24 for the writer.
+#       QA_SETTING_SOURCES=user also reads the user's own settings (~/.claude), for someone whose login
+#       or provider is set there (apiKeyHelper, env); nothing else is offered, "project" and "local"
+#       are the folders that a pull request changes. Returns 1, with a message, when the agent's file has
+#       no tools line or the variable holds another value.
+#       Also exports CLAUDE_CODE_DISABLE_AUTO_MEMORY=1. --setting-sources "" leaves Claude Code's auto
+#       memory on: its instructions stay in the system prompt, and the MEMORY.md of the project's folder
+#       in ~/.claude/projects (written by the user's own sessions, or by an earlier one) goes to the
+#       model as context. An agent of the kit runs once and gets what it needs from the request and the
+#       files: memory would be a channel between sessions that nothing checks. Measured with Claude Code
+#       2.1.303: a planted MEMORY.md reached the writer's context without it, not with it.
 
 kit_settings() {
   local settings="$1" parent dir list dirs=()
@@ -44,7 +68,7 @@ kit_manifest() {
     const walk = (dir, key) => {
       for (const name of fs.readdirSync(dir)) {
         const full = path.join(dir, name), here = key + "/" + name, stat = fs.lstatSync(full);
-        if (stat.isDirectory()) { lines.push(here + "/\t-\t-"); walk(full, here); }
+        if (stat.isDirectory()) walk(full, here);
         else if (stat.isSymbolicLink()) lines.push(here + "\tlink\t" + fs.readlinkSync(full));
         else if (stat.isFile()) lines.push(here + "\t" + (stat.mode & 0o111 ? "x" : "-") + "\t" + createHash("sha256").update(fs.readFileSync(full)).digest("hex"));
         else lines.push(here + "\tother\t-");
@@ -52,12 +76,19 @@ kit_manifest() {
     };
     for (const dir of process.argv.slice(1)) {
       if (!fs.existsSync(dir)) continue;
-      const key = path.basename(dir);
-      lines.push(key + "/\t-\t-");
-      walk(dir, key);
+      walk(dir, path.basename(dir));
     }
     console.log(lines.sort().join("\n"));
   ' "$@"
+}
+
+kit_session_args() {
+  local agent="$1" sources="${QA_SETTING_SOURCES:-}" tools
+  tools="$(awk '/^---$/ { n++; next } n == 1 && $1 == "tools:" { sub(/^tools:[ \t]*/, ""); gsub(/[ \t]/, ""); print; exit }' "$agent")"
+  [[ "$tools" =~ ^[A-Za-z]+(,[A-Za-z]+)*$ ]] || { echo "kit-integrity: no tools line in the frontmatter of $agent" >&2; return 1; }
+  [[ -z "$sources" || "$sources" == user ]] || { echo "kit-integrity: QA_SETTING_SOURCES must be empty or \"user\", got \"$sources\"" >&2; return 1; }
+  SESSION_ARGS=(--tools "$tools" --setting-sources "$sources" --strict-mcp-config --disable-slash-commands)
+  export CLAUDE_CODE_DISABLE_AUTO_MEMORY=1
 }
 
 kit_changes() {

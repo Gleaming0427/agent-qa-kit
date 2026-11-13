@@ -70,6 +70,19 @@ test('a clean improvement with enough data and no regression is accepted', () =>
   assert.match(toMarkdown(c, policy), /\*\*Decision: ACCEPTED\.\*\* Every rule passed\./);
 });
 
+test('each side gives what one successful trial cost, over the comparable trials', () => {
+  const d = get('D, clean');
+  const before = variant(d, 'before', failAll(['EVAL-11', 'EVAL-15']));
+  const c = run(side('before', before), side('D clean', d));
+  for (const [s, campaign] of [[c.a, before], [c.b, d]] as const) {
+    const trials = campaign.observations.filter((o) => c.comparability.comparable_tickets.includes(o.ticket) && o.status === 'ok');
+    const expected = trials.reduce((n, o) => n + o.cost_usd, 0) / trials.filter((o) => o.success).length;
+    assert.ok(s.cost_per_success_usd !== null && Math.abs(s.cost_per_success_usd - expected) < 1e-4, `${s.label}: ${s.cost_per_success_usd} against ${expected}`);
+  }
+  assert.ok(c.a.cost_per_success_usd! > c.b.cost_per_success_usd!, 'the same cost for fewer successes');
+  assert.match(toMarkdown(c, policy), /\| Cost per successful trial \| \$\d+\.\d{4} \| \$\d+\.\d{4} \|/);
+});
+
 test('McNemar applies when every ticket is stable on both sides', () => {
   const d = get('D, clean');
   const all = d.config.tickets;

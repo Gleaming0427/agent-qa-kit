@@ -79,3 +79,92 @@ test('the QA approval status says, before the merge, what the approval is missin
     { state: 'success', description: 'Approved by @alice, with a reason per criterion.' });
   assert.equal(approvalStatus(pull(), [], ['AC-1']).description, 'Not approved yet. Approve with one line per criterion (AC-1), then merge.');
 });
+
+test('an approval counts only from someone who can write to the repository, when the permissions are known', () => {
+  const owner = review('olive', 'APPROVED', { author_association: 'OWNER' });
+  // A member of the organization or a collaborator can have read access only: GitHub's own required reviews ignore them.
+  assert.equal(findApproval(pull(), [owner], { olive: 'admin' }).reviewer, '@olive');
+  assert.equal(findApproval(pull(), [review('wes', 'APPROVED')], { wes: 'write' }).reviewer, '@wes');
+  assert.equal(findApproval(pull(), [review('maya', 'APPROVED')], { maya: 'maintain' }).reviewer, '@maya');
+  assert.throws(() => findApproval(pull(), [review('rhea', 'APPROVED', { author_association: 'MEMBER' })], { rhea: 'read' }),
+    /@rhea cannot approve: only has read access to the repository, and writing needs write access/);
+  assert.throws(() => findApproval(pull(), [review('tess', 'APPROVED')], { tess: 'triage' }), /@tess cannot approve: only has triage access/);
+  assert.throws(() => findApproval(pull(), [review('nia', 'APPROVED')], { nia: 'none' }), /@nia cannot approve: only has none access/);
+  // The second approval is the one that counts when the first is from a reader.
+  assert.equal(findApproval(pull(), [review('rhea', 'APPROVED'), review('wes', 'APPROVED')], { rhea: 'read', wes: 'write' }).reviewer, '@wes');
+  // GitHub logins are not case sensitive; the permissions file holds them in lower case.
+  assert.throws(() => findApproval(pull(), [review('Rhea', 'APPROVED')], { rhea: 'read' }), /cannot approve/);
+});
+
+test('the permissions only narrow who may approve: a login they do not list falls back to the association, an outsider never counts', () => {
+  assert.equal(findApproval(pull(), [review('alice', 'APPROVED')], {}).reviewer, '@alice', 'unknown: as before');
+  assert.equal(findApproval(pull(), [review('alice', 'APPROVED')], undefined).reviewer, '@alice');
+  assert.equal(findApproval(pull(), [review('alice', 'APPROVED')], { bob: 'read' }).reviewer, '@alice', 'another login is not alice');
+  // Write access in the file does not make an outsider a collaborator.
+  assert.throws(() => findApproval(pull(), [review('mallory', 'APPROVED', { author_association: 'NONE' })], { mallory: 'write' }),
+    /@mallory cannot approve: not a collaborator/);
+  assert.throws(() => findApproval(pull(), [review('mallory', 'APPROVED', { author_association: 'CONTRIBUTOR' })], { mallory: 'admin' }), /not a collaborator/);
+});
+
+test('a request for changes blocks only when it comes from someone whose approval would count', () => {
+  const approved = review('alice', 'APPROVED');
+  // A passer-by on a public repository, and a reader who is a member, can ask for changes: it is a comment.
+  assert.equal(findApproval(pull(), [approved, review('passerby', 'CHANGES_REQUESTED', { author_association: 'NONE' })]).reviewer, '@alice');
+  assert.equal(findApproval(pull(), [approved, review('first-timer', 'CHANGES_REQUESTED', { author_association: 'FIRST_TIME_CONTRIBUTOR' })]).reviewer, '@alice');
+  assert.equal(findApproval(pull(), [approved, review('rhea', 'CHANGES_REQUESTED', { author_association: 'MEMBER' })], { rhea: 'read' }).reviewer, '@alice');
+  // Someone who can write blocks, with or without the permissions at hand.
+  assert.throws(() => findApproval(pull(), [approved, review('wes', 'CHANGES_REQUESTED')], { wes: 'write' }), /@wes requested changes/);
+  assert.throws(() => findApproval(pull(), [approved, review('wes', 'CHANGES_REQUESTED')]), /@wes requested changes/);
+  assert.throws(() => findApproval(pull(), [approved, review('wes', 'CHANGES_REQUESTED')], {}), /@wes requested changes/, 'unknown permission: fail safe');
+  // The names listed are the ones that count.
+  assert.throws(() => findApproval(pull(), [approved, review('wes', 'CHANGES_REQUESTED'), review('passerby', 'CHANGES_REQUESTED', { author_association: 'NONE' })]),
+    { message: '@wes requested changes on the QA pull request #7.' });
+});
+
+test('the QA approval status says why a reader\'s approval does not count', () => {
+  const criteria = ['AC-1'];
+  const reader = review('rhea', 'APPROVED', { author_association: 'MEMBER' });
+  assert.deepEqual(approvalStatus(pull(), [reader], criteria, { rhea: 'read' }), {
+    state: 'failure', description: 'This pull request has no valid approval: @rhea cannot approve: only has read access to the repository, and writing needs write access.',
+  });
+  assert.equal(approvalStatus(pull(), [reader], criteria).state, 'success', 'without the permissions, the association decides, as before');
+  assert.equal(approvalStatus(pull(), [reader, review('wes', 'APPROVED')], criteria, { rhea: 'read', wes: 'write' }).state, 'success');
+});
+
+test('a later approval without text does not take back the reasons the same person gave for the same commit', () => {
+  // What happened on a real pull request: approved with a line per criterion, approved again with nothing
+  // (a click on Approve to merge), approved once more with the lines.
+  const reasoned = review('alice', 'APPROVED');
+  const bare = review('alice', 'APPROVED', { body: null });
+  const found = findApproval(pull(), [reasoned, bare]);
+  assert.deepEqual(found, { number: 7, head_sha: latest, reviewer: '@alice', body: reasons }, 'the reasons of the first approval stand');
+  assert.equal(findApproval(pull(), [reasoned, bare, review('alice', 'APPROVED', { body: `${reasons}\\nAC-2: again` })]).body, `${reasons}\\nAC-2: again`, 'the latest approval that gives reasons');
+  assert.equal(findApproval(pull(), [reasoned, review('alice', 'COMMENTED', { body: 'a question' }), bare]).body, reasons, 'a comment in between changes nothing');
+  assert.equal(findApproval(pull(), [reasoned, review('alice', 'APPROVED', { body: '   ' })]).body, reasons, 'a blank body counts as no text');
+  // The status says so too: it is green, not "approved without a reason".
+  assert.equal(approvalStatus(pull(), [reasoned, bare], ['AC-1']).state, 'success');
+});
+
+test('a request for changes, a dismissal, or an older commit still take the reasons away', () => {
+  const reasoned = review('alice', 'APPROVED');
+  const bare = (login = 'alice') => review(login, 'APPROVED', { body: null });
+  // Retracting is done by asking for changes or dismissing, and an approval after that starts again.
+  assert.equal(findApproval(pull(), [reasoned, review('alice', 'CHANGES_REQUESTED'), bare()]).body, '');
+  assert.equal(findApproval(pull(), [reasoned, review('alice', 'DISMISSED'), bare()]).body, '');
+  assert.equal(approvalStatus(pull(), [reasoned, review('alice', 'DISMISSED'), bare()], ['AC-1']).state, 'failure');
+  // Reasons given for an older version of the tests are not reasons for this one.
+  assert.equal(findApproval(pull(), [review('alice', 'APPROVED', { commit_id: older }), bare()]).body, '');
+  assert.match(approvalStatus(pull(), [review('alice', 'APPROVED', { commit_id: older }), bare()], ['AC-1']).description, /@alice approved without a reason for AC-1/);
+  // Someone else's reasons are not alice's: a bare approval by bob next to a reasoned one by alice is alice's.
+  assert.equal(findApproval(pull(), [reasoned, bare('bob')]).reviewer, '@alice');
+  assert.equal(findApproval(pull(), [review('alice', 'APPROVED', { body: null }), bare('bob')]).body, '', 'no reasons from anyone');
+});
+
+test('reasons kept from an earlier approval need the same rights as any approval', () => {
+  const reasoned = review('rhea', 'APPROVED', { author_association: 'MEMBER' });
+  const bare = review('rhea', 'APPROVED', { author_association: 'MEMBER', body: null });
+  assert.throws(() => findApproval(pull(), [reasoned, bare], { rhea: 'read' }), /@rhea cannot approve: only has read access/);
+  assert.equal(findApproval(pull(), [reasoned, bare], { rhea: 'write' }).body, reasons);
+  const outsider = (body: string | null) => review('mallory', 'APPROVED', { author_association: 'NONE', body });
+  assert.throws(() => findApproval(pull(), [outsider(reasons), outsider(null)]), /@mallory cannot approve: not a collaborator/);
+});

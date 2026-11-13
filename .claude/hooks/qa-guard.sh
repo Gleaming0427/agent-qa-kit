@@ -102,6 +102,15 @@ case "$TOOL" in
         package.json|package-lock.json|npm-shrinkwrap.json|yarn.lock|pnpm-lock.yaml|playwright.config.*|vite.config.*|vitest.config.*|vitest.workspace.*)
           deny "Repair agent may not change the test setup or dependencies ($rel)" ;;
       esac
+      # What the tests are set up with, by conventional name: setup and teardown files, mocks, fixtures, helpers.
+      # The same two patterns as isSupportFile in qa/check-tooling.ts, which also keeps the files a configuration
+      # names as setup files unchanged during a repair (qa/tooling-integrity.ts).
+      lower="$(printf '%s' "$rel" | tr '[:upper:]' '[:lower:]')"
+      support_dir='(^|/)(__mocks__|__fixtures__|__tests__|tests?|testing|test[-_]?utils|test[-_]?helpers)/'
+      support_name='^(setup[-_]?tests?|test[-_]?setup|global[-_]?(setup|teardown)|test[-_]?(utils?|helpers?)|.+\.(setup|teardown))\.[cm]?[jt]sx?$'
+      if [[ "$lower" =~ $support_dir || "${lower##*/}" =~ $support_name ]]; then
+        deny "Repair agent may not change what the tests are set up with: setup files, mocks, fixtures and test helpers ($rel). If one of them is wrong, say so in your answer instead."
+      fi
     else
       case "$rel" in
         e2e/*.spec.ts|*.test.ts|*.test.tsx) ;;
@@ -125,9 +134,10 @@ case "$TOOL" in
       'npm run test:e2e -- --grep '@*)
         grep -Eq '^npm run test:e2e -- --grep @[a-z0-9-]+$' <<<"$cmd" || deny 'Unsafe E2E grep option'
         ;;
-      # Runs test:affected, then test:e2e -- --grep @<mfe>, then prints the summary (qa/summary.ts).
+      # Runs test:affected, then test:e2e -- --grep @<mfe>, then prints the summary (qa/summary.ts);
+      # with --stop-on-unit-failure, the browser tests only after unit tests with no failure.
       'npm run test:summary -- --run '*)
-        grep -Eq '^npm run test:summary -- --run @[a-z0-9-]+$' <<<"$cmd" || deny 'Unsafe test:summary option'
+        grep -Eq '^npm run test:summary -- --run @[a-z0-9-]+( --stop-on-unit-failure)?$' <<<"$cmd" || deny 'Unsafe test:summary option'
         ;;
       'npx vitest run '*)
         grep -Eq '^npx vitest run ([a-zA-Z0-9_/-]+\.)?([a-zA-Z0-9_/-]+)\.test\.tsx?$' <<<"$cmd" || deny 'Only one local test file allowed'

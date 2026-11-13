@@ -9,16 +9,19 @@
 //
 // Reported, among the files a pull request changes compared with its base:
 //   setup  the scripts of a package.json that run the tests or the install (test*, install, prepare,
-//          qa:*), the Vitest, Vite and Playwright configurations, and the files those configurations
-//          name as setupFiles, globalSetup or globalTeardown (found by reading their text)
+//          qa:*), the Vitest, Vite and Playwright configurations, the files those configurations
+//          name as setupFiles, globalSetup or globalTeardown (found by reading their text), and the
+//          files that look like test support by their name (isSupportFile: mocks, fixtures, helpers)
 //   kit    the kit's own files: qa/, .claude/, its workflows, .agent-qa-kit.json
-// Not reported: dependencies, and what a configuration imports without naming it as a setup file.
+// Not reported: dependencies, and what a configuration imports without naming it as a setup file or
+// what a setup file imports, unless the name says it is test support.
 //
 // Usage: node qa/check-tooling.ts <base> [<head>]     (in the repository; prints JSON)
 //   {"base": "...", "head": "...", "changes": [{"kind": "setup" | "kit", "file": "...", "why": "..."}]}
 import { spawnSync } from 'node:child_process';
 import { posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { TEST_FILE } from './check-test-blocks.ts';
 
 export interface Change { kind: 'setup' | 'kit'; file: string; why: string }
 /** The text of a file on one side of the comparison, or null when it does not exist there. */
@@ -27,6 +30,13 @@ export type Reader = (side: 'base' | 'head', file: string) => string | null;
 const KIT_FILE = /^(qa\/|\.claude\/|\.agent-qa-kit\.json$|\.github\/workflows\/qa-(write-tests|verify|branches|amend-tests|approval)\.yml$)/;
 export const isConfig = (file: string) => /(^|\/)(vitest|vite|playwright)\.config\.[cm]?[jt]s$|(^|\/)vitest\.workspace\.[cm]?[jt]s$/.test(file);
 const PACKAGE = /(^|\/)package\.json$/;
+// What the tests are set up with, by conventional name: setup and teardown files (setupTests.ts, vitest.setup.ts,
+// auth.setup.ts), mock, fixture and helper folders, and test utilities. These are test code that no test file
+// names: the repair agent may not change them. The guard (.claude/hooks/qa-guard.sh) holds the same two patterns.
+const SUPPORT_DIR = /(^|\/)(__mocks__|__fixtures__|__tests__|tests?|testing|test[-_]?utils|test[-_]?helpers)\//i;
+const SUPPORT_NAME = /^(setup[-_]?tests?|test[-_]?setup|global[-_]?(setup|teardown)|test[-_]?(utils?|helpers?)|.+\.(setup|teardown))\.[cm]?[jt]sx?$/i;
+/** Whether a file, by its path in the repository, is test support by its name: not the tests, not the application. */
+export const isSupportFile = (file: string) => SUPPORT_DIR.test(file) || SUPPORT_NAME.test(posix.basename(file));
 // The scripts that run the tests or the install: test, test:unit, pretest, install, postinstall, prepare, qa:setup.
 const WATCHED_SCRIPT = /^(pre|post)?(test|install)(:|$)|^prepare$|^qa:/;
 const SETUP_KEY = /\b(setupFiles|globalSetup|globalTeardown)\s*:\s*(\[[^\]]*\]|"[^"]*"|'[^']*'|`[^`]*`)/g;
@@ -85,6 +95,12 @@ export function toolingChanges(changed: string[], read: Reader, configs: string[
           changes.push({ kind: 'setup', file, why: `named in ${config} as ${key}` });
         }
       }
+    }
+  }
+  // What the tests are set up with, by name: mocks, fixtures, helpers and setup files that no configuration names.
+  for (const file of [...changed].sort()) {
+    if (isSupportFile(file) && !TEST_FILE.test(file) && !changes.some((c) => c.file === file)) {
+      changes.push({ kind: 'setup', file, why: 'a test setup, mock or helper file' });
     }
   }
   return changes;
