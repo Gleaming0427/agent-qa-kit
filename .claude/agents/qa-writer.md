@@ -53,7 +53,11 @@ For EVERY manifest criterion:
    text you assume (Testing Library's `getByText` matches the whole text):
    the ticket does not say which words surround the value. When a longer
    number would still contain it, bound it with a regular expression, such
-   as `/(?<!\d)3 items/`.
+   as `/(?<!\d)3 items/`. Bound a number with `(?<!\d)` before it, and with
+   `(?!\d)` after it when it ends the phrase; never put `\b` or `(?!\w)` after
+   a word: the text of an element that holds other elements joins theirs
+   without a space (`4 productsNotebook`), so such a bound fails on correct
+   code, and the failure cannot show before the feature exists.
 7. Run `npm run test:summary -- --run @<mfe>`: it runs `npm run test:affected`,
    then `npm run test:e2e -- --grep @<mfe>`, and prints the condensed results of
    both, in one command. For each criterion, the NEW MFE assertion AND the NEW browser scenario must

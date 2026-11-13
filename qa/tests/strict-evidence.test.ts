@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { buildManifest } from '../criteria-manifest.ts';
-import { jestDomImportProblem, unitRedProblem, validateEvidence } from '../../.claude/hooks/strict-evidence.ts';
+import { jestDomImportProblem, textBoundProblem, unitRedProblem, validateEvidence } from '../../.claude/hooks/strict-evidence.ts';
 import type { PlaywrightReport, Verdict, VitestReport } from '../../.claude/hooks/strict-evidence.ts';
 
 const specText = '# TICKET-42\n- AC-1: list servers\n- AC-2: filter servers\n- AC-3: empty state\n';
@@ -196,4 +196,44 @@ test('phase 1 sends back a unit test file that misses the jest-dom import', () =
   assert(validate(v, r, 1, root).problems.some((p) => p.startsWith('"src/TICKET-42.test.tsx" uses jest-dom matchers (toBeInTheDocument)')));
   writeFileSync(join(root, 'vite.config.ts'), "export default { test: { setupFiles: ['./src/setup.ts'] } };\n");
   assert(!validate(v, r, 1, root).problems.some((p) => p.includes('jest-dom')));
+}));
+// The ticket EVAL-10 of the evaluation: `/(?<!\d)4 products(?!\w)/` failed on the correct code in 3 of its 12 trials
+// (QA eval runs 49, 50, 52 and 53; trial 2 each time), because the text of the section reads "4 productsNotebook€4.50".
+test('a regular expression given to a text matcher must not end with a word boundary', () => {
+  for (const line of [
+    'expect(shop).toHaveTextContent(/(?<!\\d)4 products(?!\\w)/);',
+    'await expect(shop).toContainText(/(?<!\\d)4 products\\b/i);',
+    'expect(shop).toHaveTextContent(/(?<!\\d)4 products(?=\\s)/, { normalizeWhitespace: true });',
+    'expect(bar).toHaveTextContent( /(?<!\\d)€9\\.40(?!\\S)/ );',
+  ]) {
+    assert.match(textBoundProblem(line) ?? '', /ends with a word boundary.*joins the text of its elements without a space.*\(\?<!\\d\) before it and \(\?!\\d\) after it/, line);
+  }
+  assert.match(textBoundProblem('expect(shop).toHaveTextContent(/(?<!\\d)4 products(?!\\w)/);') ?? '', /passes \/\(\?<!\\d\)4 products\(\?!\\w\)\/ to toHaveTextContent/);
+  for (const line of [
+    'expect(shop).toHaveTextContent(/(?<!\\d)4 products/);',            // the bound that works
+    'await expect(shop).toContainText(/(?<!\\d)€9\\.40(?!\\d)/);',     // digits only
+    'expect(shop).not.toHaveTextContent(/(?<!\\d)[123] products/);',
+    'expect(shop).toHaveTextContent("4 products");',                  // a string, not a regular expression
+    'expect(screen.getByText(/Cart\\b/)).toBeVisible();',              // another matcher: the whole text of one element
+    'expect(heading).toHaveTextContent(/^Shop$/);',                   // an exact text, not a word bound
+    'expect(shop).toHaveTextContent(/[\\w ]+ products/);',               // a class that holds \w, and nothing at the end
+  ]) {
+    assert.equal(textBoundProblem(line), null, line);
+  }
+});
+test('phase 1 sends back a unit test file and a browser spec that bound a text on the right', () => inTempDir((root) => {
+  const { v, r } = redPhase1(root);
+  mkdirSync(join(root, 'src'));
+  const file = join(root, 'src/TICKET-42.test.tsx');
+  r.vitest.testResults![0].name = file;
+  const importJestDom = "import '@testing-library/jest-dom/vitest';\n";
+  writeFileSync(file, `${importJestDom}test('[TICKET-42][AC-1] x', () => { expect(shop).toHaveTextContent(/(?<!\\d)4 products(?!\\w)/); });\n`);
+  writeFileSync(join(root, 'e2e/TICKET-42.spec.ts'), "[TICKET-42][AC-1]\n[TICKET-42][AC-2]\n[TICKET-42][AC-3]\nawait expect(shop).toContainText(/(?<!\\d)4 products\\b/);\n");
+  const problems = validate(v, r, 1, root).problems;
+  assert(problems.some((p) => p.startsWith('"src/TICKET-42.test.tsx" passes /(?<!\\d)4 products(?!\\w)/ to toHaveTextContent')), problems.join('\n'));
+  assert(problems.some((p) => p.startsWith('"e2e/TICKET-42.spec.ts" passes /(?<!\\d)4 products\\b/ to toContainText')), problems.join('\n'));
+  // With the bound on the left only, both files are accepted.
+  writeFileSync(file, `${importJestDom}test('[TICKET-42][AC-1] x', () => { expect(shop).toHaveTextContent(/(?<!\\d)4 products/); });\n`);
+  writeFileSync(join(root, 'e2e/TICKET-42.spec.ts'), "[TICKET-42][AC-1]\n[TICKET-42][AC-2]\n[TICKET-42][AC-3]\nawait expect(shop).toContainText(/(?<!\\d)4 products/);\n");
+  assert.deepEqual(validate(v, r, 1, root).problems, []);
 }));

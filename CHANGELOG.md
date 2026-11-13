@@ -18,6 +18,13 @@ A Claude Code session starts what the project tells it to, outside the sandbox: 
 
 `QA_SETTING_SOURCES=user` also reads `~/.claude`, for a machine where the login or provider is set in the user's settings; any other value stops the run before the agent starts. Measured with Claude Code 2.1.303 against a stand-in for the API that recorded what was sent (nothing was billed): the default session sent the project's and the user's `CLAUDE.md` and ran both hooks; with the options, none of it. Run since in QA eval, with the real model, against a reference of the agents before the change: `eval/results/2026-11-12-session-surface.md`.
 
+### The writer: no word bound after a text
+
+On the ticket EVAL-10 of the evaluation, the writer's tests failed on the correct code in 3 of its 12 trials (QA eval runs 49, 50, 52 and 53; trial 2 each time), always on `toHaveTextContent(/(?<!\d)4 products(?!\w)/)` and its browser twin: the text of the section reads `4 productsNotebook€4.50`, because the text of an element joins the text of the elements it holds without a space, so a word bound after `products` fails. Before the feature exists the test fails earlier, for a valid reason, so its RED failure cannot show the problem.
+
+- The writer's prompt now says to bound a number with `(?<!\d)` before it, and with `(?!\d)` after it when it ends the phrase, never with `\b` or `(?!\w)` after a word.
+- The verdict check of phase 1 sends back a test file, unit or browser, that gives `toHaveTextContent` or `toContainText` a regular expression ending with `\b`, `(?!\w)`, `(?!\S)`, `(?=\s)` or `(?=\W)`. Run on the files the writer generated (every trial of run 53, and trial 2 of EVAL-10 in runs 49 and 50), it flags the 6 files of those three trials and none of the 28 others.
+
 ### The verifier: one test command, three tools
 
 Counted in the transcripts of 60 verifier sessions (QA eval runs 49 and 50): it never used Glob, and it ran three commands per session, two of them with the raw output of Vitest or Playwright in its context, where the writer runs one. Neither the writer nor the verifier ran `git diff`, `git status` or `git log` in 96 sessions.
