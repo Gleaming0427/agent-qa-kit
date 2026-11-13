@@ -119,3 +119,71 @@ test('an option other than --run @<mfe> is refused before any test runs', () => 
     assert.equal(r.calls, '');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+// With --stop-on-unit-failure, the verifier reads which test of each criterion passed: the counts do
+// not say (QA eval run 53: after a failure of AC-1, two verifiers reported AC-2 as not_run).
+const mixedUnit = JSON.stringify({ numPassedTests: 2, numFailedTests: 1, testResults: [{ assertionResults: [
+  { fullName: '[SHOP-2][AC-1] MFE heading counts each line quantity', status: 'failed', failureMessages: ['Unable to find "Cart (3)"'] },
+  { fullName: '[SHOP-2][AC-2] MFE an empty cart shows the empty message', status: 'passed', failureMessages: [] },
+  { fullName: 'the cart reducer adds a line', status: 'passed', failureMessages: [] },
+  { fullName: '[SHOP-2][AC-3] MFE a skipped scenario', status: 'pending', failureMessages: [] },
+] }] });
+const passingUnit = JSON.stringify({ numPassedTests: 2, numFailedTests: 0, testResults: [{ assertionResults: [
+  { fullName: '[SHOP-2][AC-1] MFE heading counts each line quantity', status: 'passed', failureMessages: [] },
+  { fullName: '[SHOP-2][AC-2] MFE an empty cart shows the empty message', status: 'passed', failureMessages: [] },
+] }] });
+const mixedBrowser = JSON.stringify({ stats: { expected: 2, unexpected: 1, flaky: 0 }, suites: [{ title: 'SHOP-2.spec.ts', specs: [
+  { title: '[SHOP-2][AC-1] shell heading counts each line quantity', tests: [{ status: 'unexpected', results: [{ status: 'failed', error: { message: 'no heading' } }] }] },
+  { title: '[SHOP-2][AC-2] shell an empty cart shows the empty message', tests: [{ status: 'expected', results: [{ status: 'passed' }] }] },
+  { title: 'the page loads', tests: [{ status: 'expected', results: [{ status: 'passed' }] }] },
+] }] });
+
+test('--stop-on-unit-failure lists the passed tests named for a criterion, at both levels', () => {
+  // The unit tests failed: the verifier still has the evidence of AC-2, and the browser tests are not run.
+  let dir = app('report', 'fail');
+  try {
+    writeFileSync(join(dir, 'vitest.json'), mixedUnit);
+    const r = summary(dir, '--run', '@shop', '--stop-on-unit-failure');
+    assert.match(r.out, /MFE level \(Vitest\): 2 passed, 1 failed\n {2}✗ \[SHOP-2\]\[AC-1\] MFE heading counts each line quantity\n {4}Unable to find "Cart \(3\)"\n {2}✓ \[SHOP-2\]\[AC-2\] MFE an empty cart shows the empty message\n/);
+    assert.doesNotMatch(r.out, /reducer|AC-3|skipped/, 'neither an untagged test nor a skipped one');
+    assert.match(r.out, /Browser tests not run/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+  // The unit tests passed: both levels list the tests of the criteria, and only those.
+  dir = app('report', 'pass');
+  try {
+    writeFileSync(join(dir, 'vitest.json'), passingUnit);
+    writeFileSync(join(dir, 'playwright.json'), mixedBrowser);
+    const r = summary(dir, '--run', '@shop', '--stop-on-unit-failure');
+    assert.match(r.out, /MFE level \(Vitest\): 2 passed, 0 failed\n {2}✓ \[SHOP-2\]\[AC-1\] MFE heading[^\n]*\n {2}✓ \[SHOP-2\]\[AC-2\] MFE an empty cart[^\n]*\n/);
+    assert.match(r.out, /Shell level \(Playwright\): 2 passed, 1 failed, 0 flaky\n {2}✗ SHOP-2\.spec\.ts › \[SHOP-2\]\[AC-1\] shell heading[^\n]*\n {4}no heading\n {2}✓ SHOP-2\.spec\.ts › \[SHOP-2\]\[AC-2\] shell an empty cart[^\n]*\n/);
+    assert.doesNotMatch(r.out, /page loads/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('without --stop-on-unit-failure, no passed test is listed: the writer reads the summary it always read', () => {
+  const dir = app('report', 'fail');
+  try {
+    writeFileSync(join(dir, 'vitest.json'), mixedUnit);
+    writeFileSync(join(dir, 'playwright.json'), mixedBrowser);
+    const run = summary(dir, '--run', '@shop');
+    assert.match(run.out, /MFE level \(Vitest\): 2 passed, 1 failed\n {2}✗ /);
+    assert.doesNotMatch(run.out, /✓/);
+    // Reading the reports of an earlier run lists none either.
+    const read = summary(dir);
+    assert.match(read.out, /MFE level \(Vitest\)/);
+    assert.doesNotMatch(read.out, /✓/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('--stop-on-unit-failure lists at most 30 passed tests, and says how many more there are', () => {
+  const many = JSON.stringify({ numPassedTests: 35, numFailedTests: 0, testResults: [{ assertionResults:
+    Array.from({ length: 35 }, (_, i) => ({ fullName: `[SHOP-9][AC-${i + 1}] MFE criterion ${i + 1}`, status: 'passed', failureMessages: [] })) }] });
+  const dir = app('report', 'pass');
+  try {
+    writeFileSync(join(dir, 'vitest.json'), many);
+    const r = summary(dir, '--run', '@shop', '--stop-on-unit-failure');
+    assert.equal(r.out.split('\n').filter((line) => line.startsWith('  ✓ ')).length, 30);
+    assert.match(r.out, /✓ \[SHOP-9\]\[AC-30\] MFE criterion 30\n {2}… and 5 more passed tests named for a criterion\n/);
+    assert.doesNotMatch(r.out, /AC-31\]/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

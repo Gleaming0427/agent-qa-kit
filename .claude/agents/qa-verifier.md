@@ -27,9 +27,13 @@ The launcher checks the human review receipt before starting this phase.
 1. Run `npm run test:summary -- --run @<mfe> --stop-on-unit-failure` once. It
    runs the MFE tests, then the shell tests of `@<mfe>` only if no MFE test
    failed, and prints the summary of both.
-2. If it says the browser tests were not run, report shell = `not_run`.
+2. If it says the browser tests were not run, report shell = `not_run`. The
+   MFE level is only `pass` or `fail`.
 3. Read the summary; do not run the tests again unless it says a command wrote
-   no report.
+   no report. A `✓` line is a test of a criterion that passed, a `✗` line one
+   that failed: take the status of each criterion, at each level, from the
+   line of its test, and quote that line as the evidence. A failure of one
+   criterion says nothing about the others.
 4. Every test must carry `[<TICKET>][<AC-ID>]` in its name.
 5. For every criterion from the manifest, report both MFE and shell statuses.
 6. Never declare pass on zero tests, skipped tests, stale reports or flaky E2E.

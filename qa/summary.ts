@@ -23,6 +23,12 @@
 // this run, and the summary says they were not run: the verifier then reports the shell level as
 // not_run, which the verdict check accepts only after a unit failure and without a browser report.
 // The writer does not use it: its unit tests fail by design, and its browser tests must run too.
+//
+// With that option the summary also lists, with a ✓, the tests named for an acceptance criterion
+// ([TICKET][AC-N]) that passed. The counts alone do not say which test passed, and the verifier
+// has to report the status of every criterion at both levels: after a failure of AC-1 it had no
+// evidence for AC-2, and in 2 of 15 sessions it reported AC-2 as not_run, which the verdict check
+// refuses at the MFE level (QA eval run 53). The writer's summary is unchanged.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, rmSync } from 'node:fs';
@@ -34,6 +40,11 @@ const MAX_LENGTH = 300;
 const MAX_FAILURES = 10;
 // The last lines of a test command's output, shown when it wrote no report.
 const OUTPUT_TAIL = 30;
+// A test named for an acceptance criterion, and how many of those the summary lists as passed.
+const CRITERION_TAG = /\[AC-[1-9]\d*\]/;
+const MAX_PASSED = 30;
+// Set by --stop-on-unit-failure: the summary lists the passed tests named for a criterion too.
+let listPassed = false;
 
 const clean = (text: unknown = '') =>
   String(text)
@@ -58,13 +69,14 @@ const readJson = <T>(path: string): T | null => {
 
 function summarizeVitest(report: VitestReport) {
   const failures: Failure[] = [];
+  const passedTitles: string[] = [];
   for (const file of report.testResults ?? []) {
     for (const test of file.assertionResults ?? []) {
+      const title = test.fullName ?? test.title ?? '';
       if (test.status === 'failed') {
-        failures.push({
-          title: test.fullName ?? test.title ?? '',
-          message: truncate((test.failureMessages ?? []).join(' ')),
-        });
+        failures.push({ title, message: truncate((test.failureMessages ?? []).join(' ')) });
+      } else if (test.status === 'passed' && CRITERION_TAG.test(title)) {
+        passedTitles.push(title);
       }
     }
   }
@@ -72,6 +84,7 @@ function summarizeVitest(report: VitestReport) {
   const failed = report.numFailedTests ?? failures.length;
   console.log(`MFE level (Vitest): ${passed} passed, ${failed} failed`);
   printFailures(failures);
+  if (listPassed) printPassed(passedTitles);
 }
 
 function walkSuites(suites: PlaywrightSuite[] | undefined, path: string[], tests: { title: string; test: PlaywrightTest }[]) {
@@ -92,6 +105,7 @@ function summarizePlaywright(report: PlaywrightReport) {
 
   const failures: Failure[] = [];
   const flaky: Omit<Failure, 'message'>[] = [];
+  const passedTitles: string[] = [];
   for (const { title, test } of tests) {
     const results = test.results ?? [];
     const last = results.at(-1);
@@ -104,6 +118,8 @@ function summarizePlaywright(report: PlaywrightReport) {
       failures.push({ title, message: truncate(error), trace });
     } else if (test.status === 'flaky') {
       flaky.push({ title, trace });
+    } else if (test.status === 'expected' && CRITERION_TAG.test(title)) {
+      passedTitles.push(title);
     }
   }
 
@@ -116,6 +132,7 @@ function summarizePlaywright(report: PlaywrightReport) {
   for (const { title, trace } of flaky) {
     console.log(`  ~ flaky: ${title}${trace ? ` (trace: ${trace})` : ''}`);
   }
+  if (listPassed) printPassed(passedTitles);
 }
 
 function printFailures(failures: Failure[]) {
@@ -127,6 +144,11 @@ function printFailures(failures: Failure[]) {
   if (failures.length > MAX_FAILURES) {
     console.log(`  … and ${failures.length - MAX_FAILURES} more failures`);
   }
+}
+
+function printPassed(titles: string[]) {
+  for (const title of titles.slice(0, MAX_PASSED)) console.log(`  ✓ ${title}`);
+  if (titles.length > MAX_PASSED) console.log(`  … and ${titles.length - MAX_PASSED} more passed tests named for a criterion`);
 }
 
 /**
@@ -164,6 +186,7 @@ if (options.length) {
     console.log('Usage: npm run test:summary, or npm run test:summary -- --run @<mfe> [--stop-on-unit-failure] to run the tests first.');
     process.exit(2);
   }
+  listPassed = stop;
   runTests(options[1], stop);
 }
 

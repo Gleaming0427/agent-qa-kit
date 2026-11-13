@@ -68,6 +68,23 @@ test('rejects fake pass where a corresponding actual assertion failed', () => {
   const r = reports({ bug: true });
   assert(validate(verdict(), r).problems.some((p) => p.includes('AC-2 mfe')));
 });
+test('refuses not_run at the MFE level, and says what to report instead', () => {
+  const r = reports({ bug: true });
+  const v = verdict('fail');
+  v.criteria.find((c) => c.id === 'AC-3' && c.level === 'mfe')!.status = 'not_run';
+  const problems = validate(v, r).problems;
+  assert(problems.some((p) => p === 'AC-3 mfe: not_run is not allowed at the MFE level: report pass or fail, from the result of its test.'), problems.join('\n'));
+});
+test('accepts not_run at the shell level only after a failed unit test and without a browser report', () => {
+  const notRun = (v: Verdict) => { for (const c of v.criteria) if (c.level === 'shell') c.status = 'not_run'; return v; };
+  const r = reports({ bug: true });
+  const v = verdict('fail');
+  v.criteria.find((c) => c.id === 'AC-2' && c.level === 'mfe')!.status = 'fail';
+  const without = validate(notRun(v), { vitest: r.vitest, playwright: undefined as never }).problems;
+  assert(!without.some((p) => p.includes('not_run is allowed only')), without.join('\n'));
+  const withReport = validate(notRun(v), r).problems;
+  assert(withReport.some((p) => p === 'AC-1 shell: not_run is allowed only when MFE failed and E2E did not run.'), withReport.join('\n'));
+});
 test('rejects E2E test without actual execution results', () => {
   const r = reports(); r.playwright.suites![0].specs![1].tests![0].results = [];
   assert(validate(verdict(), r).problems.some((p) => p.includes('AC-2 shell')));

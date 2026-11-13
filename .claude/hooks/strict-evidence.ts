@@ -287,7 +287,9 @@ export function validateEvidence({ verdict, manifest, phase, vitest, playwright,
       } else {
         if (c.status === 'not_run') {
           if (level !== 'shell' || (vitest?.numFailedTests ?? 0) === 0 || playwright) {
-            problems.push(`${id} ${level}: not_run is allowed only when MFE failed and E2E did not run.`);
+            problems.push(level === 'mfe'
+              ? `${id} mfe: not_run is not allowed at the MFE level: report pass or fail, from the result of its test.`
+              : `${id} ${level}: not_run is allowed only when MFE failed and E2E did not run.`);
           }
         } else if (c.status !== result) {
           problems.push(`${id} ${level}: agent claimed ${c.status}, actual test evidence is ${result}.`);
