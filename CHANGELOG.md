@@ -18,12 +18,16 @@ A Claude Code session starts what the project tells it to, outside the sandbox: 
 
 `QA_SETTING_SOURCES=user` also reads `~/.claude`, for a machine where the login or provider is set in the user's settings; any other value stops the run before the agent starts. Measured with Claude Code 2.1.303 against a stand-in for the API that recorded what was sent (nothing was billed): the default session sent the project's and the user's `CLAUDE.md` and ran both hooks; with the options, none of it. Run since in QA eval, with the real model, against a reference of the agents before the change: `eval/results/2026-11-12-session-surface.md`.
 
-### The writer: no word bound after a text
+### The writer: two causes of tests that fail on correct code
 
 On the ticket EVAL-10 of the evaluation, the writer's tests failed on the correct code in 3 of its 12 trials (QA eval runs 49, 50, 52 and 53; trial 2 each time), always on `toHaveTextContent(/(?<!\d)4 products(?!\w)/)` and its browser twin: the text of the section reads `4 productsNotebook€4.50`, because the text of an element joins the text of the elements it holds without a space, so a word bound after `products` fails. Before the feature exists the test fails earlier, for a valid reason, so its RED failure cannot show the problem.
 
 - The writer's prompt now says to bound a number with `(?<!\d)` before it, and with `(?!\d)` after it when it ends the phrase, never with `\b` or `(?!\w)` after a word.
 - The verdict check of phase 1 sends back a test file, unit or browser, that gives `toHaveTextContent` or `toContainText` a regular expression ending with `\b`, `(?!\w)`, `(?!\S)`, `(?=\s)` or `(?=\W)`. Run on the files the writer generated (every trial of run 53, and trial 2 of EVAL-10 in runs 49 and 50), it flags the 6 files of those three trials and none of the 28 others.
+
+On EVAL-8, QA eval run 55 had 2 trials (of 3) whose tests failed on the correct code, with a wrong expected amount: the bar was expected to show `€4.50` for one notebook, where the order total adds shipping (`€9.40`), and a check reused after a notebook was added to the cart kept `€53.90` for a total that had become `€53.50`. Run 49 had the same `€4.50` in its test of the same criterion. In the first trial, the coverage summary held the right arithmetic (`4.50 + 4.90 = 9.40`, in another case) while the test asserted `€4.50`; in the second, the summary itself said that the check was repeated after the notebook, with the same amount. A check that every amount a test asserts is the result of an arithmetic of the coverage would flag 19 of the 45 trials of runs 53 to 55, almost all correct, so it was not added.
+
+- The writer's prompt has a new rule 7 (the rules after it move down by one): work out each amount a test expects from the rules of the app, for the exact state of the test at that point; work it out again after each action that changes the state; and when the ticket says a new element shows a value the page already shows (the order total), compare the new element with the element that shows it, instead of writing the amount. It adds no case, which is what raised the wrong amounts when rule 5 was measured (`eval/results/2026-11-04-rule-5.md`).
 
 ### The verifier: one test command, three tools
 
