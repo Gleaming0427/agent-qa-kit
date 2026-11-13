@@ -1067,6 +1067,40 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 43414787289,
+      "run_number": 56,
+      "branch": "claude/verifier-one-command",
+      "started_at": "2026-11-13T11:09:33Z",
+      "commit": "ecd4abf799b348bfaa59b64d637d3fbb847423ff",
+      "label": "verifier one command, smoke, run 56",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 43414787289,
+        "commit": "ecd4abf799b348bfaa59b64d637d3fbb847423ff"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-43414787289.json",
+        "sha256": "566b2ba52c6f517f65bc2f0e839556b6dca34c3700e3457b1dad7cac41e0c4cc",
+        "artifact": {
+          "id": 14032455842,
+          "name": "eval-report",
+          "digest": "sha256:88eb597e317143d2e5decee1e55a7152e5d783f997be70b9838b82a9667c2b12"
+        }
+      },
+      "doc": null,
+      "notes": [
+        "Smoke on the head of the branch: the verifier running one command (--stop-on-unit-failure) with the passed tests listed in the summary, the writer rule against a word bound after a text (and its phase 1 check, which refused no test), and the writer rule 7 on expected amounts. 18 of 18 trials successful, 27 of 27 bugs detected, no test failing on the correct code, 30 verifier sessions with no API error and no invalid verdict. In the 3 trials of EVAL-8, the tests compare the bar with the Total row of the order summary and work the amount out again after each change of the cart. Run 55, on the commit before rule 7, had 16 of 18 trials successful (two EVAL-8 trials with a wrong expected amount); it is not in this history. Not comparable with the release baseline: the scoring code and the application changed."
+      ],
+      "inputs": {
+        "tickets": "smoke",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }

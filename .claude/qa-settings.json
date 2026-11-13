@@ -10,10 +10,7 @@
       "Bash(npm run test:e2e -- --grep *)",
       "Bash(npm run test:summary)",
       "Bash(npm run test:summary -- --run *)",
-      "Bash(npx vitest run *)",
-      "Bash(git diff *)",
-      "Bash(git status *)",
-      "Bash(git log *)"
+      "Bash(npx vitest run *)"
     ],
     "deny": [
       "Read(**/.env)",

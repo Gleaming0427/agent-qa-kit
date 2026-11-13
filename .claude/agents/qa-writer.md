@@ -53,8 +53,22 @@ For EVERY manifest criterion:
    text you assume (Testing Library's `getByText` matches the whole text):
    the ticket does not say which words surround the value. When a longer
    number would still contain it, bound it with a regular expression, such
-   as `/(?<!\d)3 items/`.
-7. Run `npm run test:summary -- --run @<mfe>`: it runs `npm run test:affected`,
+   as `/(?<!\d)3 items/`. Bound a number with `(?<!\d)` before it, and with
+   `(?!\d)` after it when it ends the phrase; never put `\b` or `(?!\w)` after
+   a word: the text of an element that holds other elements joins theirs
+   without a space (`4 productsNotebook`), so such a bound fails on correct
+   code, and the failure cannot show before the feature exists.
+7. Work out each amount a test expects from the rules of the app, not from
+   the figures of the ticket alone. Read the code that computes the value (a
+   fee, a threshold, a discount), apply every rule to the exact cart or state
+   of the test at that point, and work it out again after each action of the
+   test that changes that state (an item added, a quantity changed): a check
+   reused after such an action needs the new amount. When the ticket says that
+   a new element shows a value the page already shows, such as the order
+   total, compare the new element with the element that already shows it
+   instead of writing the amount, and keep literal amounts for the cases that
+   separate the rule.
+8. Run `npm run test:summary -- --run @<mfe>`: it runs `npm run test:affected`,
    then `npm run test:e2e -- --grep @<mfe>`, and prints the condensed results of
    both, in one command. For each criterion, the NEW MFE assertion AND the NEW browser scenario must
    fail against the unimplemented behavior. A browser scenario must fail on an
@@ -63,8 +77,8 @@ For EVERY manifest criterion:
    Check each failure message. A setup failure, missing module, timeout, selector
    that does not match the specified UI or unavailable environment is not
    evidence of missing behavior.
-8. Never use `.skip`, `.only`, `.fixme`, `.todo`, snapshot updates or trivial assertions.
-9. If the spec is ambiguous, report a question instead of inventing behavior.
+9. Never use `.skip`, `.only`, `.fixme`, `.todo`, snapshot updates or trivial assertions.
+10. If the spec is ambiguous, report a question instead of inventing behavior.
 
 Only test commands are allowed, one per call: the guard refuses `;`, `&&`,
 `|` and `>`. Do not cut their output: `npm run test:summary` condenses it. To

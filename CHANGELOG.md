@@ -14,9 +14,29 @@ A Claude Code session starts what the project tells it to, outside the sandbox: 
 - `--setting-sources ""`: no settings, hooks or `CLAUDE.md` from the project or the user; the kit's settings file (`--settings`) is still read, hooks included (checked);
 - `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`: no auto memory. `--setting-sources ""` leaves it on, and a `MEMORY.md` planted in the project's folder of `~/.claude/projects` reached the writer's context: on a developer's machine, what the developer's own sessions on the project remembered. The setting also takes about 2,800 characters out of the agents' fixed context;
 - `--strict-mcp-config` and `--disable-slash-commands`: no MCP server, no skill, no command;
-- `--tools` from the `tools:` line of the agent's file (`qa/kit-integrity.sh`, `kit_session_args`): 6 tools for the writer and the repair agent and 4 for the verifier, instead of 24, with no sub-agents and no web tools.
+- `--tools` from the `tools:` line of the agent's file (`qa/kit-integrity.sh`, `kit_session_args`): 6 tools for the writer and the repair agent and 3 for the verifier, instead of 24, with no sub-agents and no web tools.
 
 `QA_SETTING_SOURCES=user` also reads `~/.claude`, for a machine where the login or provider is set in the user's settings; any other value stops the run before the agent starts. Measured with Claude Code 2.1.303 against a stand-in for the API that recorded what was sent (nothing was billed): the default session sent the project's and the user's `CLAUDE.md` and ran both hooks; with the options, none of it. Run since in QA eval, with the real model, against a reference of the agents before the change: `eval/results/2026-11-12-session-surface.md`.
+
+### The writer: two causes of tests that fail on correct code
+
+On the ticket EVAL-10 of the evaluation, the writer's tests failed on the correct code in 3 of its 12 trials (QA eval runs 49, 50, 52 and 53; trial 2 each time), always on `toHaveTextContent(/(?<!\d)4 products(?!\w)/)` and its browser twin: the text of the section reads `4 productsNotebook€4.50`, because the text of an element joins the text of the elements it holds without a space, so a word bound after `products` fails. Before the feature exists the test fails earlier, for a valid reason, so its RED failure cannot show the problem.
+
+- The writer's prompt now says to bound a number with `(?<!\d)` before it, and with `(?!\d)` after it when it ends the phrase, never with `\b` or `(?!\w)` after a word.
+- The verdict check of phase 1 sends back a test file, unit or browser, that gives `toHaveTextContent` or `toContainText` a regular expression ending with `\b`, `(?!\w)`, `(?!\S)`, `(?=\s)` or `(?=\W)`. Run on the files the writer generated (every trial of run 53, and trial 2 of EVAL-10 in runs 49 and 50), it flags the 6 files of those three trials and none of the 28 others.
+
+On EVAL-8, QA eval run 55 had 2 trials (of 3) whose tests failed on the correct code, with a wrong expected amount: the bar was expected to show `€4.50` for one notebook, where the order total adds shipping (`€9.40`), and a check reused after a notebook was added to the cart kept `€53.90` for a total that had become `€53.50`. Run 49 had the same `€4.50` in its test of the same criterion. In the first trial, the coverage summary held the right arithmetic (`4.50 + 4.90 = 9.40`, in another case) while the test asserted `€4.50`; in the second, the summary itself said that the check was repeated after the notebook, with the same amount. A check that every amount a test asserts is the result of an arithmetic of the coverage would flag 19 of the 45 trials of runs 53 to 55, almost all correct, so it was not added.
+
+- The writer's prompt has a new rule 7 (the rules after it move down by one): work out each amount a test expects from the rules of the app, for the exact state of the test at that point; work it out again after each action that changes the state; and when the ticket says a new element shows a value the page already shows (the order total), compare the new element with the element that shows it, instead of writing the amount. It adds no case, which is what raised the wrong amounts when rule 5 was measured (`eval/results/2026-11-04-rule-5.md`).
+
+### The verifier: one test command, three tools
+
+Counted in the transcripts of 60 verifier sessions (QA eval runs 49 and 50): it never used Glob, and it ran three commands per session, two of them with the raw output of Vitest or Playwright in its context, where the writer runs one. Neither the writer nor the verifier ran `git diff`, `git status` or `git log` in 96 sessions.
+
+- The verifier runs `npm run test:summary -- --run @<mfe> --stop-on-unit-failure` once: the unit tests, then the browser tests only if no unit test failed, and the summary of both. The new option of `qa/summary.ts` removes the earlier browser report when it skips the browser tests, so that `not_run` is checked as before: only after a unit failure, and without a browser report. The writer's cycle is unchanged: its unit tests fail by design and its browser tests must run too.
+- With that option, the summary also lists, with a `✓`, the tests named for a criterion (`[TICKET][AC-N]`) that passed, at most 30. QA eval run 53, the first smoke run of this change with the verifier running (in run 52 the API credit ran out before it started), found that the counts alone do not say which test passed: after a failure of AC-1, 2 verifiers out of 15 reported AC-2 as `not_run`, which the verdict check refuses at the MFE level, and ended on an invalid verdict. The verifier's prompt now takes each criterion's status from the line of its test, and the verdict check says to report `pass` or `fail` at the MFE level. The writer's summary is unchanged.
+- Its tools are Read, Grep and Bash: Glob is gone, and Grep lists files.
+- `.claude/qa-settings.json` no longer allows `git diff`, `git status` or `git log` to the writer and the verifier. The repair agent keeps them in its own settings.
 
 ## v0.3.1, 11 November 2026
 

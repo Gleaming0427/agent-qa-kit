@@ -134,9 +134,10 @@ case "$TOOL" in
       'npm run test:e2e -- --grep '@*)
         grep -Eq '^npm run test:e2e -- --grep @[a-z0-9-]+$' <<<"$cmd" || deny 'Unsafe E2E grep option'
         ;;
-      # Runs test:affected, then test:e2e -- --grep @<mfe>, then prints the summary (qa/summary.ts).
+      # Runs test:affected, then test:e2e -- --grep @<mfe>, then prints the summary (qa/summary.ts);
+      # with --stop-on-unit-failure, the browser tests only after unit tests with no failure.
       'npm run test:summary -- --run '*)
-        grep -Eq '^npm run test:summary -- --run @[a-z0-9-]+$' <<<"$cmd" || deny 'Unsafe test:summary option'
+        grep -Eq '^npm run test:summary -- --run @[a-z0-9-]+( --stop-on-unit-failure)?$' <<<"$cmd" || deny 'Unsafe test:summary option'
         ;;
       'npx vitest run '*)
         grep -Eq '^npx vitest run ([a-zA-Z0-9_/-]+\.)?([a-zA-Z0-9_/-]+)\.test\.tsx?$' <<<"$cmd" || deny 'Only one local test file allowed'
