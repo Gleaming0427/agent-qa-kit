@@ -2,7 +2,7 @@
 
 A working file for long tasks on the kit, by a person or an agent. Read it at the start of a session and update it at the end: what the work is for, what was decided and why, what changed, what comes next. It records facts with their pull request or file. The reasons in full are in the changelog, `SECURITY.md` and `eval/results/`.
 
-**As of 13 November 2026.** `main` is at `8ff5e3d`: v0.3.1 (tagged) and #55 to #61. The changelog lists their changes of the agents and of the evaluation under "Unreleased".
+**As of 16 November 2026.** `main` is at `8f3ebd0`: v0.3.1 (tagged) and #55 to #62, with #63 open. The changelog lists their changes of the agents and of the evaluation under "Unreleased". The agents of `main` are those of `8ff5e3d` (#61): #62 changed this file only.
 
 ## Objectives
 
@@ -23,6 +23,8 @@ A working file for long tasks on the kit, by a person or an agent. Read it at th
 | #59 | This state file | merged |
 | #60 | `CLAUDE.md`, for the sessions that develop the kit | merged |
 | #61 | The verifier runs one test command, with three tools; and, found by its evaluation, `✓` lines in the verifier's summary, a writer rule against a word bound after a text, and a writer rule on expected amounts | merged after a smoke evaluation of its final version (runs 56 and 57): release decision "review" |
+| #62 | This state file after #61 | merged |
+| #63 | QA eval run 58 in the history, and the release baseline changed to it | open, on `claude/magical-feynman-bhdsbc` |
 
 Evaluation campaigns added to `eval/history` on 12 November ($3.42 in all):
 
@@ -43,6 +45,12 @@ QA eval runs on the branch of #61, on 12 and 13 November ($7.82 in all; only run
 | 56 | `ecd4abf`, with the writer rule on amounts | same | 18/18, 27/27 bugs; verifier 15, 15, 15; in `eval/history` |
 | 57 | `bb5ef36`, the agents of run 56 | EVAL-1, 6, 8, 9, 10, 15 | 18/18, 27/27 bugs; verifier 15, 15, 15 |
 
+Every ticket on `main`, on 13 November ($4.34; in `eval/history` with #63; `eval/results/2026-11-13-every-ticket.md`):
+
+| Run | Agents (commit) | Tickets | Result |
+|---|---|---|---|
+| 58 | `8ff5e3d`, the agents of runs 56 and 57 | all 17 × 3 | 50/51, 96/96 bugs; one trial of EVAL-13 with a test failing on the correct code (the cart line expected to show its discounted amount, which the ticket does not ask for); verifier 47, 48 and 48 of 48, no API error and no invalid verdict in 96 sessions; its own release decision "review", against "D clean" |
+
 ## Decisions, and why
 
 - **Artifacts, not conversations.** Each agent runs in a new `claude -p` session. Between steps, only files pass: the criteria, the tests, the verdicts, the review and its receipt, and the failure summary for repairs. The verifier does not read the writer's explanations. Since #56, the agents can no longer start sub-agents.
@@ -54,7 +62,9 @@ QA eval runs on the branch of #61, on 12 and 13 November ($7.82 in all; only run
 
   The policy allows one follow-up per ticket, then asks a person (`eval/results/2026-11-12-session-surface.md`).
 - **An evaluation for every change of the agents' surface (#55).** The surface is the prompts, the models, the effort, the tools, the settings, the hooks, `qa/run-qa.sh`, `qa/kit-integrity.sh`, `qa/criteria-manifest.ts` and the Claude Code version. The label `qa-eval-waived` is for a change that only removes unused context from the agents (used once, #58). A prompt change always gets an evaluation.
-- **The release baseline stays "D clean" for now.** No new campaign is comparable with it, since the demo shop changed in #50 and the scoring code in #55. It is replaced only after a full run. Until then, each campaign gets the decision "review" (runs 49 to 57), which QA eval required lets through: it does not say that the baseline was met.
+- **The release baseline is run 58 (#63, the owner's decision of 16 November).** "D clean" could not be compared with any campaign since the demo shop changed in #50 and the scoring code in #55: every campaign from run 49 to run 58 got the decision "review" for that reason, which QA eval required lets through without saying that the baseline was met. With run 58 as the baseline, a smoke run is compared ticket by ticket: computed again with no model call, run 56 (the same agents) is accepted and run 49 (the agents before #61) is "review" (EVAL-8, EVAL-15 and one bug of EVAL-10 unstable and worse).
+  - **The order:** `eval/README.md` says to change the baseline after a release. Here it changes before the tag of v0.3.2, on the version to be released, so that the next change of the agents (the security fixes below) is the first to be compared with a baseline.
+  - Two tests named the campaigns of "D clean" where they meant the release baseline (`eval/tests/validate.test.ts`, `eval/tests/required.test.ts`). They now read the campaigns of `eval/release-baseline.json`, and pass with the old file and with the new one.
 - **#61 merged on the measures of its final version.** Its evaluation found two defects of its own, fixed on the branch: the verifier's summary listed only the failed tests, so the verifier had no evidence for the other criteria (2 invalid verdicts of 15, run 53; `✓` lines added); and two causes of writer false positives (next bullet). Runs 56 and 57, on the final agents: 36 of 36 trials successful, 54 of 54 injected bugs detected, the verifier right in 30 of 30 trials, no test failing on the correct code. A small sample: 3 trials per ticket, and 7 tickets of 17 (EVAL-1, 5, 6, 8, 9, 10, 15).
 - **Two causes of writer false positives, found on the way.**
   - A word bound after a text in a text matcher (`toHaveTextContent(/(?<!\d)4 products(?!\w)/)`; EVAL-10, 3 of 12 trials in runs 49, 50, 52 and 53): the text of a section joins its elements without a space (`4 productsNotebook`). Writer prompt rule 6 and a phase 1 check (`textBoundProblem`).
@@ -71,6 +81,7 @@ QA eval runs on the branch of #61, on 12 and 13 November ($7.82 in all; only run
 - **The evaluation:**
   - `eval/history/` (campaigns, sources, `index.json`);
   - `eval/results/2026-11-12-session-surface.md`;
+  - `eval/results/2026-11-13-every-ticket.md` (run 58, the baseline);
   - `eval/release-baseline.json`;
   - `eval/compare-policy.json` (the rules of the release decision).
 - **A ticket in a project:**
@@ -83,19 +94,30 @@ QA eval runs on the branch of #61, on 12 and 13 November ($7.82 in all; only run
 
 ## Next steps, in order
 
-1. **A new release baseline, and v0.3.2.** Run 58: QA eval on `main` (`8ff5e3d`), every ticket, 3 trials, started on 13 November at 13:13 UTC (cost cap $8). Its result is not read yet. Then a human review of it; if it is accepted, release v0.3.2 with the "Unreleased" entries, and make that version the baseline (`eval/release-baseline.json`) with the campaign added to `eval/history`, in a reviewed pull request (`eval/README.md`: the baseline changes after a release).
-2. **Writer false positives of a third kind**, seen once: run 49, EVAL-15 trial 2, a role `list` named `Products` assumed where a message replaces the list. Its frequency is not measured; run 58 covers every ticket.
-3. **`--exclude-dynamic-system-prompt-sections`.** It moves the working directory, the environment and the git status from the system prompt into the first message, so that the system prompt is the same in every project folder (measured). The cache gain is small; it needs an evaluation.
-4. **Context in the eval report.** Add the first-call and peak context per session, measured from the transcripts. No credit needed. Measured by hand on 12 November: writer peak about 20,000 tokens, verifier about 14,000.
-5. **The repair loop on a real runner.** It has never run there. After that, consider a repair log passed from one attempt to the next: the failing criteria, the files changed, the result.
-6. **"Permission mode forced to default".** Claude Code prints this when `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB` is set, so the agents may not run in `dontAsk` as the launchers ask. It is printed in every phase 1 and phase 2 log of runs 53 to 57 (240 of 240). Check what this changes, with `--allowedTools`.
+1. **Release v0.3.2**, once #63 is merged: the "Unreleased" entries of the changelog under a v0.3.2 heading, the version in `package.json` and in the README, then the tag, which is the owner's.
+2. **The fixes of the security review of 13 November**, in one pull request with a smoke run, the first to be compared with the new baseline.
+   - **How it was measured:** the kit's launcher (`qa/run-qa.sh`, phase 1) with Claude Code 2.1.303 against a stand-in for the API, as an unprivileged user on Linux. Nothing was billed. It is not a run on a GitHub-hosted runner.
+   - **What held:** the commands an agent starts could not write to the project's `qa/`, `.claude/` and `.github/`, to `.git/hooks`, `.git/config` or `package.json`; they had no API key and no network; they could not read the `.env` files, `~/.ssh` or `~/.aws`. Read and Write outside the project were refused, a path under `~` included. `npm test`, which the settings do not list, was refused. A file written in the project's copy of the kit stopped the launcher.
+   - **"Permission mode forced to default"**, which every agent log prints: the transcript records the mode `default`. A command outside the allow list was refused ("This command requires approval"); a read-only one ran without an allow rule.
+   - **To fix:**
+     - the guard still accepts `git status`, `git diff` and `git log` for the writer and the verifier, and `git status` ran: #61 removed them from `.claude/qa-settings.json` only, so the changelog says more than what is in force;
+     - the rest of `.git/`, `node_modules/` and files such as `.gitattributes` or `.husky/` can be written by the code an agent runs, and QA write tests then uses git in that checkout with a write token. Whether this can be used was not tested; `check-scope` runs after the commit;
+     - `~/.git-credentials`, `~/.netrc` and `~/.config/gh/hosts.yml` can be read from the sandbox;
+     - on a developer's machine, the full suite after a pass runs outside the sandbox: the API key is removed from its environment, the rest is not. `SECURITY.md` should say so;
+     - `qa-guard.yml`, the kit's own CI, has two checkouts without `persist-credentials: false`.
+   - **Not concluded:** writes outside the project (the test folders were under `/tmp`, which the sandbox allows); which rule kept a `.env` out of a Grep (it was also in `.gitignore`).
+   - **Not reviewed:** the installer (`bin/agent-qa-kit.mjs`), `qa/ci-verify.sh`, `qa/ci-amend-tests.sh`, the isolation of the evaluation, the repair agent's settings, phase 2. `npm audit` was not run again.
+3. **Writer tests that assume markup or a display the ticket does not give**, seen twice since 12 November: run 49, EVAL-15 trial 2 (a list counted where a message replaces it), and run 58, EVAL-13 trial 2 (the cart line expected to show its discounted amount). One trial in 51 in run 58. No rule or check was written for it.
+4. **`--exclude-dynamic-system-prompt-sections`.** It moves the working directory, the environment and the git status from the system prompt into the first message, so that the system prompt is the same in every project folder (measured). The cache gain is small; it needs an evaluation.
+5. **Context in the eval report.** Add the first-call and peak context per session, measured from the transcripts. No credit needed. Measured by hand on 12 November: writer peak about 20,000 tokens, verifier about 14,000.
+6. **The repair loop on a real runner.** It has never run there. After that, consider a repair log passed from one attempt to the next: the failing criteria, the files changed, the result.
 7. **Known gaps of `SECURITY.md`:**
    - GitHub Actions pinned by tag, not by SHA;
    - the install scripts of `npm ci`;
    - install steps that wait ten minutes when the runner's network fails;
    - measurements on new tickets and other applications.
 
-**For the owner:** delete the branches of merged or closed pull requests: `claude/confident-brown-bn2ttv` (#55), `claude/session-surface` (#56), `claude/eval-reference` (#57), `claude/no-auto-memory` (#58), `claude/verifier-one-command` (#61), `claude/keep-approval-reasons` (#53, #54) and `feat/TICKET-44` (the trial of #49, closed). `claude/magical-feynman-bhdsbc` is not in `main`'s history: check before deleting it.
+**For the owner:** delete the branches of merged or closed pull requests: `claude/confident-brown-bn2ttv` (#55), `claude/session-surface` (#56), `claude/eval-reference` (#57), `claude/no-auto-memory` (#58), `claude/verifier-one-command` (#61), `claude/keep-approval-reasons` (#53, #54) and `feat/TICKET-44` (the trial of #49, closed). `claude/magical-feynman-bhdsbc` holds #63: delete it once that pull request is merged.
 
 ## How to update this file
 

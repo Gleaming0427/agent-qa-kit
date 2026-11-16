@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "label": "D clean",
-  "campaigns": ["gh-41605000003", "gh-41605005317"],
-  "why": "The last version measured on every ticket, 3 trials each, with no sight of the corpus: D clean and its regression check. The release decision of each QA eval run compares the new version with it. Change it, in a reviewed commit, once a new version is accepted and released."
+  "label": "main, 13 November (run 58)",
+  "campaigns": ["gh-43431804429"],
+  "why": "The last version measured on every ticket, 3 trials each, with no sight of the corpus: main at 8ff5e3d, after #61, QA eval run 58 (50 of 51 trials successful, 96 of 96 injected bugs detected). It replaces D clean (gh-41605000003 and gh-41605005317), which no campaign could be compared with since the demo shop changed in #50 and the scoring code in #55. The release decision of each QA eval run compares the new version with it. Change it, in a reviewed commit, once a new version is accepted and released."
 }
