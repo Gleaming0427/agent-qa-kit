@@ -13,9 +13,18 @@ A review on 13 November ran the kit's launcher (`qa/run-qa.sh`, phase 1) with Cl
 
 With these changes, the same test, run again on 17 November, was refused `git status`, every read of those credential files, and the writes to `HEAD`, `info/attributes`, `.git/hooks` and `.git/config`; `git add` failed, `objects/` being read-only. What its code could still do is in `SECURITY.md`, known gaps: write to `node_modules/` and to files such as `.gitattributes` or `CLAUDE.md`, and read the rest of the home folder.
 
-Measured by QA eval run 60 (smoke, 6 tickets × 3 trials): 17 of 18 trials successful, as the release baseline (run 58) on the same tickets, with no sandbox error; release decision "review", one EVAL-8 trial having a test that expects two Checkout buttons where the page has one.
+Measured by QA eval run 60 (smoke, 6 tickets × 3 trials): 17 of 18 trials successful, as the release baseline (run 58) on the same tickets, with no sandbox error; release decision "review", one EVAL-8 trial having a test that expects two Checkout buttons where the page has one. The follow-up, run 61 (EVAL-8 × 3), had one more trial with the same test: EVAL-8 4/6, against 3/3 in run 58.
 
 The kit's own CI (`qa-guard.yml`) no longer keeps the GitHub token on disk in its two jobs, which run the pull request's code and need no git credentials.
+
+### The writer: no test that depends on the answer to its own question
+
+In QA eval runs 60 and 61, two EVAL-8 trials of 6 had a browser test that failed on the correct code: it waited for two Checkout buttons (`toHaveCount(2)`), the one in the cart and the one in the new bar, where the reference hides the cart's button on a phone. Both writers had asked in `spec_questions` whether the cart's button stays on phone screens, and kept the count. So had the EVAL-13 trial of run 58 whose test failed on the correct code: it asked where a line's discounted amount appears, and checked it in the line. The EVAL-15 trial of run 49 asked nothing.
+
+- Rule 10 of the writer's prompt now says that each test must pass whatever the answer to the writer's questions: a test that assumes what the ticket does not give is changed, not only reported. A ticket that adds an element does not say what becomes of those the page already has: unless a criterion says so, a test does not assert that one of them stays visible or unchanged, nor how many elements share the new one's role and name. Its example is not taken from the evaluation's tickets.
+- No check was added: whether an assertion depends on an open question is not visible in the test code.
+
+Measured by QA eval run 62 (smoke: EVAL-1, 3, 8, 9, 10, 13 × 3): 17 of 18 trials successful, as the release baseline (run 58) on the same tickets; no test failing on the correct implementation in 15 trials (14 of 15 in run 58); EVAL-8 3 of 3, with no test counting the Checkout buttons; the three EVAL-13 writers asked where a line's discounted amount appears and checked the discount through the subtotal, shipping and total. Release decision "review": one EVAL-1 trial missed the bug that computes the discount on the subtotal plus shipping, its only case being a cart with free shipping, where both give the same discount; a trial of run 42 had missed it with the same cart. The follow-up, run 63 (EVAL-1 × 3), had 3 of 3, each trial testing a cart below the free-shipping threshold. Runs 62 and 63 together against run 58: 20/21 against 17/18, EVAL-1 5/6 against 3/3, no test failing on the correct implementation in 18 trials against 14 of 15; release decision "review", which now asks a person: a ticket gets one follow-up. Three trials per ticket is a small sample.
 
 ## v0.3.2, 17 November 2026
 
