@@ -2,7 +2,7 @@
 
 A working file for long tasks on the kit, by a person or an agent. Read it at the start of a session and update it at the end: what the work is for, what was decided and why, what changed, what comes next. It records facts with their pull request or file. The reasons in full are in the changelog, `SECURITY.md` and `eval/results/`.
 
-**As of 17 November 2026.** `main` is at `c560781`: v0.3.2 (tagged), with #55 to #64. The agents of `main` are those of `8ff5e3d` (#61), measured by QA eval run 58, the release baseline: #62 to #64 changed no file the agents see. The fixes of the security review of 13 November are on `claude/magical-feynman-bhdsbc`. Their first smoke run (59) found that a read-only `.git` stopped the agents' sandbox on a runner; fixed on the branch, and measured by smoke run 60 (17/18, release decision "review": one EVAL-8 trial with a test assuming two Checkout buttons).
+**As of 17 November 2026.** `main` is at `c560781`: v0.3.2 (tagged), with #55 to #64. The agents of `main` are those of `8ff5e3d` (#61), measured by QA eval run 58, the release baseline: #62 to #64 changed no file the agents see. The fixes of the security review of 13 November are on `claude/magical-feynman-bhdsbc`. Their first smoke run (59) found that a read-only `.git` stopped the agents' sandbox on a runner; fixed on the branch, and measured by smoke run 60 and its follow-up run 61: release decision "review", EVAL-8 4/6 against 3/3, both failures from tests that expect two Checkout buttons. The pull request is #65.
 
 ## Objectives
 
@@ -26,7 +26,7 @@ A working file for long tasks on the kit, by a person or an agent. Read it at th
 | #62 | This state file after #61 | merged |
 | #63 | QA eval run 58 in the history, and the release baseline changed to it | merged |
 | #64 | v0.3.2: the changelog's entries under a v0.3.2 heading, the version, and the gaps found on 13 November in `SECURITY.md` | merged, tagged `v0.3.2` |
-| next | The fixes of the security review of 13 November: git refused to the writer and the verifier by the guard, the git folder's entries read-only and the home folder's credential files unreadable in the sandbox, no git hook in the publish steps of QA write tests and QA amend tests, no token on disk in `qa-guard.yml` | on `claude/magical-feynman-bhdsbc`; smoke run 59 failed, run 60 in `eval/history` (below) |
+| #65 | The fixes of the security review of 13 November: git refused to the writer and the verifier by the guard, the git folder's entries read-only and the home folder's credential files unreadable in the sandbox, no git hook in the publish steps of QA write tests and QA amend tests, no token on disk in `qa-guard.yml` | open, on `claude/magical-feynman-bhdsbc`; smoke run 59 failed, runs 60 and 61 in `eval/history` (below); release decision "review" |
 
 Evaluation campaigns added to `eval/history` on 12 November ($3.42 in all):
 
@@ -53,12 +53,13 @@ Every ticket on `main`, on 13 November ($4.34; in `eval/history` with #63; `eval
 |---|---|---|---|
 | 58 | `8ff5e3d`, the agents of runs 56 and 57 | all 17 × 3 | 50/51, 96/96 bugs; one trial of EVAL-13 with a test failing on the correct code (the cart line expected to show its discounted amount, which the ticket does not ask for); verifier 47, 48 and 48 of 48, no API error and no invalid verdict in 96 sessions; its own release decision "review", against "D clean" |
 
-QA eval runs on the branch of the security fixes, on 17 November ($2.95 in all; only run 60 is in `eval/history`):
+QA eval runs on the branch of the security fixes, on 17 November ($3.28 in all; runs 60 and 61 are in `eval/history`):
 
 | Run | Agents (commit) | Tickets | Result |
 |---|---|---|---|
 | 59 | `2006cf3`, the first commit of the security fixes | EVAL-1, 2, 8, 9, 10, 13 × 3 | 6/18 (only the ambiguous and the adversarial tickets); release decision "review" against run 58. In 15 of 15 trials that write tests, every Bash command failed: `bwrap: Can't create file at .../.git/config.lock: Read-only file system`. The writer's tests were right (54/54 fail-to-pass units, 27/27 bugs, no false positive) but it could not run them, and answered "blocked"; the verifier did not run. $1.49. |
 | 60 | `b41f920`, the git folder's entries read-only instead | same | 17/18, 26/27 bugs; verifier pass on the correct implementation 14/15, fail on a bug 15/15; no API error, no sandbox error in the 18 trials. EVAL-8 trial 3: its browser test expects two Checkout buttons on the page (`toHaveCount(2)`), the reference has one. Release decision "review" against run 58: EVAL-8 unstable and worse (3/3 → 2/3); it suggests EVAL-8 × 3 again. $1.46. |
+| 61 | `01b390f`, the agents of run 60 (history and documentation added) | EVAL-8 × 3 | 2/3, 5/6 bugs; trial 2 failed for the same reason (two Checkout buttons expected). In runs 56, 58, 60 and 61, every EVAL-8 writer read the same files (5 Read, 1 Glob) and ran one command. Runs 60 and 61 together against run 58: 19/21 against 17/18; EVAL-8 4/6 against 3/3, 10/12 bugs against 6/6; decision "review", which now asks a person: one follow-up per ticket. $0.33. |
 
 ## Decisions, and why
 
@@ -103,7 +104,7 @@ QA eval runs on the branch of the security fixes, on 17 November ($2.95 in all; 
 
 ## Next steps, in order
 
-1. **The fixes of the security review of 13 November**, on `claude/magical-feynman-bhdsbc`: the pull request, and the owner's decision on its "review" (run 60), with or without the EVAL-8 follow-up the decision suggests.
+1. **The fixes of the security review of 13 November (#65):** the owner's decision on its "review". EVAL-8 is 4/6 on the branch (runs 60 and 61) against 9/9 with the agents of `main` (runs 56, 57 and 58); both failures are tests that expect two Checkout buttons. The writers' tool calls on EVAL-8 are the same in all these runs, and the changes do not touch the prompts; no cause in the change was found, and none is ruled out.
    - **How the review measured:** the kit's launcher (`qa/run-qa.sh`, phase 1) with Claude Code 2.1.303 against a stand-in for the API, as an unprivileged user on Linux, on 13 November and again on 17 November with the fixes. Nothing was billed. It is not a run on a GitHub-hosted runner.
    - **What held on 13 November:** the commands an agent starts could not write to the project's `qa/`, `.claude/` and `.github/`, to `.git/hooks`, `.git/config` or `package.json`; they had no API key and no network; they could not read the `.env` files, `~/.ssh` or `~/.aws`. Read and Write outside the project were refused, a path under `~` included. `npm test`, which the settings do not list, was refused. A file written in the project's copy of the kit stopped the launcher.
    - **"Permission mode forced to default"**, which every agent log prints: the transcript records the mode `default`. A command outside the allow list was refused ("This command requires approval"); a read-only one ran without an allow rule. The guard is what refuses the others.
@@ -112,7 +113,7 @@ QA eval runs on the branch of the security fixes, on 17 November ($2.95 in all; 
    - **Still open** (`SECURITY.md`, known gaps): writes to `node_modules/` and to files such as `.gitattributes`, `.husky/` or `CLAUDE.md`; a new file directly in `.git`; reads of the rest of the home folder.
    - **Not concluded:** writes outside the project (the test folders were under `/tmp`, which the sandbox allows); which rule kept a `.env` out of a Grep (it was also in `.gitignore`).
    - **Not reviewed:** the installer (`bin/agent-qa-kit.mjs`), `qa/ci-verify.sh`, `qa/ci-amend-tests.sh` apart from the hooks of its publish step, the isolation of the evaluation, the repair agent's settings, phase 2. `npm audit` was not run again.
-2. **Writer tests that assume markup or a display the ticket does not give**, seen three times since 12 November: run 49, EVAL-15 trial 2 (a list counted where a message replaces it); run 58, EVAL-13 trial 2 (the cart line expected to show its discounted amount); run 60, EVAL-8 trial 3 (two Checkout buttons expected on the page). One trial in 51 in run 58, one in 18 in run 60. No rule or check was written for it.
+2. **Writer tests that assume markup or a display the ticket does not give**, seen three times since 12 November: run 49, EVAL-15 trial 2 (a list counted where a message replaces it); run 58, EVAL-13 trial 2 (the cart line expected to show its discounted amount); runs 60 and 61, EVAL-8 trials 3 and 2 (two Checkout buttons expected on the page). One trial in 51 in run 58, two in 21 in runs 60 and 61. No rule or check was written for it.
 3. **`--exclude-dynamic-system-prompt-sections`.** It moves the working directory, the environment and the git status from the system prompt into the first message, so that the system prompt is the same in every project folder (measured). The cache gain is small; it needs an evaluation.
 4. **Context in the eval report.** Add the first-call and peak context per session, measured from the transcripts. No credit needed. Measured by hand on 12 November: writer peak about 20,000 tokens, verifier about 14,000.
 5. **The repair loop on a real runner.** It has never run there. After that, consider a repair log passed from one attempt to the next: the failing criteria, the files changed, the result.

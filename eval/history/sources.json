@@ -1169,6 +1169,40 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 44100705624,
+      "run_number": 61,
+      "branch": "claude/magical-feynman-bhdsbc",
+      "started_at": "2026-11-17T14:13:11Z",
+      "commit": "01b390f8ae6f539327fdecc1f337785acf99fdde",
+      "label": "security fixes, follow-up EVAL-8, run 61",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 44100705624,
+        "commit": "01b390f8ae6f539327fdecc1f337785acf99fdde"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-44100705624.json",
+        "sha256": "c5f9decdfa73fc861dd7271b09f378ad16aa561b0f29be47fa5e3d8fd43ef657",
+        "artifact": {
+          "id": 14337690725,
+          "name": "eval-report",
+          "digest": "sha256:c28be3b6a8fb422a8f5ea201693293a0ebf65f579729eb33d2ab3e15b0b4c85a"
+        }
+      },
+      "doc": null,
+      "notes": [
+        "The follow-up the release decision of run 60 asked for: EVAL-8, 3 trials, with the agents of run 60 (01b390f adds only the history and the documentation to b41f920). 2 of 3 trials successful, 5 of 6 injected bugs detected, no sandbox error. Trial 2 failed on the correct implementation for the same reason as trial 3 of run 60: its browser test expected two Checkout buttons on the page (toHaveCount(2)), where the reference has one. In runs 56, 58, 60 and 61, every EVAL-8 writer read the same files and ran one command."
+      ],
+      "inputs": {
+        "tickets": "EVAL-8",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }

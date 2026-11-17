@@ -13,7 +13,7 @@ A review on 13 November ran the kit's launcher (`qa/run-qa.sh`, phase 1) with Cl
 
 With these changes, the same test, run again on 17 November, was refused `git status`, every read of those credential files, and the writes to `HEAD`, `info/attributes`, `.git/hooks` and `.git/config`; `git add` failed, `objects/` being read-only. What its code could still do is in `SECURITY.md`, known gaps: write to `node_modules/` and to files such as `.gitattributes` or `CLAUDE.md`, and read the rest of the home folder.
 
-Measured by QA eval run 60 (smoke, 6 tickets × 3 trials): 17 of 18 trials successful, as the release baseline (run 58) on the same tickets, with no sandbox error; release decision "review", one EVAL-8 trial having a test that expects two Checkout buttons where the page has one.
+Measured by QA eval run 60 (smoke, 6 tickets × 3 trials): 17 of 18 trials successful, as the release baseline (run 58) on the same tickets, with no sandbox error; release decision "review", one EVAL-8 trial having a test that expects two Checkout buttons where the page has one. The follow-up, run 61 (EVAL-8 × 3), had one more trial with the same test: EVAL-8 4/6, against 3/3 in run 58.
 
 The kit's own CI (`qa-guard.yml`) no longer keeps the GitHub token on disk in its two jobs, which run the pull request's code and need no git credentials.
 

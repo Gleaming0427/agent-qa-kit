@@ -703,5 +703,24 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 1.4608
+  },
+  {
+    "id": "gh-44100705624",
+    "label": "security fixes, follow-up EVAL-8, run 61",
+    "role": "campaign",
+    "started_at": "2026-11-17T14:13:11Z",
+    "commit": "01b390f",
+    "agent": "1106d918e9fc",
+    "writer_prompt": "2e02c1c",
+    "scoring": "original at 01b390f",
+    "tickets": 1,
+    "trials": 3,
+    "agent_errors": 0,
+    "successes": 2,
+    "bugs_detected": "5/6",
+    "trials_with_false_positives": 1,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 0.3265
   }
 ]
