@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          # No token on disk while the pull request's code runs: no step of this job uses git with it.
+          persist-credentials: false
       - uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -45,6 +48,8 @@ jobs:
         working-directory: examples/shop
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v5
         with:
           node-version: 22

@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Security: what the agents' code could still reach
+
+A review on 13 November ran the kit's launcher (`qa/run-qa.sh`, phase 1) with Claude Code 2.1.303 against a stand-in for the API, as an unprivileged user on Linux, with a test standing for what an agent's tests could do. These gaps it found are closed:
+
+- **The guard refuses git to the writer and the verifier.** v0.3.2 took `git diff`, `git status` and `git log` out of their settings, but the guard still accepted them, and a read-only `git status` ran without an allow rule. Only the repair agent may run them now, in the same narrow forms.
+- **The repository's git folder is read-only in the sandbox.** Claude Code already kept `.git/hooks` and `.git/config` out of reach; the test still wrote `HEAD` and `info/attributes`. `kit_settings` now adds the git folder of the project's repository to the sandbox's `denyWrite`, wherever it is: the project's own `.git`, a parent folder's, or the common folder of a worktree. `git status`, `git diff` and `git log` still work with the folder read-only.
+- **The credential files of the home folder cannot be read** by the commands an agent runs: the test read `~/.git-credentials`, `~/.netrc` and `~/.config/gh/hosts.yml`. Both agents' settings now refuse them, with `~/.npmrc`, `~/.docker/config.json`, `~/.kube/`, `~/.config/gcloud/` and `~/.azure/`; a read rule of the settings is also a read rule of the sandbox. `npm run` still works with `~/.npmrc` unreadable.
+- **No git hook runs while QA write tests and QA amend tests commit and push with a token.** The code an agent runs can still write to `.husky/`, and a project that uses husky points `core.hooksPath` there in its own install script: a planted `.husky/pre-commit` would have run in the publish step, outside the sandbox, with a token that can push. Both publish steps now set `core.hooksPath` to `/dev/null` for every git command they run.
+
+With these changes, the same test, run again on 17 November, was refused every write in `.git/`, every read of those credential files and `git status`. What its code could still do is in `SECURITY.md`, known gaps: write to `node_modules/` and to files such as `.gitattributes` or `CLAUDE.md`, and read the rest of the home folder.
+
+The kit's own CI (`qa-guard.yml`) no longer keeps the GitHub token on disk in its two jobs, which run the pull request's code and need no git credentials.
+
 ## v0.3.2, 17 November 2026
 
 Since v0.3.1 the agents' sessions start without the settings, hooks, MCP servers and `CLAUDE.md` of the project they work in, every change of what the agents see or can do needs an evaluation before it is merged, and the release decision has a baseline it can compare with again. The verifier runs one test command with three tools, and the writer has two new rules against tests that fail on correct code. The agents of this release were measured on every ticket of the corpus, 3 trials each (QA eval run 58): 50 of 51 trials successful, 96 of 96 planted bugs caught, $0.085 per trial. A security review on 13 November found gaps that this release does not close: they are in the known gaps of `SECURITY.md`. Run `npx github:Gleaming0427/agent-qa-kit init` again to upgrade.

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
@@ -101,6 +101,31 @@ test('the tests the writer added are committed on qa/<ticket> and pushed, with f
     assert.equal(git(s.work, 'diff', '--name-only', s.sha, `qa/${TICKET}`).split('\n').sort().join(' '),
       `${APP}/e2e/${TICKET}.spec.ts ${APP}/qa-reviews/${TICKET}/${TICKET}-review-request.json ${APP}/src/${TICKET}.test.tsx`);
     assert.match(r.calls, new RegExp(`pr create --repo acme/shop --base feat/${TICKET} --head qa/${TICKET} --title ${TICKET}: QA tests to review`));
+  } finally { done(s); }
+});
+
+test('no hook of the repository runs while the tests are committed and pushed, husky\'s included', () => {
+  const s = setup();
+  try {
+    writerAdds(s);
+    // A project with husky: its install script points core.hooksPath to a folder of the project, which
+    // the tests the agent ran could write to. Each hook would leave a mark if it ran.
+    git(s.work, 'config', 'core.hooksPath', '.husky');
+    for (const hook of ['pre-commit', 'commit-msg', 'post-commit', 'post-checkout', 'pre-push', 'reference-transaction']) {
+      write(s.work, `.husky/${hook}`, `#!/bin/sh\necho ran >> "${s.dir}/hook-${hook}"\n`);
+      chmodSync(join(s.work, `.husky/${hook}`), 0o755);
+    }
+    // The same hooks run when git is called without the job's protection: the test would mean nothing otherwise.
+    git(s.work, 'commit', '--allow-empty', '-qm', 'hooks are live');
+    assert.ok(existsSync(join(s.dir, 'hook-pre-commit')), 'a plain commit runs the planted hook');
+    git(s.work, 'reset', '-q', '--hard', s.sha);
+    for (const hook of readdirSync(s.dir).filter((n) => n.startsWith('hook-'))) rmSync(join(s.dir, hook));
+    writerAdds(s);
+
+    const r = publish(s);
+    assert.equal(r.code, 0, r.output);
+    assert.notEqual(r.remote(`refs/heads/qa/${TICKET}`), '', 'qa/<ticket> is pushed');
+    assert.deepEqual(readdirSync(s.dir).filter((n) => n.startsWith('hook-')), [], 'no hook ran');
   } finally { done(s); }
 });
 

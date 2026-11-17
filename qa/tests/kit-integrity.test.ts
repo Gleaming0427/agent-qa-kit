@@ -128,6 +128,44 @@ function sessionArgs(agent: string, env: Record<string, string> = {}) {
 }
 const valueAfter = (args: string[], flag: string) => args[args.indexOf(flag) + 1];
 
+test('the sandbox is told to keep the repository\'s git folder read-only, wherever it is', () => {
+  const settings = join(kit, '.claude/qa-settings.json');
+  const git = (cwd: string, ...args: string[]) => {
+    const r = spawnSync('git', ['-c', 'user.name=QA', '-c', 'user.email=qa@example.invalid', ...args], { cwd, encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+  };
+  const repo = folder({ 'app/package.json': '{}\n', 'qa/run-qa.sh': '#!/usr/bin/env bash\n' });
+  try {
+    git(repo, 'init', '-q');
+    git(repo, 'commit', '-q', '--allow-empty', '-m', 'base');
+    const real = realpathSync(repo);
+    const denied = (...parents: string[]) => JSON.parse(fn('kit_settings', settings, ...parents).out).sandbox.filesystem.denyWrite as string[];
+    // An application at the root: its .git folder, with the kit's folders.
+    assert.deepEqual(denied(repo), [`${real}/.git`, `${real}/qa`]);
+    // An application in a sub-folder: the git folder is that of the repository, above it.
+    assert.deepEqual(denied(join(repo, 'app')), [`${real}/.git`]);
+    // A worktree: its own git folder and the repository's common one.
+    git(repo, 'worktree', 'add', '-q', join(repo, 'wt'));
+    assert.deepEqual(denied(join(repo, 'wt')), [`${real}/.git`, `${real}/.git/worktrees/wt`]);
+    // A repository git refuses to read (owned by another user, here a broken one): its .git folder all the same.
+    const broken = folder({ '.git/HEAD': 'not a ref\n' });
+    try {
+      assert.deepEqual(denied(broken), [`${realpathSync(broken)}/.git`]);
+    } finally { rmSync(broken, { recursive: true, force: true }); }
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('the agents\' settings refuse the credential files of the home folder, to the tools and to the sandbox', () => {
+  // Read rules of the settings are also the sandbox's read rules: the commands an agent starts could read
+  // these files otherwise (measured on 13 November 2026 for the first three).
+  const credentials = ['Read(~/.git-credentials)', 'Read(~/.netrc)', 'Read(~/.config/gh/**)', 'Read(~/.npmrc)',
+    'Read(~/.docker/config.json)', 'Read(~/.kube/**)', 'Read(~/.config/gcloud/**)', 'Read(~/.azure/**)', 'Read(~/.ssh/**)', 'Read(~/.aws/**)'];
+  for (const file of ['.claude/qa-settings.json', '.claude/repair-settings.json']) {
+    const deny = (JSON.parse(readFileSync(join(kit, file), 'utf8')) as { permissions: { deny: string[] } }).permissions.deny;
+    for (const rule of credentials) assert.ok(deny.includes(rule), `${file} denies ${rule}`);
+  }
+});
+
 test('a session has the tools of its agent\'s file, no MCP server, no command and nothing from the project', () => {
   // What each agent may use is its `tools:` line: a change of it is a change of what the agent can do.
   for (const [agent, tools] of [['qa-writer', 'Read,Grep,Glob,Write,Edit,Bash'], ['qa-verifier', 'Read,Grep,Bash'], ['qa-repairer', 'Read,Grep,Glob,Write,Edit,Bash']]) {

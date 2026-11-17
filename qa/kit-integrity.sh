@@ -15,6 +15,12 @@
 #       Prints the settings with the qa, .claude and .github folders of each PARENT (those that exist)
 #       added to the sandbox's denyWrite list, as absolute paths: the commands an agent starts cannot
 #       write there. Pass the kit's folder and the project's.
+#       The git folder of each PARENT's repository is added too, wherever it is (a parent folder, or
+#       the common folder of a worktree). The launchers commit, push and compare in that repository
+#       after the agent: the code it runs must not move HEAD, add a ref or an object, or rewrite
+#       .git/info. Claude Code already refuses .git/hooks and .git/config; a test of 13 November 2026
+#       wrote HEAD and info/attributes. Reading git still works with the folder read-only (git status,
+#       git diff and git log were tried that way).
 #   kit_manifest DIR...
 #       Prints one line per file below the folders given: path, executable bit and sha256 of the content
 #       (a link, its target). Folders are not listed: an empty one changes nothing, and Claude Code
@@ -47,11 +53,18 @@
 #       2.1.303: a planted MEMORY.md reached the writer's context without it, not with it.
 
 kit_settings() {
-  local settings="$1" parent dir list dirs=()
+  local settings="$1" parent dir list gitdir dirs=()
   shift
   for parent in "$@"; do
     for dir in qa .claude .github; do
       [[ -d "$parent/$dir" ]] && dirs+=("$(cd "$parent/$dir" && pwd -P)")
+    done
+    # The parent's own .git folder too, in case git cannot answer (not installed, or a repository
+    # owned by another user, which git refuses to read).
+    for gitdir in "$(git -C "$parent" rev-parse --absolute-git-dir 2>/dev/null)" \
+                  "$(git -C "$parent" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" \
+                  "$parent/.git"; do
+      [[ -n "$gitdir" && -d "$gitdir" ]] && dirs+=("$(cd "$gitdir" && pwd -P)")
     done
   done
   if (( ${#dirs[@]} == 0 )); then jq -c . "$settings"; return; fi
