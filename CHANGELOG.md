@@ -17,6 +17,13 @@ Measured by QA eval run 60 (smoke, 6 tickets × 3 trials): 17 of 18 trials succe
 
 The kit's own CI (`qa-guard.yml`) no longer keeps the GitHub token on disk in its two jobs, which run the pull request's code and need no git credentials.
 
+### The writer: no test that depends on the answer to its own question
+
+In QA eval runs 60 and 61, two EVAL-8 trials of 6 had a browser test that failed on the correct code: it waited for two Checkout buttons (`toHaveCount(2)`), the one in the cart and the one in the new bar, where the reference hides the cart's button on a phone. Both writers had asked in `spec_questions` whether the cart's button stays on phone screens, and kept the count. So had the EVAL-13 trial of run 58 whose test failed on the correct code: it asked where a line's discounted amount appears, and checked it in the line. The EVAL-15 trial of run 49 asked nothing.
+
+- Rule 10 of the writer's prompt now says that each test must pass whatever the answer to the writer's questions: a test that assumes what the ticket does not give is changed, not only reported. A ticket that adds an element does not say what becomes of those the page already has: unless a criterion says so, a test does not assert that one of them stays visible or unchanged, nor how many elements share the new one's role and name. Its example is not taken from the evaluation's tickets.
+- No check was added: whether an assertion depends on an open question is not visible in the test code.
+
 ## v0.3.2, 17 November 2026
 
 Since v0.3.1 the agents' sessions start without the settings, hooks, MCP servers and `CLAUDE.md` of the project they work in, every change of what the agents see or can do needs an evaluation before it is merged, and the release decision has a baseline it can compare with again. The verifier runs one test command with three tools, and the writer has two new rules against tests that fail on correct code. The agents of this release were measured on every ticket of the corpus, 3 trials each (QA eval run 58): 50 of 51 trials successful, 96 of 96 planted bugs caught, $0.085 per trial. A security review on 13 November found gaps that this release does not close: they are in the known gaps of `SECURITY.md`. Run `npx github:Gleaming0427/agent-qa-kit init` again to upgrade.

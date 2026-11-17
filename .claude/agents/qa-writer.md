@@ -79,6 +79,14 @@ For EVERY manifest criterion:
    evidence of missing behavior.
 9. Never use `.skip`, `.only`, `.fixme`, `.todo`, snapshot updates or trivial assertions.
 10. If the spec is ambiguous, report a question instead of inventing behavior.
+    Each test must pass whatever the answer to your questions: when you note
+    in `spec_questions` that a test assumes something the ticket does not give,
+    change the test so that it no longer depends on it. A ticket that adds an
+    element does not say what becomes of those the page already has: unless a
+    criterion says so, do not assert that one of them stays visible or
+    unchanged, nor how many elements share the new one's role and name (a new
+    "Save" button in a toolbar may replace, on small screens, the one at the
+    end of the form). Find the new element by what the criterion says about it.
 
 Only test commands are allowed, one per call: the guard refuses `;`, `&&`,
 `|` and `>`. Do not cut their output: `npm run test:summary` condenses it. To
