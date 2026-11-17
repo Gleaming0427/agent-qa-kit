@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v0.3.2, 17 November 2026
+
+Since v0.3.1 the agents' sessions start without the settings, hooks, MCP servers and `CLAUDE.md` of the project they work in, every change of what the agents see or can do needs an evaluation before it is merged, and the release decision has a baseline it can compare with again. The verifier runs one test command with three tools, and the writer has two new rules against tests that fail on correct code. The agents of this release were measured on every ticket of the corpus, 3 trials each (QA eval run 58): 50 of 51 trials successful, 96 of 96 planted bugs caught, $0.085 per trial. A security review on 13 November found gaps that this release does not close: they are in the known gaps of `SECURITY.md`. Run `npx github:Gleaming0427/agent-qa-kit init` again to upgrade.
 
 ### Evaluation
 
@@ -37,7 +39,7 @@ Counted in the transcripts of 60 verifier sessions (QA eval runs 49 and 50): it 
 - The verifier runs `npm run test:summary -- --run @<mfe> --stop-on-unit-failure` once: the unit tests, then the browser tests only if no unit test failed, and the summary of both. The new option of `qa/summary.ts` removes the earlier browser report when it skips the browser tests, so that `not_run` is checked as before: only after a unit failure, and without a browser report. The writer's cycle is unchanged: its unit tests fail by design and its browser tests must run too.
 - With that option, the summary also lists, with a `✓`, the tests named for a criterion (`[TICKET][AC-N]`) that passed, at most 30. QA eval run 53, the first smoke run of this change with the verifier running (in run 52 the API credit ran out before it started), found that the counts alone do not say which test passed: after a failure of AC-1, 2 verifiers out of 15 reported AC-2 as `not_run`, which the verdict check refuses at the MFE level, and ended on an invalid verdict. The verifier's prompt now takes each criterion's status from the line of its test, and the verdict check says to report `pass` or `fail` at the MFE level. The writer's summary is unchanged.
 - Its tools are Read, Grep and Bash: Glob is gone, and Grep lists files.
-- `.claude/qa-settings.json` no longer allows `git diff`, `git status` or `git log` to the writer and the verifier. The repair agent keeps them in its own settings.
+- `.claude/qa-settings.json` no longer allows `git diff`, `git status` or `git log` to the writer and the verifier. The repair agent keeps them in its own settings. The guard still accepts them, and a read-only `git status` ran without an allow rule in a test of 13 November: they are to be removed from the guard as well (`SECURITY.md`, known gaps).
 
 ## v0.3.1, 11 November 2026
 

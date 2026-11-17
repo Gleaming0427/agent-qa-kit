@@ -27,6 +27,11 @@ Each rule has regression tests, which `npm run check` runs in CI. Run on a GitHu
 - The repair agent is kept out of the files the tests are set up with: by name (`setupTests.ts`, `*.setup.ts`, `__mocks__/`, `test-utils.ts`, `tests/` and the like), and, by comparison with a snapshot, those a test configuration names and what they import with a relative path. A helper that only a test file imports, a file imported through an alias (`@/`) and a helper with an ordinary name are not covered.
 - The copy of the kit comes from the base branch. On the pull request that installs the kit, or upgrades it from a version without the copy, the base branch has nothing to copy from: the job uses the pull request's own scripts and says so.
 - The check on how tests run is a static reading of the files. It does not follow what a configuration imports without naming it as a setup file, and it does not look at dependencies.
+- Found on 13 November 2026 by running the kit's launcher (`qa/run-qa.sh`, phase 1) with Claude Code 2.1.303 against a stand-in for the API, as an unprivileged user on Linux, not on a runner. What the commands of an agent could not do is in the table above; what they could do is listed here.
+  - The guard still accepts `git status`, `git diff` and `git log` from the writer and the verifier, which their settings no longer list: a read-only `git status` ran without an allow rule.
+  - The code an agent runs can write to `.git/` outside `hooks/` and `config` (`HEAD` and `info/attributes` included), to `node_modules/`, and to files such as `.gitattributes` or `.husky/`. QA write tests then commits in that checkout with a token that can push. Whether this can be used was not tried.
+  - It can read files of the home folder such as `~/.git-credentials`, `~/.netrc` and `~/.config/gh/hosts.yml`: on a developer's machine, run the agents without personal credentials.
+  - On a developer's machine, the full suite that the launcher runs after a pass runs outside the sandbox, without the API key in its environment. In CI it is a step of its own, without the key.
 
 **Limits that no tool removes:**
 
