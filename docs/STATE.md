@@ -2,7 +2,7 @@
 
 A working file for long tasks on the kit, by a person or an agent. Read it at the start of a session and update it at the end: what the work is for, what was decided and why, what changed, what comes next. It records facts with their pull request or file. The reasons in full are in the changelog, `SECURITY.md` and `eval/results/`.
 
-**As of 17 November 2026.** `main` is at `38c3f81`: v0.3.1 (tagged) and #55 to #63. The release pull request of v0.3.2 is open, on `claude/magical-feynman-bhdsbc`: it puts the changelog's entries under a v0.3.2 heading. The agents of `main` are those of `8ff5e3d` (#61), measured by QA eval run 58, the release baseline: #62 and #63 changed no file the agents see.
+**As of 17 November 2026.** `main` is at `c560781`: v0.3.2 (tagged), with #55 to #64. The agents of `main` are those of `8ff5e3d` (#61), measured by QA eval run 58, the release baseline: #62 to #64 changed no file the agents see. The fixes of the security review of 13 November are on `claude/magical-feynman-bhdsbc`. Their first smoke run (59) found that a read-only `.git` stopped the agents' sandbox on a runner; fixed on the branch, and measured by smoke run 60 (17/18, release decision "review": one EVAL-8 trial with a test assuming two Checkout buttons).
 
 ## Objectives
 
@@ -25,7 +25,8 @@ A working file for long tasks on the kit, by a person or an agent. Read it at th
 | #61 | The verifier runs one test command, with three tools; and, found by its evaluation, `✓` lines in the verifier's summary, a writer rule against a word bound after a text, and a writer rule on expected amounts | merged after a smoke evaluation of its final version (runs 56 and 57): release decision "review" |
 | #62 | This state file after #61 | merged |
 | #63 | QA eval run 58 in the history, and the release baseline changed to it | merged |
-| v0.3.2 | The release: the changelog's entries under a v0.3.2 heading, the version, and the gaps found on 13 November in `SECURITY.md` | open, on `claude/magical-feynman-bhdsbc` |
+| #64 | v0.3.2: the changelog's entries under a v0.3.2 heading, the version, and the gaps found on 13 November in `SECURITY.md` | merged, tagged `v0.3.2` |
+| next | The fixes of the security review of 13 November: git refused to the writer and the verifier by the guard, the git folder's entries read-only and the home folder's credential files unreadable in the sandbox, no git hook in the publish steps of QA write tests and QA amend tests, no token on disk in `qa-guard.yml` | on `claude/magical-feynman-bhdsbc`; smoke run 59 failed, run 60 in `eval/history` (below) |
 
 Evaluation campaigns added to `eval/history` on 12 November ($3.42 in all):
 
@@ -51,6 +52,13 @@ Every ticket on `main`, on 13 November ($4.34; in `eval/history` with #63; `eval
 | Run | Agents (commit) | Tickets | Result |
 |---|---|---|---|
 | 58 | `8ff5e3d`, the agents of runs 56 and 57 | all 17 × 3 | 50/51, 96/96 bugs; one trial of EVAL-13 with a test failing on the correct code (the cart line expected to show its discounted amount, which the ticket does not ask for); verifier 47, 48 and 48 of 48, no API error and no invalid verdict in 96 sessions; its own release decision "review", against "D clean" |
+
+QA eval runs on the branch of the security fixes, on 17 November ($2.95 in all; only run 60 is in `eval/history`):
+
+| Run | Agents (commit) | Tickets | Result |
+|---|---|---|---|
+| 59 | `2006cf3`, the first commit of the security fixes | EVAL-1, 2, 8, 9, 10, 13 × 3 | 6/18 (only the ambiguous and the adversarial tickets); release decision "review" against run 58. In 15 of 15 trials that write tests, every Bash command failed: `bwrap: Can't create file at .../.git/config.lock: Read-only file system`. The writer's tests were right (54/54 fail-to-pass units, 27/27 bugs, no false positive) but it could not run them, and answered "blocked"; the verifier did not run. $1.49. |
+| 60 | `b41f920`, the git folder's entries read-only instead | same | 17/18, 26/27 bugs; verifier pass on the correct implementation 14/15, fail on a bug 15/15; no API error, no sandbox error in the 18 trials. EVAL-8 trial 3: its browser test expects two Checkout buttons on the page (`toHaveCount(2)`), the reference has one. Release decision "review" against run 58: EVAL-8 unstable and worse (3/3 → 2/3); it suggests EVAL-8 × 3 again. $1.46. |
 
 ## Decisions, and why
 
@@ -95,30 +103,26 @@ Every ticket on `main`, on 13 November ($4.34; in `eval/history` with #63; `eval
 
 ## Next steps, in order
 
-1. **Tag v0.3.2** once its release pull request is merged: the tag is the owner's. The changelog's heading says 17 November 2026: change it if the tag is made on another day.
-2. **The fixes of the security review of 13 November**, in one pull request with a smoke run, the first to be compared with the new baseline.
-   - **How it was measured:** the kit's launcher (`qa/run-qa.sh`, phase 1) with Claude Code 2.1.303 against a stand-in for the API, as an unprivileged user on Linux. Nothing was billed. It is not a run on a GitHub-hosted runner.
-   - **What held:** the commands an agent starts could not write to the project's `qa/`, `.claude/` and `.github/`, to `.git/hooks`, `.git/config` or `package.json`; they had no API key and no network; they could not read the `.env` files, `~/.ssh` or `~/.aws`. Read and Write outside the project were refused, a path under `~` included. `npm test`, which the settings do not list, was refused. A file written in the project's copy of the kit stopped the launcher.
-   - **"Permission mode forced to default"**, which every agent log prints: the transcript records the mode `default`. A command outside the allow list was refused ("This command requires approval"); a read-only one ran without an allow rule.
-   - **To fix:**
-     - the guard still accepts `git status`, `git diff` and `git log` for the writer and the verifier, and `git status` ran: #61 removed them from `.claude/qa-settings.json` only, so the changelog says more than what is in force;
-     - the rest of `.git/`, `node_modules/` and files such as `.gitattributes` or `.husky/` can be written by the code an agent runs, and QA write tests then uses git in that checkout with a write token. Whether this can be used was not tested; `check-scope` runs after the commit;
-     - `~/.git-credentials`, `~/.netrc` and `~/.config/gh/hosts.yml` can be read from the sandbox;
-     - on a developer's machine, the full suite after a pass runs outside the sandbox: the API key is removed from its environment, the rest is not. `SECURITY.md` should say so;
-     - `qa-guard.yml`, the kit's own CI, has two checkouts without `persist-credentials: false`.
+1. **The fixes of the security review of 13 November**, on `claude/magical-feynman-bhdsbc`: the pull request, and the owner's decision on its "review" (run 60), with or without the EVAL-8 follow-up the decision suggests.
+   - **How the review measured:** the kit's launcher (`qa/run-qa.sh`, phase 1) with Claude Code 2.1.303 against a stand-in for the API, as an unprivileged user on Linux, on 13 November and again on 17 November with the fixes. Nothing was billed. It is not a run on a GitHub-hosted runner.
+   - **What held on 13 November:** the commands an agent starts could not write to the project's `qa/`, `.claude/` and `.github/`, to `.git/hooks`, `.git/config` or `package.json`; they had no API key and no network; they could not read the `.env` files, `~/.ssh` or `~/.aws`. Read and Write outside the project were refused, a path under `~` included. `npm test`, which the settings do not list, was refused. A file written in the project's copy of the kit stopped the launcher.
+   - **"Permission mode forced to default"**, which every agent log prints: the transcript records the mode `default`. A command outside the allow list was refused ("This command requires approval"); a read-only one ran without an allow rule. The guard is what refuses the others.
+   - **Fixed on the branch, measured on 17 November:** `git status` refused by the guard; the writes to `HEAD`, `info/attributes`, `.git/hooks` and `.git/config` refused (read-only file system) and `git add` failing; `~/.git-credentials`, `~/.netrc`, `~/.config/gh/hosts.yml` and the five other credential files unreadable; `npm run` still working with `~/.npmrc` unreadable. The hooks of the publish steps were checked by the tests of `qa/tests/ci-write-tests.test.ts` and `qa/tests/ci-amend.test.ts`, not on a runner.
+   - **Why the first version failed on a runner (run 59):** it made the whole `.git` read-only. With `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`, Claude Code 2.1.303 also refuses writes to paths of its own in `.git`, some of which do not exist (`.git/config.lock`). It skips those under a folder already read-only, unless it cannot work out the read rules: when a path it refuses to read cannot be resolved for another reason than its absence. Then bubblewrap must create them, and cannot in a read-only `.git`. Reproduced on the bench by making `/run/containerd` (Claude Code refuses to read `/run/containerd/containerd.sock`) unreadable to the job's user, as it presumably is on a GitHub-hosted runner (not checked there). The fix makes each entry of the git folder read-only instead: on the bench, in that condition, the commands start, the writes above are refused, git's read commands work; a new file directly in `.git` can still be created.
+   - **Still open** (`SECURITY.md`, known gaps): writes to `node_modules/` and to files such as `.gitattributes`, `.husky/` or `CLAUDE.md`; a new file directly in `.git`; reads of the rest of the home folder.
    - **Not concluded:** writes outside the project (the test folders were under `/tmp`, which the sandbox allows); which rule kept a `.env` out of a Grep (it was also in `.gitignore`).
-   - **Not reviewed:** the installer (`bin/agent-qa-kit.mjs`), `qa/ci-verify.sh`, `qa/ci-amend-tests.sh`, the isolation of the evaluation, the repair agent's settings, phase 2. `npm audit` was not run again.
-3. **Writer tests that assume markup or a display the ticket does not give**, seen twice since 12 November: run 49, EVAL-15 trial 2 (a list counted where a message replaces it), and run 58, EVAL-13 trial 2 (the cart line expected to show its discounted amount). One trial in 51 in run 58. No rule or check was written for it.
-4. **`--exclude-dynamic-system-prompt-sections`.** It moves the working directory, the environment and the git status from the system prompt into the first message, so that the system prompt is the same in every project folder (measured). The cache gain is small; it needs an evaluation.
-5. **Context in the eval report.** Add the first-call and peak context per session, measured from the transcripts. No credit needed. Measured by hand on 12 November: writer peak about 20,000 tokens, verifier about 14,000.
-6. **The repair loop on a real runner.** It has never run there. After that, consider a repair log passed from one attempt to the next: the failing criteria, the files changed, the result.
-7. **Known gaps of `SECURITY.md`:**
+   - **Not reviewed:** the installer (`bin/agent-qa-kit.mjs`), `qa/ci-verify.sh`, `qa/ci-amend-tests.sh` apart from the hooks of its publish step, the isolation of the evaluation, the repair agent's settings, phase 2. `npm audit` was not run again.
+2. **Writer tests that assume markup or a display the ticket does not give**, seen three times since 12 November: run 49, EVAL-15 trial 2 (a list counted where a message replaces it); run 58, EVAL-13 trial 2 (the cart line expected to show its discounted amount); run 60, EVAL-8 trial 3 (two Checkout buttons expected on the page). One trial in 51 in run 58, one in 18 in run 60. No rule or check was written for it.
+3. **`--exclude-dynamic-system-prompt-sections`.** It moves the working directory, the environment and the git status from the system prompt into the first message, so that the system prompt is the same in every project folder (measured). The cache gain is small; it needs an evaluation.
+4. **Context in the eval report.** Add the first-call and peak context per session, measured from the transcripts. No credit needed. Measured by hand on 12 November: writer peak about 20,000 tokens, verifier about 14,000.
+5. **The repair loop on a real runner.** It has never run there. After that, consider a repair log passed from one attempt to the next: the failing criteria, the files changed, the result.
+6. **Known gaps of `SECURITY.md`:**
    - GitHub Actions pinned by tag, not by SHA;
    - the install scripts of `npm ci`;
    - install steps that wait ten minutes when the runner's network fails;
    - measurements on new tickets and other applications.
 
-**For the owner:** delete the branches of merged or closed pull requests: `claude/confident-brown-bn2ttv` (#55), `claude/session-surface` (#56), `claude/eval-reference` (#57), `claude/no-auto-memory` (#58), `claude/verifier-one-command` (#61), `claude/keep-approval-reasons` (#53, #54) and `feat/TICKET-44` (the trial of #49, closed). `claude/magical-feynman-bhdsbc` holds the release pull request of v0.3.2: delete it once that pull request is merged.
+**For the owner:** delete the branches of merged or closed pull requests: `claude/confident-brown-bn2ttv` (#55), `claude/session-surface` (#56), `claude/eval-reference` (#57), `claude/no-auto-memory` (#58), `claude/verifier-one-command` (#61), `claude/keep-approval-reasons` (#53, #54) and `feat/TICKET-44` (the trial of #49, closed). `claude/magical-feynman-bhdsbc` held #64 and now holds the security fixes: delete it once their pull request is merged.
 
 ## How to update this file
 

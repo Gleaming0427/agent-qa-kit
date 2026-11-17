@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
@@ -165,8 +165,18 @@ function amendAndVerify(folder: string, merge: Merge = 'merge') {
     assert.match(body, /Unable to find a button named Clear search/);
 
     writeFileSync(join(h.dir, 'reviews.json'), JSON.stringify([[]]));
+    // A project with husky: core.hooksPath points to a folder of the project, which the application's
+    // tests of the step before could write to. No hook may run while the job commits and pushes.
+    git(work, 'config', 'core.hooksPath', '.husky');
+    mkdirSync(join(work, '.husky'), { recursive: true });
+    for (const hook of ['pre-commit', 'commit-msg', 'post-commit', 'post-merge', 'pre-push', 'reference-transaction']) {
+      writeFileSync(join(work, '.husky', hook), `#!/bin/sh\necho ran >> "${h.dir}/hook-${hook}"\n`, { mode: 0o755 });
+    }
+    // Left out of git's view: a new file outside the review package would stop the step before it commits.
+    writeFileSync(join(work, '.git/info/exclude'), '.husky/\n', { flag: 'a' });
     r = amend(h, 'publish', work);
     assert.equal(r.code, 0, r.output);
+    assert.deepEqual(readdirSync(h.dir).filter((n) => n.startsWith('hook-')), [], 'no hook ran');
     assert.doesNotMatch(r.output, /::warning/);
     const calls = readFileSync(join(h.dir, 'calls.log'), 'utf8');
     assert.match(calls, /pr create --repo acme\/shop --base feat\/TICKET-43 --head qa\/TICKET-43 --title TICKET-43: amended QA tests to review/);

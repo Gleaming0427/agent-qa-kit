@@ -53,6 +53,11 @@ case "${1:-}" in
 
   publish)
     [[ -s "$REVIEW_BODY" ]] || fail 'No review package: the write step did not finish.'
+    # No hook of the repository runs while this step switches, commits and pushes with a token that
+    # can write. The tests the agent wrote ran in this checkout, and could have planted one: git
+    # hooks in .git/ are out of their reach, but a project that uses husky has core.hooksPath set to
+    # .husky by its own install script, a folder of the project.
+    export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null
     gh auth setup-git
     git switch --quiet -c "qa/$TICKET"
     qa_files=(); other=()

@@ -89,6 +89,10 @@ case "${1:-}" in
   publish)
     [[ -s "$REVIEW_BODY" ]] || fail 'No review package: the amend step did not finish.'
     cd "$WORK"
+    # No hook of the repository runs while this step commits and pushes with a token that can write:
+    # the application's tests ran in this checkout just before, and a project that uses husky has
+    # core.hooksPath set to a folder of the project (.husky).
+    export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null
     gh auth setup-git
     changed=(); other=()
     # git lists paths from the repository's root: an application at the root ("." ) has no prefix.

@@ -82,7 +82,14 @@ says 'Glob to list files'                    'ls says to use Glob'   "$(action B
 check 2 'the test cycle chained'             "$(action Bash command 'npm run test:affected >/dev/null 2>&1; npm run test:e2e -- --grep @shop >/dev/null 2>&1; npm run test:summary 2>&1 | tail -60')"
 says 'npm run test:summary -- --run @<mfe>'  'chaining says to run one command, and how to run a cycle' "$(action Bash command 'npm run test:affected 2>&1 | tail -n 80')"
 check 0 'one test file'                      "$(action Bash command 'npx vitest run apps/services/src/ServiceList.test.tsx')"
-check 0 'read diff'                          "$(action Bash command 'git diff --name-only origin/master...HEAD')"
+# The writer and the verifier do not run git: their settings stopped allowing it in #61, and a
+# read-only command could still run without an allow rule (measured on 13 November 2026).
+check 2 'git diff, writer or verifier'       "$(action Bash command 'git diff --name-only origin/master...HEAD')"
+check 2 'git status, writer or verifier'     "$(action Bash command 'git status')"
+check 2 'git status --short'                 "$(action Bash command 'git status --short')"
+check 2 'git log, writer or verifier'        "$(action Bash command 'git log --oneline')"
+check 2 'git diff alone'                     "$(action Bash command 'git diff')"
+says 'npm run test:summary'                  'a refused git command says where to look instead' "$(action Bash command 'git status')"
 check 2 'update snapshots -u'                "$(action Bash command 'npx vitest run -u')"
 check 2 'update snapshots --update'          "$(action Bash command 'npx playwright test --update-snapshots')"
 check 2 'chain deletion'                     "$(action Bash command 'npm test && rm -rf src')"
@@ -105,6 +112,12 @@ check 0 'fix a component'                     "$(file_action Edit apps/services/
 check 0 'add a source file'                   "$(file_action Write src/search.ts 'export const search = 1')"
 check 0 'build the app'                       "$(action Bash command 'npm run build')"
 check 0 'run the failing tests'               "$(action Bash command 'npm run test:affected')"
+# The repair agent reads git, as its settings allow, with the same narrow forms as before.
+check 0 'git status, repair'                  "$(action Bash command 'git status')"
+check 0 'git diff of a range, repair'         "$(action Bash command 'git diff --name-only origin/master...HEAD')"
+check 0 'git log, repair'                     "$(action Bash command 'git log --oneline')"
+check 2 'git diff with an option, repair'     "$(action Bash command 'git diff --output=x HEAD')"
+check 2 'git log with a format, repair'       "$(action Bash command 'git log --format=%H')"
 check 2 'edit a unit test'                    "$(file_action Edit apps/services/src/ServiceList.test.tsx "it('AC-2', () => {})")"
 check 2 'edit a browser test'                 "$(file_action Write e2e/TICKET-42.spec.ts "test('AC-2', () => {})")"
 check 2 'edit a nested e2e helper'            "$(file_action Edit examples/demo/e2e/helpers.ts 'export {}')"

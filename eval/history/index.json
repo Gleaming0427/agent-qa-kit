@@ -684,5 +684,24 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 4.3397
+  },
+  {
+    "id": "gh-44069054973",
+    "label": "security fixes, smoke, run 60",
+    "role": "campaign",
+    "started_at": "2026-11-17T10:54:01Z",
+    "commit": "b41f920",
+    "agent": "1106d918e9fc",
+    "writer_prompt": "2e02c1c",
+    "scoring": "original at b41f920",
+    "tickets": 6,
+    "trials": 18,
+    "agent_errors": 0,
+    "successes": 17,
+    "bugs_detected": "26/27",
+    "trials_with_false_positives": 1,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 1.4608
   }
 ]

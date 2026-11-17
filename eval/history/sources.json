@@ -1135,6 +1135,40 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 44069054973,
+      "run_number": 60,
+      "branch": "claude/magical-feynman-bhdsbc",
+      "started_at": "2026-11-17T10:54:01Z",
+      "commit": "b41f9204c5c04fc81dbb9bbe8bdd4238fe91173d",
+      "label": "security fixes, smoke, run 60",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 44069054973,
+        "commit": "b41f9204c5c04fc81dbb9bbe8bdd4238fe91173d"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-44069054973.json",
+        "sha256": "eac97dc686b74419ab5b08757290cb9da6f108964909bb5c875dd0e15dda7082",
+        "artifact": {
+          "id": 14322542715,
+          "name": "eval-report",
+          "digest": "sha256:1d13c8f4dec3be5ce32702db9b90f77ceb542fc07d08e68a34e86361535fe45e"
+        }
+      },
+      "doc": null,
+      "notes": [
+        "Smoke on the head of the branch of the security fixes of 13 November: git refused to the writer and the verifier by the guard, the entries of the git folder read-only and the home folder's credential files unreadable in the sandbox, no git hook in the publish steps. 17 of 18 trials successful, 26 of 27 injected bugs detected, 15 verifier runs with no API error, no sandbox error in the 18 trials. EVAL-8 failed on the correct implementation in 1 of 3 trials: its browser test expected two Checkout buttons on the page (toHaveCount(2)), where the reference has one. Release decision \"review\" against run 58 (EVAL-8 unstable and worse). Run 59, on the commit before (the whole .git read-only), had every Bash command of the 15 trials that write tests fail to start the sandbox (bwrap could not create .git/config.lock); it is not in this history."
+      ],
+      "inputs": {
+        "tickets": "smoke",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }

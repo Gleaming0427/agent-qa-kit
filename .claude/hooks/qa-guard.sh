@@ -142,12 +142,15 @@ case "$TOOL" in
       'npx vitest run '*)
         grep -Eq '^npx vitest run ([a-zA-Z0-9_/-]+\.)?([a-zA-Z0-9_/-]+)\.test\.tsx?$' <<<"$cmd" || deny 'Only one local test file allowed'
         ;;
-      'git status'|'git status --short'|'git diff'|'git log') ;;
-      'git diff '*)
-        grep -Eq '^git diff (--name-only )?[a-zA-Z0-9_/-]+(\.\.\.[a-zA-Z0-9_/-]+)?$' <<<"$cmd" || deny 'Unsupported git diff command'
-        ;;
-      'git log '*)
-        grep -Eq '^git log (-[0-9]+|--oneline)$' <<<"$cmd" || deny 'Unsupported git log command'
+      # Only the repair agent reads git, as its settings say. The writer and the verifier lost these
+      # commands in their settings (#61), but a read-only command can run without an allow rule: the
+      # guard is what refuses them.
+      'git status'|'git status --short'|'git diff'|'git log'|'git diff '*|'git log '*)
+        [[ "${QA_GUARD_MODE:-qa}" == repair ]] || deny "Command not allowed: $cmd (the test summary says what ran: npm run test:summary)"
+        case "$cmd" in
+          'git diff '*) grep -Eq '^git diff (--name-only )?[a-zA-Z0-9_/-]+(\.\.\.[a-zA-Z0-9_/-]+)?$' <<<"$cmd" || deny 'Unsupported git diff command' ;;
+          'git log '*) grep -Eq '^git log (-[0-9]+|--oneline)$' <<<"$cmd" || deny 'Unsupported git log command' ;;
+        esac
         ;;
       # The agents reach for these to read, list or search files: say which tool does it.
       cat\ *|head\ *|tail\ *|less\ *|more\ *|ls|ls\ *|find\ *|grep\ *|rg\ *|wc\ *|sed\ *|awk\ *|tree|tree\ *)
