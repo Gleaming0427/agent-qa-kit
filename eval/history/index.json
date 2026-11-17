@@ -741,5 +741,24 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 1.457
+  },
+  {
+    "id": "gh-44129443610",
+    "label": "writer's open questions, follow-up EVAL-1, run 63",
+    "role": "campaign",
+    "started_at": "2026-11-17T16:45:47Z",
+    "commit": "6ca1484",
+    "agent": "7d3b5ccf9a46",
+    "writer_prompt": "90bbd5e",
+    "scoring": "original at 6ca1484",
+    "tickets": 1,
+    "trials": 3,
+    "agent_errors": 0,
+    "successes": 3,
+    "bugs_detected": "6/6",
+    "trials_with_false_positives": 0,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 0.2903
   }
 ]
