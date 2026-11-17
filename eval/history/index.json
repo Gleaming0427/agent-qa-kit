@@ -722,5 +722,24 @@
     "corpus_exposed_trials": 0,
     "corrections": [],
     "cost_usd": 0.3265
+  },
+  {
+    "id": "gh-44120108607",
+    "label": "writer's open questions, smoke, run 62",
+    "role": "campaign",
+    "started_at": "2026-11-17T15:56:47Z",
+    "commit": "05fa345",
+    "agent": "7d3b5ccf9a46",
+    "writer_prompt": "90bbd5e",
+    "scoring": "original at 05fa345",
+    "tickets": 6,
+    "trials": 18,
+    "agent_errors": 0,
+    "successes": 17,
+    "bugs_detected": "26/27",
+    "trials_with_false_positives": 0,
+    "corpus_exposed_trials": 0,
+    "corrections": [],
+    "cost_usd": 1.457
   }
 ]

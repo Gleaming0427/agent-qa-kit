@@ -1203,6 +1203,40 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 44120108607,
+      "run_number": 62,
+      "branch": "claude/magical-feynman-bhdsbc",
+      "started_at": "2026-11-17T15:56:47Z",
+      "commit": "05fa345a66e729daaa786e33e7bbf98c41c2834c",
+      "label": "writer's open questions, smoke, run 62",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 44120108607,
+        "commit": "05fa345a66e729daaa786e33e7bbf98c41c2834c"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-44120108607.json",
+        "sha256": "699e430d23fc4b13eab904c5c026397d75919a0a887e088bc1a6980559448fe3",
+        "artifact": {
+          "id": 14346851319,
+          "name": "eval-report",
+          "digest": "sha256:f534a3cf6d7a36d11bd40bf8da0ffe82885c742eec5885b13f11be998819435e"
+        }
+      },
+      "doc": null,
+      "notes": [
+        "Smoke on the agents of main since #65 with rule 10 of the writer's prompt extended: each test must pass whatever the answer to the writer's own questions, and a test does not assume what becomes of the elements a page already has when a ticket adds one. 17 of 18 trials successful, 26 of 27 injected bugs detected, no test failing on the correct implementation in 15 trials, EVAL-9 blocked in 3 of 3. EVAL-8 3 of 3: no test counts the Checkout buttons. The three EVAL-13 writers asked where a line's discounted amount appears and checked the discount through the subtotal, shipping and total. EVAL-1 trial 1 missed the bug discount-includes-shipping: its only AC-1 case is a cart with free shipping (Backpack and Notebook, 53.50), where both computations give the same discount; the writer listed a cart below 50 in not_covered. Trial 3 of EVAL-1 in run 42 missed it with the same cart, and one trial of run 50 missed the same bug. Release decision \"review\" against run 58 (EVAL-1 unstable and worse, 3/3 to 2/3)."
+      ],
+      "inputs": {
+        "tickets": "smoke",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }

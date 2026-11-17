@@ -2,7 +2,7 @@
 
 A working file for long tasks on the kit, by a person or an agent. Read it at the start of a session and update it at the end: what the work is for, what was decided and why, what changed, what comes next. It records facts with their pull request or file. The reasons in full are in the changelog, `SECURITY.md` and `eval/results/`.
 
-**As of 17 November 2026.** `main` is at `5947ba5`: v0.3.2 (tagged `c560781`), then #65, the fixes of the security review of 13 November, not tagged. The agents of `main` are those of #65. Its first smoke run (59) found that a read-only `.git` stopped the agents' sandbox on a runner; fixed on the branch and measured by smoke run 60. #65 was merged after run 60; the follow-up, run 61, ran after the merge, on the same agents. Runs 60 and 61 against run 58, the release baseline: decision "review", EVAL-8 4/6 against 3/3, both failures from tests that expect two Checkout buttons. Run 61's history and this file are on `claude/magical-feynman-bhdsbc`, with no pull request yet.
+**As of 17 November 2026.** `main` is at `5947ba5`: v0.3.2 (tagged `c560781`), then #65, the fixes of the security review of 13 November, not tagged. The agents of `main` are those of #65. Its first smoke run (59) found that a read-only `.git` stopped the agents' sandbox on a runner; fixed on the branch and measured by smoke run 60. #65 was merged after run 60; the follow-up, run 61, ran after the merge, on the same agents. Runs 60 and 61 against run 58, the release baseline: decision "review", EVAL-8 4/6 against 3/3, both failures from tests that expect two Checkout buttons. On `claude/magical-feynman-bhdsbc`, with no pull request yet: run 61's history, this file, and rule 10 of the writer's prompt extended (no test that depends on the answer to the writer's own question), measured by smoke run 62: 17/18, EVAL-8 3/3, no test failing on the correct implementation in 15 trials; release decision "review" (EVAL-1 2/3, a bug missed with a cart that has free shipping, as in run 42).
 
 ## Objectives
 
@@ -27,6 +27,7 @@ A working file for long tasks on the kit, by a person or an agent. Read it at th
 | #63 | QA eval run 58 in the history, and the release baseline changed to it | merged |
 | #64 | v0.3.2: the changelog's entries under a v0.3.2 heading, the version, and the gaps found on 13 November in `SECURITY.md` | merged, tagged `v0.3.2` |
 | #65 | The fixes of the security review of 13 November: git refused to the writer and the verifier by the guard, the git folder's entries read-only and the home folder's credential files unreadable in the sandbox, no git hook in the publish steps of QA write tests and QA amend tests, no token on disk in `qa-guard.yml` | merged on 17 November (`5947ba5`) after smoke run 60; smoke run 59 failed; the follow-up run 61 ran after the merge, on the same agents; runs 60 and 61 in `eval/history` (below); release decision "review" |
+| none yet | Run 61's history, this file, and rule 10 of the writer's prompt: each test must pass whatever the answer to the writer's own questions | on `claude/magical-feynman-bhdsbc`; smoke run 62 in `eval/history` (below); release decision "review" |
 
 Evaluation campaigns added to `eval/history` on 12 November ($3.42 in all):
 
@@ -53,13 +54,14 @@ Every ticket on `main`, on 13 November ($4.34; in `eval/history` with #63; `eval
 |---|---|---|---|
 | 58 | `8ff5e3d`, the agents of runs 56 and 57 | all 17 × 3 | 50/51, 96/96 bugs; one trial of EVAL-13 with a test failing on the correct code (the cart line expected to show its discounted amount, which the ticket does not ask for); verifier 47, 48 and 48 of 48, no API error and no invalid verdict in 96 sessions; its own release decision "review", against "D clean" |
 
-QA eval runs on the agents of the security fixes (#65), on 17 November ($3.28 in all; runs 60 and 61 are in `eval/history`):
+QA eval runs of 17 November ($4.74 in all; runs 60 to 62 are in `eval/history`), on the agents of the security fixes (#65), then with rule 10 of the writer's prompt (run 62):
 
 | Run | Agents (commit) | Tickets | Result |
 |---|---|---|---|
 | 59 | `2006cf3`, the first commit of the security fixes | EVAL-1, 2, 8, 9, 10, 13 × 3 | 6/18 (only the ambiguous and the adversarial tickets); release decision "review" against run 58. In 15 of 15 trials that write tests, every Bash command failed: `bwrap: Can't create file at .../.git/config.lock: Read-only file system`. The writer's tests were right (54/54 fail-to-pass units, 27/27 bugs, no false positive) but it could not run them, and answered "blocked"; the verifier did not run. $1.49. |
 | 60 | `b41f920`, the git folder's entries read-only instead | same | 17/18, 26/27 bugs; verifier pass on the correct implementation 14/15, fail on a bug 15/15; no API error, no sandbox error in the 18 trials. EVAL-8 trial 3: its browser test expects two Checkout buttons on the page (`toHaveCount(2)`), the reference has one. Release decision "review" against run 58: EVAL-8 unstable and worse (3/3 → 2/3); it suggests EVAL-8 × 3 again. $1.46. |
 | 61 | `01b390f`, the agents of run 60 (history and documentation added); the same tree as `5947ba5` on `main` | EVAL-8 × 3 | 2/3, 5/6 bugs; trial 2 failed for the same reason (two Checkout buttons expected). In runs 60 and 61, every EVAL-8 writer read the same files and ran one command; in runs 56 and 58 they made the same number of tool calls (5 Read, 1 Glob, 2 Write, 1 Bash; one more Edit in trial 2 of run 58). Runs 60 and 61 together against run 58: 19/21 against 17/18; EVAL-8 4/6 against 3/3, 10/12 bugs against 6/6; decision "review", which now asks a person: one follow-up per ticket. $0.33. |
+| 62 | `05fa345`, the agents of `main` (#65) with rule 10 of the writer's prompt extended | EVAL-1, 3, 8, 9, 10, 13 × 3 | 17/18, 26/27 bugs; no test failing on the correct implementation in 15 trials; verifier pass on the correct implementation 15/15, fail on a bug 14/15; EVAL-9 blocked 3/3. EVAL-8 3/3: no test counts the Checkout buttons. The three EVAL-13 writers asked where a line's discounted amount appears and checked the discount through the subtotal, shipping and total. EVAL-1 trial 1 missed `discount-includes-shipping`: its only case has free shipping (53.50), where both computations give the same discount; trial 3 of run 42 missed it with the same cart, and one trial of run 50 missed the same bug. Release decision "review" against run 58 (EVAL-1 unstable and worse, 3/3 → 2/3); it suggests EVAL-1 × 3. $1.46. |
 
 ## Decisions, and why
 
@@ -107,25 +109,26 @@ QA eval runs on the agents of the security fixes (#65), on 17 November ($3.28 in
 
 ## Next steps, in order
 
-1. **The "review" of runs 60 and 61, on the agents of `main` since #65:** the owner's decision. EVAL-8 is 4/6 with these agents (runs 60 and 61) against 9/9 with those of #61 (runs 56, 57 and 58); both failures are tests that expect two Checkout buttons. The writers' tool calls on EVAL-8 are the same in number in runs 56, 58, 60 and 61 (run 57 not looked at), and #65 does not touch the prompts; no cause in #65 was found, and none is ruled out.
-2. **What the security review of 13 November left (#65):**
+1. **Rule 10 of the writer's prompt, on the branch (run 62):** release decision "review", for EVAL-1 2/3; the decision suggests one follow-up, EVAL-1 × 3 (about $0.26), then a pull request. The owner decides on the follow-up and on the pull request.
+2. **The "review" of runs 60 and 61, on the agents of `main` since #65:** the owner's decision. EVAL-8 is 4/6 with these agents (runs 60 and 61) against 9/9 with those of #61 (runs 56, 57 and 58); both failures are tests that expect two Checkout buttons. The writers' tool calls on EVAL-8 are the same in number in runs 56, 58, 60 and 61 (run 57 not looked at), and #65 does not touch the prompts; no cause in #65 was found, and none is ruled out.
+3. **What the security review of 13 November left (#65):**
    - **How the review measured:** the kit's launcher (`qa/run-qa.sh`, phase 1) with Claude Code 2.1.303 against a stand-in for the API, as an unprivileged user on Linux, on 13 November and again on 17 November with the fixes. Nothing was billed. It is not a run on a GitHub-hosted runner.
    - **What held on 13 November:** the commands an agent starts could not write to the project's `qa/`, `.claude/` and `.github/`, to `.git/hooks`, `.git/config` or `package.json`; they had no API key and no network; they could not read the `.env` files, `~/.ssh` or `~/.aws`. Read and Write outside the project were refused, a path under `~` included. `npm test`, which the settings do not list, was refused. A file written in the project's copy of the kit stopped the launcher.
    - **"Permission mode forced to default"**, which every agent log prints: the transcript records the mode `default`. A command outside the allow list was refused ("This command requires approval"); a read-only one ran without an allow rule. The guard is what refuses the others.
    - **Still open** (`SECURITY.md`, known gaps): writes to `node_modules/` and to files such as `.gitattributes`, `.husky/` or `CLAUDE.md`; a new file directly in `.git`; reads of the rest of the home folder.
    - **Not concluded:** writes outside the project (the test folders were under `/tmp`, which the sandbox allows); which rule kept a `.env` out of a Grep (it was also in `.gitignore`).
    - **Not reviewed:** the installer (`bin/agent-qa-kit.mjs`), `qa/ci-verify.sh`, `qa/ci-amend-tests.sh` apart from the hooks of its publish step, the isolation of the evaluation, the repair agent's settings, phase 2. `npm audit` was not run again.
-3. **Writer tests that assume markup or a display the ticket does not give**, seen three times since 12 November: run 49, EVAL-15 trial 2 (a list counted where a message replaces it); run 58, EVAL-13 trial 2 (the cart line expected to show its discounted amount); runs 60 and 61, EVAL-8 trials 3 and 2 (two Checkout buttons expected on the page). One trial in 51 in run 58, two in 21 in runs 60 and 61. No rule or check was written for it.
-4. **`--exclude-dynamic-system-prompt-sections`.** It moves the working directory, the environment and the git status from the system prompt into the first message, so that the system prompt is the same in every project folder (measured). The cache gain is small; it needs an evaluation.
-5. **Context in the eval report.** Add the first-call and peak context per session, measured from the transcripts. No credit needed. Measured by hand on 12 November: writer peak about 20,000 tokens, verifier about 14,000.
-6. **The repair loop on a real runner.** It has never run there. After that, consider a repair log passed from one attempt to the next: the failing criteria, the files changed, the result.
-7. **Known gaps of `SECURITY.md`:**
+4. **Writer tests that assume markup or a display the ticket does not give**, seen three times since 12 November: run 49, EVAL-15 trial 2 (a list counted where a message replaces it); run 58, EVAL-13 trial 2 (the cart line expected to show its discounted amount); runs 60 and 61, EVAL-8 trials 3 and 2 (two Checkout buttons expected on the page). One trial in 51 in run 58, two in 21 in runs 60 and 61. In three of the four, the writer had asked about the assumption in `spec_questions` and kept it. Rule 10 of the writer's prompt now says that each test must pass whatever the answer (on the branch, next step 1; no check). Run 62: no test failing on the correct implementation in 15 trials, a small sample.
+5. **`--exclude-dynamic-system-prompt-sections`.** It moves the working directory, the environment and the git status from the system prompt into the first message, so that the system prompt is the same in every project folder (measured). The cache gain is small; it needs an evaluation.
+6. **Context in the eval report.** Add the first-call and peak context per session, measured from the transcripts. No credit needed. Measured by hand on 12 November: writer peak about 20,000 tokens, verifier about 14,000.
+7. **The repair loop on a real runner.** It has never run there. After that, consider a repair log passed from one attempt to the next: the failing criteria, the files changed, the result.
+8. **Known gaps of `SECURITY.md`:**
    - GitHub Actions pinned by tag, not by SHA;
    - the install scripts of `npm ci`;
    - install steps that wait ten minutes when the runner's network fails;
    - measurements on new tickets and other applications.
 
-**For the owner:** delete the branches of merged or closed pull requests: `claude/confident-brown-bn2ttv` (#55), `claude/session-surface` (#56), `claude/eval-reference` (#57), `claude/no-auto-memory` (#58), `claude/verifier-one-command` (#61), `claude/keep-approval-reasons` (#53, #54) and `feat/TICKET-44` (the trial of #49, closed). `claude/magical-feynman-bhdsbc` held #64 and #65, and now holds run 61's history and this file: delete it once their pull request is merged.
+**For the owner:** delete the branches of merged or closed pull requests: `claude/confident-brown-bn2ttv` (#55), `claude/session-surface` (#56), `claude/eval-reference` (#57), `claude/no-auto-memory` (#58), `claude/verifier-one-command` (#61), `claude/keep-approval-reasons` (#53, #54) and `feat/TICKET-44` (the trial of #49, closed). `claude/magical-feynman-bhdsbc` held #64 and #65, and now holds run 61's history, this file and rule 10 of the writer's prompt: delete it once their pull request is merged.
 
 ## How to update this file
 
