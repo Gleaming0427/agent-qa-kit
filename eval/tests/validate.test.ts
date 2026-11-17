@@ -96,17 +96,21 @@ test('the command line decides against the release baseline, and fails CI only o
   const work = mkdtempSync(join(tmpdir(), 'eval-validate-'));
   try {
     const file = (c: Campaign) => { const p = join(work, `${c.id}.json`); writeFileSync(p, JSON.stringify(c)); return p; };
-    // The baseline file names D clean and its regression check: a copy of both is the same version.
-    const sameNew = file(variant(get('D, clean'), 'same-new'));
-    const sameOld = file(variant(get('D, clean regression check'), 'same-old'));
-    const ok = cli('--candidate', sameNew, '--candidate', sameOld, '--ci', '--md', join(work, 'ok.md'));
+    // Whatever campaigns the baseline file names, a copy of each of them is the same version. Read from
+    // the file, so that the test follows a change of the release baseline.
+    const named = (JSON.parse(readFileSync(join(KIT, 'eval/release-baseline.json'), 'utf8')) as { label: string; campaigns: string[] });
+    assert.ok(named.campaigns.length > 0 && named.campaigns.every((id) => get(id).role === 'campaign'), 'the baseline file names campaigns of the history');
+    const same = named.campaigns.map((id, i) => file(variant(get(id), `same-${i}`)));
+    const ok = cli(...same.flatMap((p) => ['--candidate', p]), '--ci', '--md', join(work, 'ok.md'));
     assert.equal(ok.status, 0, ok.stderr);
     assert.match(ok.stdout, /::notice title=Release decision: accepted::/);
     const md = readFileSync(join(work, 'ok.md'), 'utf8');
     assert.match(md, /^# Release decision: ACCEPTED/);
+    assert.ok(md.includes(`against the release baseline, ${named.label}.`), 'the report names the baseline of the file');
     assert.match(md, new RegExp(`eval/compare-policy.json as it was at the candidate's commit \`${head.slice(0, 7)}\`, before its results existed`));
 
-    const leaky = file(variant(get('D, clean'), 'leaky', (o) => (o.key === 'EVAL-11#1' ? { policy_ok: false } : {})));
+    const leakyKey = get(named.campaigns[0]).observations[0].key;
+    const leaky = file(variant(get(named.campaigns[0]), 'leaky', (o) => (o.key === leakyKey ? { policy_ok: false } : {})));
     const bad = cli('--candidate', leaky, '--ci');
     assert.equal(bad.status, 1, 'a rejected version fails the job');
     assert.match(bad.stdout, /::error title=Release decision: rejected::b_policy/);

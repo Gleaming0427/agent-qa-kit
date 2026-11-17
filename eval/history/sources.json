@@ -1101,6 +1101,40 @@
         "verify": true,
         "dry_run": false
       }
+    },
+    {
+      "run_id": 43431804429,
+      "run_number": 58,
+      "branch": "main",
+      "started_at": "2026-11-13T13:13:25Z",
+      "commit": "8ff5e3df59250cb55664efcb707821c6f135e3fb",
+      "label": "every ticket, run 58",
+      "role": "campaign",
+      "scoring": {
+        "kind": "original",
+        "run_id": 43431804429,
+        "commit": "8ff5e3df59250cb55664efcb707821c6f135e3fb"
+      },
+      "corrections": [],
+      "source": {
+        "file": "sources/eval-report-43431804429.json",
+        "sha256": "258334d7c9ee44dd7520b38f6766e3c9d979116acad55218efb2b9a12e1d1673",
+        "artifact": {
+          "id": 14045880111,
+          "name": "eval-report",
+          "digest": "sha256:37d5dcdb7e198a54158405227faa055bb578b4d4a3f58fa2686650528aec6cb5"
+        }
+      },
+      "doc": "eval/results/2026-11-13-every-ticket.md",
+      "notes": [
+        "Every ticket on main after #61 (the verifier running one command with the passed tests listed in the summary, the writer rules against a word bound after a text and on expected amounts). 50 of 51 trials successful, 96 of 96 injected bugs detected, 96 verifier sessions with no API error and no invalid verdict. EVAL-13 failed on the correct implementation in 1 of 3 trials: the writer expected the cart line to show its discounted amount, which the ticket does not ask for. The release baseline since 16 November 2026."
+      ],
+      "inputs": {
+        "tickets": "all",
+        "trials": "3",
+        "verify": true,
+        "dry_run": false
+      }
     }
   ]
 }

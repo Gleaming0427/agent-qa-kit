@@ -84,9 +84,12 @@ The demo is a small React shop that can switch a bug on and off. The test cycle 
 
 | Version | Date | Tickets | Trials successful | Planted bugs caught | Trials with a test failing on correct code | Cost per trial |
 |---|---|---|---|---|---|---|
-| "D clean", the release baseline | 3 Nov | 16 | 45/48 | 86/87 | 2/45 | $0.11 |
+| "D clean", the release baseline until 16 November | 3 Nov | 16 | 45/48 | 86/87 | 2/45 | $0.11 |
 | main, before the fixes of v0.3.0 | 9 Nov | 17 | 49/51 | 93/96 | 1/48 | $0.095 |
 | v0.3.0 | 9 Nov | 6 | 21/21 | 33/33 | 0/18 | $0.094 |
+| main after v0.3.1, the release baseline | 13 Nov | 17 | 50/51 | 96/96 | 1/48 | $0.085 |
+
+The first three rows were measured on an earlier version of the demo shop and of the scoring code: the release decision does not compare them with the last one ([details](eval/results/2026-11-13-every-ticket.md)).
 
 What the evaluation found:
 - **A blind spot.** On a promo code ticket, the "D clean" writer missed a bug in 8 of 15 trials: its tests always used a cart big enough for free shipping, and the bug only shows when shipping is paid. Asking for more test cases caught it, but tests failing on correct code went from 2 to 5 trials in 48, so that change was dropped. The coverage summary was kept: on six tickets, the bug was caught 5 times out of 5, no test failed on correct code in 20 trials, for about 11% more per trial.
@@ -114,7 +117,7 @@ On omni-tools, QA verify blocked the correct code once: an approved browser test
 | Repair | Sonnet, medium effort | $1.00 per repair, at most 2 |
 | Visual review, in the demo's CI (warnings only) | Opus | about $0.17 at most |
 
-These are ceilings passed to the CLI, not prices. Measured costs are in the tables above. An evaluation run of every ticket cost $4.84 on 9 November, a smoke run $1.60 to $1.73. QA eval estimates the cost before it starts and refuses to go above `max_cost_usd`.
+These are ceilings passed to the CLI, not prices. Measured costs are in the tables above. An evaluation run of every ticket cost $4.84 on 9 November and $4.34 on 13 November, a smoke run $1.30 to $1.73. QA eval estimates the cost before it starts and refuses to go above `max_cost_usd`.
 
 On a large application, the repository variable `QA_MAX_TURNS` gives the agents more turns than their own limit (40 for the writer, 25 for the verifier). When the scripts run on a developer machine, `QA_BUDGET_USD`, `QA_MODEL`, `QA_EFFORT` and `QA_REPAIR_*` change budgets, models and effort.
 
@@ -134,7 +137,7 @@ The kit does not protect against someone with write access to the repository. De
 - Checks prove that named tests ran and gave the expected result. They can't prove the assertions match what the user wanted, so a person still reviews.
 - QA write tests, QA verify and QA amend tests have run on two real tickets, one of them in the demo. QA approval and an amendment after a squash merge have run on a third demo ticket ([details](eval/results/2026-11-07-approval-trial.md)). The repair agent isn't measured.
 - The installer has run on one large project, immich, a pnpm monorepo: install and full suite, no agent ([details](eval/results/2026-11-07-immich.md)).
-- The corpus is 17 tickets of one small shop: it says how the agents do there, not on a real project. The v0.3.0 writer was measured on 6 of them.
+- The corpus is 17 tickets of one small shop: it says how the agents do there, not on a real project. The writer and the verifier of `main` were measured on all 17 on 13 November, 3 trials each.
 - The visual review can miss problems or report ones that aren't there, so it only warns.
 
 ## License

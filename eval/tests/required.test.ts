@@ -8,13 +8,16 @@ import type { Campaign } from '../lib/history.ts';
 import { CLAUDE_CODE, requirement } from '../lib/required.ts';
 import { KIT } from '../lib/workspace.ts';
 
-// A repository with the kit's agents, its evaluation code, the release baseline's two campaigns and its
+// A repository with the kit's agents, its evaluation code, the campaigns of the release baseline and its
 // policy, on which pull requests are simulated with real commits. No model is called.
+// The campaigns are those eval/release-baseline.json names, so that the tests follow a change of baseline.
+const BASELINE = (JSON.parse(readFileSync(join(KIT, 'eval/release-baseline.json'), 'utf8')) as { campaigns: string[] }).campaigns
+  .map((id) => `eval/history/campaigns/${id}.json`);
 const COPIED = [
   'package.json', '.claude/agents/qa-writer.md', '.claude/agents/qa-verifier.md', '.claude/qa-settings.json', '.claude/hooks',
   'qa/run-qa.sh', 'qa/kit-integrity.sh', 'qa/criteria-manifest.ts', 'qa/ci-install-agents.sh', 'qa/ci-approval.sh',
   'eval/lib', 'eval/validate.ts', 'eval/required.ts', 'eval/compare-policy.json', 'eval/release-baseline.json',
-  'eval/history/campaigns/gh-41605000003.json', 'eval/history/campaigns/gh-41605005317.json',
+  ...BASELINE,
 ];
 
 function git(dir: string, ...args: string[]): string {
@@ -45,7 +48,7 @@ function commit(dir: string, files: Record<string, string>, message = 'change'):
 const append = (dir: string, path: string, text: string) => readFileSync(join(dir, path), 'utf8') + text;
 /** A campaign of the history that ran the agents of `at`: a copy of a baseline campaign, as another version. */
 function campaign(dir: string, at: string, id: string, change: Partial<Campaign['observations'][number]> = {}, role: Campaign['role'] = 'campaign'): Record<string, string> {
-  const c = JSON.parse(readFileSync(join(dir, 'eval/history/campaigns/gh-41605000003.json'), 'utf8')) as Campaign;
+  const c = JSON.parse(readFileSync(join(dir, BASELINE[0]), 'utf8')) as Campaign;
   c.id = id;
   c.label = `candidate ${id}`;
   c.role = role;
@@ -112,7 +115,7 @@ test('without a campaign of the new version, the check fails and says what to do
   assert.match(r.out, /QA eval → Run workflow, on the branch feature\/x, with tickets "smoke"/);
   assert.match(r.out, /add the label qa-eval-waived/);
   // The campaigns of the baseline ran on commits that are not in this repository: not compared, and said so.
-  assert.match(r.out, /2 campaign\(s\) of the history ran on a commit that is not in this repository/);
+  assert.ok(r.out.includes(`${BASELINE.length} campaign(s) of the history ran on a commit that is not in this repository`), r.out);
   const waived = cli(dir, base, head, '--waived');
   assert.equal(waived.code, 0, waived.out);
   assert.match(waived.out, /::warning title=QA eval waived::/);

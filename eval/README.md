@@ -282,7 +282,7 @@ The backtest replays the history. For each version, it makes the selection from 
 
 ## Release validation
 
-Every QA eval run that calls the agents ends with a **Release decision** job. It compares the new version with the release baseline, with no model call, and says whether it can be released. The baseline is `eval/release-baseline.json`, currently D clean and its regression check; the `baseline` input overrides it. Locally:
+Every QA eval run that calls the agents ends with a **Release decision** job. It compares the new version with the release baseline, with no model call, and says whether it can be released. The baseline is `eval/release-baseline.json`, currently `main` on 13 November 2026 (QA eval run 58, every ticket, [results](results/2026-11-13-every-ticket.md)); the `baseline` input overrides it. Locally:
 
 ```bash
 node eval/validate.ts --candidate eval-history.json            # a run's campaign file
