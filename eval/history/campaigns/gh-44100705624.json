@@ -69,7 +69,7 @@
     "doc": null
   },
   "notes": [
-    "The follow-up the release decision of run 60 asked for: EVAL-8, 3 trials, with the agents of run 60 (01b390f adds only the history and the documentation to b41f920). 2 of 3 trials successful, 5 of 6 injected bugs detected, no sandbox error. Trial 2 failed on the correct implementation for the same reason as trial 3 of run 60: its browser test expected two Checkout buttons on the page (toHaveCount(2)), where the reference has one. In runs 56, 58, 60 and 61, every EVAL-8 writer read the same files and ran one command."
+    "The follow-up the release decision of run 60 asked for: EVAL-8, 3 trials, with the agents of run 60 (01b390f adds only the history and the documentation to b41f920). 2 of 3 trials successful, 5 of 6 injected bugs detected, no sandbox error. Trial 2 failed on the correct implementation for the same reason as trial 3 of run 60: its browser test expected two Checkout buttons on the page (toHaveCount(2)), where the reference has one. In runs 60 and 61, every EVAL-8 writer read the same files and ran one command, npm run test:summary; in runs 56 and 58 they made the same number of tool calls (5 Read, 1 Glob, 2 Write, 1 Bash; one more Edit in trial 2 of run 58)."
   ],
   "missing": {},
   "observations": [
