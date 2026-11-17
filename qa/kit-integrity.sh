@@ -15,12 +15,13 @@
 #       Prints the settings with the qa, .claude and .github folders of each PARENT (those that exist)
 #       added to the sandbox's denyWrite list, as absolute paths: the commands an agent starts cannot
 #       write there. Pass the kit's folder and the project's.
-#       The git folder of each PARENT's repository is added too, wherever it is (a parent folder, or
-#       the common folder of a worktree). The launchers commit, push and compare in that repository
-#       after the agent: the code it runs must not move HEAD, add a ref or an object, or rewrite
-#       .git/info. Claude Code already refuses .git/hooks and .git/config; a test of 13 November 2026
-#       wrote HEAD and info/attributes. Reading git still works with the folder read-only (git status,
-#       git diff and git log were tried that way).
+#       The entries of the git folder of each PARENT's repository are added too, wherever it is (a
+#       parent folder, or the common folder of a worktree). The launchers commit, push and compare in
+#       that repository after the agent: the code it runs must not move HEAD, stage a file, add a ref
+#       or an object, or rewrite .git/info. Claude Code already refuses .git/hooks and .git/config; a
+#       test of 13 November 2026 wrote HEAD and info/attributes. New files directly in the git folder
+#       can still be created (see the comment in the function). Reading git still works with these
+#       entries read-only (git status, git diff and git log were tried that way).
 #   kit_manifest DIR...
 #       Prints one line per file below the folders given: path, executable bit and sha256 of the content
 #       (a link, its target). Folders are not listed: an empty one changes nothing, and Claude Code
@@ -59,12 +60,25 @@ kit_settings() {
     for dir in qa .claude .github; do
       [[ -d "$parent/$dir" ]] && dirs+=("$(cd "$parent/$dir" && pwd -P)")
     done
-    # The parent's own .git folder too, in case git cannot answer (not installed, or a repository
-    # owned by another user, which git refuses to read).
+    # The repository's git folder, entry by entry (HEAD, index, refs/, objects/, info/...), not the
+    # folder itself: Claude Code keeps paths of its own in it, some of which may not exist (.git/config.lock),
+    # and when it cannot work out the read rules (on a GitHub-hosted runner, where a path it refuses to
+    # read is under a folder the job's user cannot open), bubblewrap must create them in .git. A read-only
+    # .git then stopped every command (Claude Code 2.1.303, QA eval run 59). For the same reason info/ is
+    # kept whole only when info/exclude, another of those paths, exists. The parent's own .git folder is
+    # looked at too, in case git cannot answer (not installed, or a repository owned by another user).
     for gitdir in "$(git -C "$parent" rev-parse --absolute-git-dir 2>/dev/null)" \
                   "$(git -C "$parent" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" \
                   "$parent/.git"; do
-      [[ -n "$gitdir" && -d "$gitdir" ]] && dirs+=("$(cd "$gitdir" && pwd -P)")
+      [[ -n "$gitdir" && -d "$gitdir" ]] || continue
+      gitdir="$(cd "$gitdir" && pwd -P)"
+      while IFS= read -r -d '' entry; do
+        if [[ "$entry" == "$gitdir/info" && -d "$entry" && ! -e "$entry/exclude" ]]; then
+          while IFS= read -r -d '' entry; do dirs+=("$entry"); done < <(find "$gitdir/info" -mindepth 1 -maxdepth 1 -print0)
+        else
+          dirs+=("$entry")
+        fi
+      done < <(find "$gitdir" -mindepth 1 -maxdepth 1 -print0)
     done
   done
   if (( ${#dirs[@]} == 0 )); then jq -c . "$settings"; return; fi

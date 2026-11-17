@@ -2,7 +2,7 @@
 
 A working file for long tasks on the kit, by a person or an agent. Read it at the start of a session and update it at the end: what the work is for, what was decided and why, what changed, what comes next. It records facts with their pull request or file. The reasons in full are in the changelog, `SECURITY.md` and `eval/results/`.
 
-**As of 17 November 2026.** `main` is at `c560781`: v0.3.2 (tagged), with #55 to #64. The agents of `main` are those of `8ff5e3d` (#61), measured by QA eval run 58, the release baseline: #62 to #64 changed no file the agents see. The fixes of the security review of 13 November are on `claude/magical-feynman-bhdsbc`, with a smoke run to compare with that baseline.
+**As of 17 November 2026.** `main` is at `c560781`: v0.3.2 (tagged), with #55 to #64. The agents of `main` are those of `8ff5e3d` (#61), measured by QA eval run 58, the release baseline: #62 to #64 changed no file the agents see. The fixes of the security review of 13 November are on `claude/magical-feynman-bhdsbc`. Their first smoke run (59) found that a read-only `.git` stopped the agents' sandbox on a runner; fixed on the branch, and a second smoke run is to be made.
 
 ## Objectives
 
@@ -26,7 +26,7 @@ A working file for long tasks on the kit, by a person or an agent. Read it at th
 | #62 | This state file after #61 | merged |
 | #63 | QA eval run 58 in the history, and the release baseline changed to it | merged |
 | #64 | v0.3.2: the changelog's entries under a v0.3.2 heading, the version, and the gaps found on 13 November in `SECURITY.md` | merged, tagged `v0.3.2` |
-| next | The fixes of the security review of 13 November: git refused to the writer and the verifier by the guard, the git folder read-only and the home folder's credential files unreadable in the sandbox, no git hook in the publish steps of QA write tests and QA amend tests, no token on disk in `qa-guard.yml` | on `claude/magical-feynman-bhdsbc`, with a smoke run |
+| next | The fixes of the security review of 13 November: git refused to the writer and the verifier by the guard, the git folder's entries read-only and the home folder's credential files unreadable in the sandbox, no git hook in the publish steps of QA write tests and QA amend tests, no token on disk in `qa-guard.yml` | on `claude/magical-feynman-bhdsbc`; smoke run 59 failed (below), a second one to make |
 
 Evaluation campaigns added to `eval/history` on 12 November ($3.42 in all):
 
@@ -52,6 +52,12 @@ Every ticket on `main`, on 13 November ($4.34; in `eval/history` with #63; `eval
 | Run | Agents (commit) | Tickets | Result |
 |---|---|---|---|
 | 58 | `8ff5e3d`, the agents of runs 56 and 57 | all 17 × 3 | 50/51, 96/96 bugs; one trial of EVAL-13 with a test failing on the correct code (the cart line expected to show its discounted amount, which the ticket does not ask for); verifier 47, 48 and 48 of 48, no API error and no invalid verdict in 96 sessions; its own release decision "review", against "D clean" |
+
+QA eval run 59, on 17 November ($1.49; not in `eval/history`: the version it measured was fixed):
+
+| Run | Agents (commit) | Tickets | Result |
+|---|---|---|---|
+| 59 | `2006cf3`, the first commit of the security fixes | EVAL-1, 2, 8, 9, 10, 13 × 3 | 6/18 (only the ambiguous and the adversarial tickets); release decision "review" against run 58. In 15 of 15 feature trials, every Bash command failed: `bwrap: Can't create file at .../.git/config.lock: Read-only file system`. The writer's tests were right (54/54 fail-to-pass units, 27/27 bugs, no false positive) but it could not run them, and answered "blocked"; the verifier did not run. |
 
 ## Decisions, and why
 
@@ -100,8 +106,9 @@ Every ticket on `main`, on 13 November ($4.34; in `eval/history` with #63; `eval
    - **How the review measured:** the kit's launcher (`qa/run-qa.sh`, phase 1) with Claude Code 2.1.303 against a stand-in for the API, as an unprivileged user on Linux, on 13 November and again on 17 November with the fixes. Nothing was billed. It is not a run on a GitHub-hosted runner.
    - **What held on 13 November:** the commands an agent starts could not write to the project's `qa/`, `.claude/` and `.github/`, to `.git/hooks`, `.git/config` or `package.json`; they had no API key and no network; they could not read the `.env` files, `~/.ssh` or `~/.aws`. Read and Write outside the project were refused, a path under `~` included. `npm test`, which the settings do not list, was refused. A file written in the project's copy of the kit stopped the launcher.
    - **"Permission mode forced to default"**, which every agent log prints: the transcript records the mode `default`. A command outside the allow list was refused ("This command requires approval"); a read-only one ran without an allow rule. The guard is what refuses the others.
-   - **Fixed on the branch, measured on 17 November:** `git status` refused by the guard; every write in `.git/` refused (read-only file system); `~/.git-credentials`, `~/.netrc`, `~/.config/gh/hosts.yml` and the five other credential files unreadable; `npm run` still working with `~/.npmrc` unreadable. The hooks of the publish steps were checked by the tests of `qa/tests/ci-write-tests.test.ts` and `qa/tests/ci-amend.test.ts`, not on a runner.
-   - **Still open** (`SECURITY.md`, known gaps): writes to `node_modules/` and to files such as `.gitattributes`, `.husky/` or `CLAUDE.md`; reads of the rest of the home folder.
+   - **Fixed on the branch, measured on 17 November:** `git status` refused by the guard; the writes to `HEAD`, `info/attributes`, `.git/hooks` and `.git/config` refused (read-only file system) and `git add` failing; `~/.git-credentials`, `~/.netrc`, `~/.config/gh/hosts.yml` and the five other credential files unreadable; `npm run` still working with `~/.npmrc` unreadable. The hooks of the publish steps were checked by the tests of `qa/tests/ci-write-tests.test.ts` and `qa/tests/ci-amend.test.ts`, not on a runner.
+   - **Why the first version failed on a runner (run 59):** it made the whole `.git` read-only. With `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`, Claude Code 2.1.303 also refuses writes to paths of its own in `.git`, some of which do not exist (`.git/config.lock`). It skips those under a folder already read-only, unless it cannot work out the read rules: when a path it refuses to read cannot be resolved for another reason than its absence. Then bubblewrap must create them, and cannot in a read-only `.git`. Reproduced on the bench by making `/run/containerd` (Claude Code refuses to read `/run/containerd/containerd.sock`) unreadable to the job's user, as it presumably is on a GitHub-hosted runner (not checked there). The fix makes each entry of the git folder read-only instead: on the bench, in that condition, the commands start, the writes above are refused, git's read commands work; a new file directly in `.git` can still be created.
+   - **Still open** (`SECURITY.md`, known gaps): writes to `node_modules/` and to files such as `.gitattributes`, `.husky/` or `CLAUDE.md`; a new file directly in `.git`; reads of the rest of the home folder.
    - **Not concluded:** writes outside the project (the test folders were under `/tmp`, which the sandbox allows); which rule kept a `.env` out of a Grep (it was also in `.gitignore`).
    - **Not reviewed:** the installer (`bin/agent-qa-kit.mjs`), `qa/ci-verify.sh`, `qa/ci-amend-tests.sh` apart from the hooks of its publish step, the isolation of the evaluation, the repair agent's settings, phase 2. `npm audit` was not run again.
 2. **Writer tests that assume markup or a display the ticket does not give**, seen twice since 12 November: run 49, EVAL-15 trial 2 (a list counted where a message replaces it), and run 58, EVAL-13 trial 2 (the cart line expected to show its discounted amount). One trial in 51 in run 58. No rule or check was written for it.

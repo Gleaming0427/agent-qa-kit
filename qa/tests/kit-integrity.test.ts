@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
@@ -128,29 +128,42 @@ function sessionArgs(agent: string, env: Record<string, string> = {}) {
 }
 const valueAfter = (args: string[], flag: string) => args[args.indexOf(flag) + 1];
 
-test('the sandbox is told to keep the repository\'s git folder read-only, wherever it is', () => {
+test('the sandbox is told to keep the entries of the repository\'s git folder read-only, wherever it is', () => {
   const settings = join(kit, '.claude/qa-settings.json');
   const git = (cwd: string, ...args: string[]) => {
     const r = spawnSync('git', ['-c', 'user.name=QA', '-c', 'user.email=qa@example.invalid', ...args], { cwd, encoding: 'utf8' });
     assert.equal(r.status, 0, r.stderr);
   };
+  const entries = (gitDir: string) => readdirSync(gitDir).map((name) => `${gitDir}/${name}`);
   const repo = folder({ 'app/package.json': '{}\n', 'qa/run-qa.sh': '#!/usr/bin/env bash\n' });
   try {
     git(repo, 'init', '-q');
-    git(repo, 'commit', '-q', '--allow-empty', '-m', 'base');
+    git(repo, 'add', 'app/package.json');
+    git(repo, 'commit', '-q', '-m', 'base');
     const real = realpathSync(repo);
+    const dotGit = `${real}/.git`;
     const denied = (...parents: string[]) => JSON.parse(fn('kit_settings', settings, ...parents).out).sandbox.filesystem.denyWrite as string[];
-    // An application at the root: its .git folder, with the kit's folders.
-    assert.deepEqual(denied(repo), [`${real}/.git`, `${real}/qa`]);
+    for (const name of ['HEAD', 'index', 'refs', 'objects', 'info']) assert.ok(existsSync(`${dotGit}/${name}`), `git made ${name}`);
+    // An application at the root: the entries of its .git folder, with the kit's folders. Never the git folder
+    // itself: Claude Code may have to create paths of its own in it, such as .git/config.lock (QA eval run 59).
+    assert.deepEqual(denied(repo), [...entries(dotGit), `${real}/qa`].sort());
+    assert.ok(!denied(repo).includes(dotGit));
     // An application in a sub-folder: the git folder is that of the repository, above it.
-    assert.deepEqual(denied(join(repo, 'app')), [`${real}/.git`]);
-    // A worktree: its own git folder and the repository's common one.
+    assert.deepEqual(denied(join(repo, 'app')), entries(dotGit).sort());
+    // info/ whole only with its exclude file, which Claude Code also mounts: otherwise, what is in it.
+    writeFileSync(`${dotGit}/info/attributes`, '* -diff\n');
+    rmSync(`${dotGit}/info/exclude`, { force: true });
+    const withoutExclude = denied(repo);
+    assert.ok(!withoutExclude.includes(`${dotGit}/info`), 'info/ itself is left writable');
+    assert.ok(withoutExclude.includes(`${dotGit}/info/attributes`) && withoutExclude.includes(`${dotGit}/HEAD`));
+    writeFileSync(`${dotGit}/info/exclude`, '');
+    // A worktree: the entries of its own git folder and of the repository's common one.
     git(repo, 'worktree', 'add', '-q', join(repo, 'wt'));
-    assert.deepEqual(denied(join(repo, 'wt')), [`${real}/.git`, `${real}/.git/worktrees/wt`]);
-    // A repository git refuses to read (owned by another user, here a broken one): its .git folder all the same.
+    assert.deepEqual(denied(join(repo, 'wt')), [...entries(dotGit), ...entries(`${dotGit}/worktrees/wt`)].sort());
+    // A repository git refuses to read (owned by another user, here a broken one): its .git folder's entries all the same.
     const broken = folder({ '.git/HEAD': 'not a ref\n' });
     try {
-      assert.deepEqual(denied(broken), [`${realpathSync(broken)}/.git`]);
+      assert.deepEqual(denied(broken), [`${realpathSync(broken)}/.git/HEAD`]);
     } finally { rmSync(broken, { recursive: true, force: true }); }
   } finally { rmSync(repo, { recursive: true, force: true }); }
 });
