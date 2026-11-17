@@ -4,7 +4,7 @@
 
 AI agents write code, and other AI agents review it. Nobody checks that the app still works for the person using it. This kit adds that check: a QA agent writes the tests from the ticket before the code exists, a person approves them once, and scripts, not the agent, decide whether they pass.
 
-Version 0.3.1, experimental. Changes: [CHANGELOG.md](CHANGELOG.md).
+Version 0.3.2, experimental. Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## How it works
 
@@ -87,7 +87,7 @@ The demo is a small React shop that can switch a bug on and off. The test cycle 
 | "D clean", the release baseline until 16 November | 3 Nov | 16 | 45/48 | 86/87 | 2/45 | $0.11 |
 | main, before the fixes of v0.3.0 | 9 Nov | 17 | 49/51 | 93/96 | 1/48 | $0.095 |
 | v0.3.0 | 9 Nov | 6 | 21/21 | 33/33 | 0/18 | $0.094 |
-| main after v0.3.1, the release baseline | 13 Nov | 17 | 50/51 | 96/96 | 1/48 | $0.085 |
+| v0.3.2, the release baseline | 13 Nov | 17 | 50/51 | 96/96 | 1/48 | $0.085 |
 
 The first three rows were measured on an earlier version of the demo shop and of the scoring code: the release decision does not compare them with the last one ([details](eval/results/2026-11-13-every-ticket.md)).
 

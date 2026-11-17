@@ -2,7 +2,7 @@
 
 A working file for long tasks on the kit, by a person or an agent. Read it at the start of a session and update it at the end: what the work is for, what was decided and why, what changed, what comes next. It records facts with their pull request or file. The reasons in full are in the changelog, `SECURITY.md` and `eval/results/`.
 
-**As of 16 November 2026.** `main` is at `8f3ebd0`: v0.3.1 (tagged) and #55 to #62, with #63 open. The changelog lists their changes of the agents and of the evaluation under "Unreleased". The agents of `main` are those of `8ff5e3d` (#61): #62 changed this file only.
+**As of 17 November 2026.** `main` is at `38c3f81`: v0.3.1 (tagged) and #55 to #63. The release pull request of v0.3.2 is open, on `claude/magical-feynman-bhdsbc`: it puts the changelog's entries under a v0.3.2 heading. The agents of `main` are those of `8ff5e3d` (#61), measured by QA eval run 58, the release baseline: #62 and #63 changed no file the agents see.
 
 ## Objectives
 
@@ -24,7 +24,8 @@ A working file for long tasks on the kit, by a person or an agent. Read it at th
 | #60 | `CLAUDE.md`, for the sessions that develop the kit | merged |
 | #61 | The verifier runs one test command, with three tools; and, found by its evaluation, `✓` lines in the verifier's summary, a writer rule against a word bound after a text, and a writer rule on expected amounts | merged after a smoke evaluation of its final version (runs 56 and 57): release decision "review" |
 | #62 | This state file after #61 | merged |
-| #63 | QA eval run 58 in the history, and the release baseline changed to it | open, on `claude/magical-feynman-bhdsbc` |
+| #63 | QA eval run 58 in the history, and the release baseline changed to it | merged |
+| v0.3.2 | The release: the changelog's entries under a v0.3.2 heading, the version, and the gaps found on 13 November in `SECURITY.md` | open, on `claude/magical-feynman-bhdsbc` |
 
 Evaluation campaigns added to `eval/history` on 12 November ($3.42 in all):
 
@@ -94,7 +95,7 @@ Every ticket on `main`, on 13 November ($4.34; in `eval/history` with #63; `eval
 
 ## Next steps, in order
 
-1. **Release v0.3.2**, once #63 is merged: the "Unreleased" entries of the changelog under a v0.3.2 heading, the version in `package.json` and in the README, then the tag, which is the owner's.
+1. **Tag v0.3.2** once its release pull request is merged: the tag is the owner's. The changelog's heading says 17 November 2026: change it if the tag is made on another day.
 2. **The fixes of the security review of 13 November**, in one pull request with a smoke run, the first to be compared with the new baseline.
    - **How it was measured:** the kit's launcher (`qa/run-qa.sh`, phase 1) with Claude Code 2.1.303 against a stand-in for the API, as an unprivileged user on Linux. Nothing was billed. It is not a run on a GitHub-hosted runner.
    - **What held:** the commands an agent starts could not write to the project's `qa/`, `.claude/` and `.github/`, to `.git/hooks`, `.git/config` or `package.json`; they had no API key and no network; they could not read the `.env` files, `~/.ssh` or `~/.aws`. Read and Write outside the project were refused, a path under `~` included. `npm test`, which the settings do not list, was refused. A file written in the project's copy of the kit stopped the launcher.
@@ -117,7 +118,7 @@ Every ticket on `main`, on 13 November ($4.34; in `eval/history` with #63; `eval
    - install steps that wait ten minutes when the runner's network fails;
    - measurements on new tickets and other applications.
 
-**For the owner:** delete the branches of merged or closed pull requests: `claude/confident-brown-bn2ttv` (#55), `claude/session-surface` (#56), `claude/eval-reference` (#57), `claude/no-auto-memory` (#58), `claude/verifier-one-command` (#61), `claude/keep-approval-reasons` (#53, #54) and `feat/TICKET-44` (the trial of #49, closed). `claude/magical-feynman-bhdsbc` holds #63: delete it once that pull request is merged.
+**For the owner:** delete the branches of merged or closed pull requests: `claude/confident-brown-bn2ttv` (#55), `claude/session-surface` (#56), `claude/eval-reference` (#57), `claude/no-auto-memory` (#58), `claude/verifier-one-command` (#61), `claude/keep-approval-reasons` (#53, #54) and `feat/TICKET-44` (the trial of #49, closed). `claude/magical-feynman-bhdsbc` holds the release pull request of v0.3.2: delete it once that pull request is merged.
 
 ## How to update this file
 
